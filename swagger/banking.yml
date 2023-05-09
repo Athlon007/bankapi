@@ -325,6 +325,100 @@ paths:
                   amount: 100.00
         "401":
           $ref: "#/components/responses/Unauthorized"
+  /deposits/{deposit_id}/deposit:
+    put: 
+      tags: 
+        - Deposits
+        - Employee
+        - Client
+      security:
+        - bearerAuth: []
+      description: >
+        Updates the deposit amount with the provided ID.<br><br>
+        _Note: **Client** can only update his own account._
+      operationId: updateDepositAmount
+      parameters:
+        - name: deposit_id
+          in: path
+          description: Deposit ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Deposit"
+            example:
+              id: 0
+              kind: current
+              iban: "NL00INHL1234567890"
+              amount: 50.00
+      responses:
+        "200":
+          description: "Deposit amount updated!"
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: "#/components/schemas/Deposit"
+                example:
+                  id: 1
+                  kind: current
+                  iban: "NL00INHL1234567890"
+                  amount: 100.00
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /deposits/{deposit_id}/withdraw:
+    put:
+      tags:
+        - Deposits
+        - Employee
+        - Client
+      security:
+        - bearerAuth: []
+      description: >
+        Withdraws the deposit amount with the provided ID.<br><br>
+        _Note: **Client** can only withdraw from his own account._
+      operationId: withdrawDepositAmount
+      parameters:
+        - name: deposit_id
+          in: path
+          description: Deposit ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Deposit"
+            example:
+              id: 1
+              kind: current
+              iban: "NL00INHL1234567890"
+              amount: 100.00
+      responses:
+        "200":
+          description: "Deposit amount withdrawn!"
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: "#/components/schemas/Deposit"
+                example:
+                  id: 1
+                  kind: current
+                  iban: "NL00INHL1234567890"
+                  amount: 100.00
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /auth/login:
     post:
       tags:
