@@ -392,6 +392,39 @@ paths:
                   refresh_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
         "401":
           $ref: "#/components/responses/Unauthorized"
+  /accounts/transfer:
+    post:
+      tags:
+        - Employee
+        - Client
+      description: >
+        Transfers money from one account to another.
+      operationId: transfer
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                from:
+                  type: string
+                  example: "NL00INHL1234567890"
+                to:
+                  type: string
+                  example: "NL00INHL1234567891"
+                amount:
+                  type: number
+                  format: double
+                  example: 100.00
+      responses:
+        "200":
+          description: "Transfer successful!"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "400":
+          description: Invalid request
 components:
   schemas:
     Account:
