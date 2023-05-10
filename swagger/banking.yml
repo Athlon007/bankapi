@@ -417,16 +417,18 @@ paths:
                   example: 50.00
       responses:
         "200":
-          description: "Amount withdrawn from deposit associated with the ATM!"
+          description: "Withdraw amount is withdrawn!"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Deposit"
+                type: object
+                items:
+                  $ref: "#/components/schemas/Deposit"
                 example:
                   id: 1
                   kind: current
                   iban: "NL00INHL1234567890"
-                  amount: 50.00
+                  amount: 100.00
         "401":
           $ref: "#/components/responses/Unauthorized"
   /auth/login:
@@ -551,23 +553,25 @@ components:
         transactions:
           type: array
           items:
-            type: object
-            properties:
-              id:
-                type: integer
-                format: int64
-              deposit_id:
-                type: integer
-                format: int64
-              type:
-                type: string
-                enum: ["deposit", "withdrawal"]
-              amount:
-                type: number
-                format: double
-              timestamp:
-                type: string
-                format: date-time
+            $ref: "#/components/schemas/Transaction"
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        deposit_id:
+          type: integer
+          format: int64
+        type:
+          type: string
+          enum: ["deposit", "withdrawal"]
+        amount:
+          type: number
+          format: double
+        timestamp:
+          type: string
+          format: date-time
     LoginDTO:
       type: object
       properties:
