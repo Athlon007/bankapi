@@ -284,7 +284,7 @@ paths:
         Returns all user limits.<br>
         Employee can edit any user.<br>
         Client can only edit his own limits.<br><br>
-        User Users that are employee-only do NOT have limits. In this case, 400 will be returned.
+        Users that are employee-only and do not have currents accounts can't access it. In this case, 405 will be returned.
       operationId: getUserLimits
       parameters:
         - name: user_id
@@ -310,6 +310,8 @@ paths:
           $ref: "#/components/responses/NotFound"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "405":
+          $ref: "#/components/responses/NotAllowed"
     put:
       tags:
         - User
@@ -615,6 +617,8 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "405":
+          $ref: "#/components/responses/InternalServerError"
   /transactions/withdraw:
     post:
       tags:
@@ -676,6 +680,8 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "405":
+          $ref: "#/components/responses/InternalServerError"
   /auth/login:
     post:
       tags:
@@ -747,6 +753,7 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "400":
           $ref: "#/components/responses/BadRequest"
+
 components:
   schemas:
     User:
@@ -957,7 +964,7 @@ components:
     Unauthorized:
       description: "Authorization information is missing or is invalid."
     NotAllowed:
-      description: "User is not allowed to perform this action."
+      description: "User is not allowed to perform this action."  
     BadRequest:
       description: "Request body is incorrect."
     NotFound:
