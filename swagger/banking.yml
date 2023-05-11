@@ -8,10 +8,10 @@ info:
   title: banking-api
   description: The API for the Banking Application by Group 02, IT2A
 tags:
-  - name: Account
-    description: "Operations related to accounts."
-  - name: Deposits
-    description: "Operations related to the deposits process."
+  - name: User
+    description: "Operations related to users."
+  - name: Accounts
+    description: "Operations related to the accounts process."
   - name: Authentication
     description: "User authentication."
   - name: Guest
@@ -21,12 +21,12 @@ tags:
   - name: Client
     description: "Operations accessible to bank's clients."
 paths:
-  /accounts:
+  /users:
     get:
       tags:
-        - Account
+        - User
         - Employee
-      description: returns all accounts
+      description: returns all users
       operationId: getAcounts
       security:
         - bearerAuth: []
@@ -51,39 +51,39 @@ paths:
             type: string
       responses:
         "200":
-          description: all the accounts
+          description: all the users
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Account"
+                  $ref: "#/components/schemas/User"
                 example:
                   - id: 1
                     name: Bobby
-                    deposits:
+                    accounts:
                       - id: 1
                         iban: "NL00INHL1234567890"
                       - id: 2
                         iban: "NL00INHL1234567891"
                   - id: 2
                     name: Bobberson
-                    deposits:
+                    accounts:
                       - id: 3
                         iban: "NL00INHL1234567892"
                   - id: 3
                     name: Bobbina
-                    deposits:
+                    accounts:
                       -
         "401":
           $ref: "#/components/responses/Unauthorized"
     post:
       tags:
-        - Account
+        - User
         - Guest
         - Employee
-      description: register a new account
-      operationId: registerAccount
+      description: register a new user
+      operationId: registerUser
       requestBody:
         required: true
         content:
@@ -98,20 +98,20 @@ paths:
                 - name
       responses:
         "200":
-          description: successfully registered new account
+          description: successfully registered new user
         "400":
           $ref: "#/components/responses/BadRequest"
-  /accounts/{id}:
+  /users/{id}:
     get:
       tags:
-        - Account
+        - User
         - Employee
         - Client
       security:
         - bearerAuth: []
       description: >
-        Returns an account with following ID.<br><br>For **client**, only his user's ID will return the **200**.<br>For **employee**, it will return **200**.
-      operationId: getAccount
+        Returns an user with following ID.<br><br>For **client**, only his user's ID will return the **200**.<br>For **employee**, it will return **200**.
+      operationId: getUser
       parameters:
         - name: id
           in: path
@@ -122,11 +122,11 @@ paths:
             format: int64
       responses:
         "200":
-          description: Requested account
+          description: Requested user
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Account"
+                $ref: "#/components/schemas/User"
               example:
                 id: 0
                 name: "Bobby"
@@ -136,16 +136,16 @@ paths:
           $ref: "#/components/responses/NotFound"
     put:
       tags:
-        - Account
+        - User
         - Employee
         - Client
       security:
         - bearerAuth: []
       description: >
-        Updates the information of the provdied account ID.<br><br>
-        **Clients** can only update their own account.<br>
-        **Employees** can update anyone's account.
-      operationId: updateAccount
+        Updates the information of the provdied user ID.<br><br>
+        **Clients** can only update their own user.<br>
+        **Employees** can update anyone's user.
+      operationId: updateUser
       parameters:
         - name: id
           in: path
@@ -159,17 +159,17 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Account"
+              $ref: "#/components/schemas/User"
             example:
               id: 0
               name: "Namey"
       responses:
         "200":
-          description: Account has been updated
+          description: User has been updated
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Account"
+                $ref: "#/components/schemas/User"
               example:
                 id: 1
                 name: "Namey"
@@ -181,14 +181,14 @@ paths:
           $ref: "#/components/responses/BadRequest"
     delete:
       tags:
-        - Account
+        - User
         - Employee
       security:
         - bearerAuth: []
       description: >
-        Closes the user account IF no banking account has been tied to this account.<br>
-        Otherwise, deactivates the user account.
-      operationId: deleteAccount
+        Closes the user user IF no banking user has been tied to this user.<br>
+        Otherwise, deactivates the user user.
+      operationId: deleteUser
       parameters:
         - name: id
           in: path
@@ -199,42 +199,42 @@ paths:
             format: int64
       responses:
         "200":
-          description: Account successfully deleted
+          description: User successfully deleted
         "401":
           $ref: "#/components/responses/Unauthorized"
         "400":
           $ref: "#/components/responses/BadRequest"
         "404":
           $ref: "#/components/responses/NotFound"
-  /accounts/{account_id}/deposits:
+  /users/{user_id}/accounts:
     get:
       tags:
-        - Deposits
+        - Accounts
         - Employee
         - Client
       security:
         - bearerAuth: []
       description: >
-        Returns the list of all deposits belonging to account.<br>
-        For **client**, only his own deposits are visible to him.
-      operationId: getDeposits
+        Returns the list of all accounts belonging to user.<br>
+        For **client**, only his own accounts are visible to him.
+      operationId: getAccounts
       parameters:
-        - name: account_id
+        - name: user_id
           in: path
-          description: Account ID
+          description: User ID
           required: true
           schema:
             type: integer
             format: int64
       responses:
         "200":
-          description: A complete list of all deposits
+          description: A complete list of all accounts
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Deposit"
+                  $ref: "#/components/schemas/Account"
                 example:
                   - id: 1
                     kind: current
@@ -250,18 +250,18 @@ paths:
           $ref: "#/components/responses/NotFound"
     post:
       tags:
-        - Deposits
+        - Accounts
         - Employee
       security:
         - bearerAuth: []
       description: >
-        Creates a new deposit for "account id" account.
-      operationId: createDeposit
+        Creates a new account for "user id" user.
+      operationId: createAccount
       parameters:
-        - name: account_id
+        - name: user_id
           required: true
           in: path
-          description: Account ID for which the deposit is created.
+          description: User ID for which the account is created.
           schema:
             type: integer
             format: int64
@@ -270,14 +270,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/DepositCreateDTO"
+              $ref: "#/components/schemas/AccountCreateDTO"
       responses:
         "200":
-          description: "Deposit created!"
+          description: "Account created!"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Deposit"
+                $ref: "#/components/schemas/Account"
               example:
                 id: 1
                 iban: "NL00INHL1234567890"
@@ -289,19 +289,26 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "404":
           $ref: "#/components/responses/NotFound"
-  /accounts/{account_id}/deposits/{deposit_id}:
+  /users/{user_id}/accounts/{account_id}:
     get:
       tags:
-        - Deposits
+        - Accounts
         - Employee
         - Client
       security:
         - bearerAuth: []
       description: >
-        Returns details of specified deposit.<br><br>
-        _Note: **Client** can only see his own account details._
-      operationId: getDeposit
+        Returns details of specified account.<br><br>
+        _Note: **Client** can only see his own user details._
+      operationId: getAccount
       parameters:
+        - name: user_id
+          in: path
+          description: User ID
+          required: true
+          schema:
+            type: integer
+            format: int64
         - name: account_id
           in: path
           description: Account ID
@@ -309,22 +316,15 @@ paths:
           schema:
             type: integer
             format: int64
-        - name: deposit_id
-          in: path
-          description: Deposit ID
-          required: true
-          schema:
-            type: integer
-            format: int64
       responses:
         "200":
-          description: "Deposit details"
+          description: "Account details"
           content:
             application/json:
               schema:
                 type: object
                 items:
-                  $ref: "#/components/schemas/Account"
+                  $ref: "#/components/schemas/User"
                 example:
                   id: 1
                   kind: current
@@ -334,24 +334,24 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "404":
           $ref: "#/components/responses/NotFound"
-  /accounts/{account_id}/limits:
+  /users/{user_id}/limits:
     get:
       tags:
-        - Account
+        - User
         - Employee
         - Client
       security:
         - bearerAuth: []
       description: >
-        Returns all account limits.<br>
-        Employee can edit any account.<br>
+        Returns all user limits.<br>
+        Employee can edit any user.<br>
         Client can only edit his own limits.<br><br>
-        User Accounts that are employee-only do NOT have limits. In this case, 400 will be returned.
-      operationId: getAccountLimits
+        User Users that are employee-only do NOT have limits. In this case, 400 will be returned.
+      operationId: getUserLimits
       parameters:
-        - name: account_id
+        - name: user_id
           in: path
-          description: Account ID
+          description: User ID
           required: true
           schema:
             type: integer
@@ -372,23 +372,23 @@ paths:
           $ref: "#/components/responses/BadRequest"
     put:
       tags:
-        - Account
+        - User
         - Employee
         - Client
       security:
         - bearerAuth: []
       description: >
-        Updates the account limits.<br>
-        Employee can edit any account.<br>
+        Updates the user limits.<br>
+        Employee can edit any user.<br>
         Client can only edit his own limits.<br><br>
-        <b>'daily_withdraw_limit'</b> refers to the maximum amount of money that can be withdrawn from the account in a day.<br>
-        <b>'daily_transfer_limit'</b> refers to the maximum amount of money that can be transferred from the account in a day.<br>
-        <i>Note: daily transfer limit does not apply to transfers between accounts of the same user.</i>
-      operationId: updateAccountLimits
+        <b>'daily_withdraw_limit'</b> refers to the maximum amount of money that can be withdrawn from the user in a day.<br>
+        <b>'daily_transfer_limit'</b> refers to the maximum amount of money that can be transferred from the user in a day.<br>
+        <i>Note: daily transfer limit does not apply to transfers between users of the same user.</i>
+      operationId: updateUserLimits
       parameters:
-        - name: account_id
+        - name: user_id
           in: path
-          description: Account ID
+          description: User ID
           required: true
           schema:
             type: integer
@@ -398,17 +398,17 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/AccountLimits"
+              $ref: "#/components/schemas/UserLimits"
             example:
               daily_withdraw_limit: 1000
               daily_transfer_limit: 5000
       responses:
         "200":
-          description: Account limits have been updated
+          description: User limits have been updated
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AccountLimits"
+                $ref: "#/components/schemas/UserLimits"
               example:
                 daily_withdraw_limit: 1000
                 daily_transfer_limit: 5000
@@ -416,12 +416,12 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "404":
           $ref: "#/components/responses/NotFound"
-  /accounts/transfer:
+  /users/transfer:
     post:
       tags:
         - Transfer
       description: >
-        Transfers money from one account to another.
+        Transfers money from one user to another.
       operationId: transfer
       security:
         - bearerAuth: []
@@ -472,26 +472,26 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "400":
           $ref: "#/components/responses/BadRequest"
-  /accounts/{id}/transfers:
+  /users/{id}/transfers:
     get:
       tags:
         - Transfer
       description: >
-        Returns all transfers for a given account.
+        Returns all transfers for a given user.
       operationId: getTransfers
       security:
         - bearerAuth: []
       parameters:
         - name: id
           in: path
-          description: Account id
+          description: User id
           required: true
           schema:
             type: integer
             format: int64
       responses:
         "200":
-          description: "Returns all transfers for a given account."
+          description: "Returns all transfers for a given user."
           content:
             application/json:
               schema:
@@ -502,7 +502,7 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "404":
           $ref: "#/components/responses/NotFound"
-  /atms/{atm_id}/accounts/{account_id}/deposits/{deposit_id}/deposit:
+  /atms/{atm_id}/users/{user_id}/accounts/{account_id}/account:
     post:
       tags:
         - Employee
@@ -510,8 +510,8 @@ paths:
       security:
         - bearerAuth: []
       description: >
-        Deposit money to a deposit associated with the ATM.
-      operationId: depositToATM
+        Account money to a account associated with the ATM.
+      operationId: accountToATM
       parameters:
         - name: atm_id
           in: path
@@ -521,17 +521,17 @@ paths:
             type: integer
             format: int64
             example: 1
-        - name: account_id
+        - name: user_id
           in: path
-          description: Account ID
+          description: User ID
           required: true
           schema:
             type: integer
             format: int64
             example: 1
-        - name: deposit_id
+        - name: account_id
           in: path
-          description: Deposit ID
+          description: Account ID
           required: true
           schema:
             type: integer
@@ -545,13 +545,13 @@ paths:
               $ref: "#/components/schemas/Transfer"
       responses:
         "200":
-          description: "Deposit amount deposited!"
+          description: "Account amount accounted!"
           content:
             application/json:
               schema:
                 type: object
                 items:
-                  $ref: "#/components/schemas/Deposit"
+                  $ref: "#/components/schemas/Account"
                 example:
                   id: 1
                   kind: current
@@ -561,7 +561,7 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "400":
           $ref: "#/components/responses/BadRequest"
-  /atms/{atm_id}/accounts/{account_id}/deposits/{deposit_id}/withdraw:
+  /atms/{atm_id}/users/{user_id}/accounts/{account_id}/withdraw:
     post:
       tags:
         - Employee
@@ -569,7 +569,7 @@ paths:
       security:
         - bearerAuth: []
       description: >
-        Withdraw money from a deposit associated with the ATM.
+        Withdraw money from a account associated with the ATM.
       operationId: withdrawFromATM
       parameters:
         - name: atm_id
@@ -580,17 +580,17 @@ paths:
             type: integer
             format: int64
             example: 1
-        - name: account_id
+        - name: user_id
           in: path
-          description: Account ID
+          description: User ID
           required: true
           schema:
             type: integer
             format: int64
             example: 1
-        - name: deposit_id
+        - name: account_id
           in: path
-          description: Deposit ID
+          description: Account ID
           required: true
           schema:
             type: integer
@@ -609,7 +609,7 @@ paths:
               schema:
                 type: object
                 items:
-                  $ref: "#/components/schemas/Deposit"
+                  $ref: "#/components/schemas/Account"
                 example:
                   id: 1
                   kind: current
@@ -694,7 +694,7 @@ paths:
           $ref: "#/components/responses/BadRequest"
 components:
   schemas:
-    Account:
+    User:
       type: object
       properties:
         id:
@@ -702,7 +702,7 @@ components:
           format: int64
         name:
           type: string
-        deposits:
+        accounts:
           type: array
           items:
             type: object
@@ -714,7 +714,7 @@ components:
                 type: string
                 pattern: "[A-Z]{2,2}[0-9]{2,2}[A-Z]{4,4}[0,9]{10,10}"
       description: ok
-    Deposit:
+    Account:
       type: object
       properties:
         id:
@@ -747,7 +747,7 @@ components:
         timestamp:
           type: string
           format: date-time
-    DepositCreateDTO:
+    AccountCreateDTO:
       type: object
       properties:
         kind:
@@ -767,7 +767,7 @@ components:
           type: string
         refresh_token:
           type: string
-    AccountLimits:
+    UserLimits:
       type: object
       properties:
         daily_withdraw_limit:
