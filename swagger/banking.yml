@@ -436,7 +436,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/TransactionRequest"
       responses:
-        "200":
+        "201":
           description: "Transaction successful!"
           content:
             application/json:
