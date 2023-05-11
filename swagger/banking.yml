@@ -20,6 +20,8 @@ tags:
     description: "Operations accessible to employees."
   - name: Client
     description: "Operations accessible to bank's clients."
+  - name: Transfer
+    description: "Operations related to money transfers."
 paths:
   /accounts:
     get:
@@ -395,8 +397,7 @@ paths:
   /accounts/transfer:
     post:
       tags:
-        - Employee
-        - Client
+        - Transfer
       description: >
         Transfers money from one account to another.
       operationId: transfer
