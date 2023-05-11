@@ -422,9 +422,9 @@ paths:
       security:
         - bearerAuth: []
       parameters:
-        - name: user_id
+        - name: transaction_id
           in: path
-          description: User ID
+          description: Transaction ID
           required: true
           schema:
             type: integer
@@ -575,7 +575,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/LoginDTO"
+              $ref: "#/components/schemas/LoginRequest"
             example:
               username: "abcd123"
               password: "TremendouslySecurePassword1!"
