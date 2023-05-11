@@ -504,6 +504,8 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "405":
+          $ref: "#/components/responses/InternalServerError"
   /transactions/withdraw:
     post:
       tags:
@@ -565,6 +567,8 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "405":
+          $ref: "#/components/responses/InternalServerError"
   /auth/login:
     post:
       tags:
@@ -636,6 +640,7 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "400":
           $ref: "#/components/responses/BadRequest"
+
 components:
   schemas:
     User:
@@ -846,7 +851,7 @@ components:
     Unauthorized:
       description: "Authorization information is missing or is invalid."
     NotAllowed:
-      description: "User is not allowed to perform this action."
+      description: "User is not allowed to perform this action."  
     BadRequest:
       description: "Request body is incorrect."
     NotFound:
