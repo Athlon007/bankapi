@@ -20,6 +20,8 @@ tags:
     description: "Operations accessible to employees."
   - name: Client
     description: "Operations accessible to bank's clients."
+  - name: Transaction
+    description: "Operations related to transactions."
 paths:
   /users:
     get:
@@ -441,10 +443,10 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "404":
           $ref: "#/components/responses/NotFound"
-  /users/transfer:
+  /transactions:
     post:
       tags:
-        - Transfer
+        - Transaction
       description: >
         Transfers money from one user to another.
       operationId: transfer
@@ -457,16 +459,16 @@ paths:
               type: object
               properties:
                 items:
-                  $ref: "#/components/schemas/Transfer"
+                  $ref: "#/components/schemas/TransactionRequest"
       responses:
         "200":
-          description: "Transfer successful!"
+          description: "Transaction successful!"
           content:
             application/json:
               schema:
                 type: object
                 items:
-                  $ref: "#/components/schemas/Transfer"
+                  $ref: "#/components/schemas/TransactionResponse"
                 example:
                   id: 1
                   senderiban: "NL00INHL1234567890"
@@ -478,9 +480,9 @@ paths:
           $ref: "#/components/responses/BadRequest"
     get:
       tags:
-        - Transfer
+        - Transaction
       description: >
-        Returns all transfers.
+        Returns all transactions.
       operationId: getAllTransfers
       security:
         - bearerAuth: []
@@ -492,24 +494,24 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Transfer"
+                  $ref: "#/components/schemas/TransactionResponse"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "400":
           $ref: "#/components/responses/BadRequest"
-  /users/{id}/transfers:
+  /transactions/{transaction_id}:
     get:
       tags:
-        - Transfer
+        - Transaction
       description: >
-        Returns all transfers for a given user.
+        Returns all transactions for a given user.
       operationId: getTransfers
       security:
         - bearerAuth: []
       parameters:
-        - name: id
+        - name: user_id
           in: path
-          description: User id
+          description: User ID
           required: true
           schema:
             type: integer
@@ -522,21 +524,19 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Transfer"
+                  $ref: "#/components/schemas/TransactionResponse"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "404":
           $ref: "#/components/responses/NotFound"
-  /atms/{atm_id}/users/{user_id}/accounts/{account_id}/account:
+  /transactions/deposit:
     post:
       tags:
         - Employee
         - Client
-      security:
-        - bearerAuth: []
       description: >
-        Account money to a account associated with the ATM.
-      operationId: accountToATM
+        Deposit money to a account.
+      operationId: deposit
       parameters:
         - name: atm_id
           in: path
@@ -545,7 +545,6 @@ paths:
           schema:
             type: integer
             format: int64
-            example: 1
         - name: user_id
           in: path
           description: User ID
@@ -553,7 +552,6 @@ paths:
           schema:
             type: integer
             format: int64
-            example: 1
         - name: account_id
           in: path
           description: Account ID
@@ -561,41 +559,44 @@ paths:
           schema:
             type: integer
             format: int64
-            example: 1
+      security:
+        - bearerAuth: []
       requestBody:
-        required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Transfer"
+              $ref: "#/components/schemas/TransactionDepositRequest"
+            example:
+              receiver_iban: "NL00INHL1234567890"
+              amount: 100.00
       responses:
         "200":
-          description: "Account amount accounted!"
+          description: "Deposit successful!"
           content:
             application/json:
               schema:
                 type: object
                 items:
-                  $ref: "#/components/schemas/Account"
+                  $ref: "#/components/schemas/TransactionResponse"
                 example:
                   id: 1
-                  kind: current
-                  iban: "NL00INHL1234567890"
-                  amount: 100.00
+                  sender_iban: "NL00INHL2234567890"
+                  receiver_iban: "NL00INHL1234567890"
+                  amount: 150.00
+                  timestamp: "2021-06-01T12:00:00.000Z"
+                  description: "Deposit"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "400":
           $ref: "#/components/responses/BadRequest"
-  /atms/{atm_id}/users/{user_id}/accounts/{account_id}/withdraw:
+  /transactions/withdraw:
     post:
       tags:
         - Employee
         - Client
-      security:
-        - bearerAuth: []
       description: >
-        Withdraw money from a account associated with the ATM.
-      operationId: withdrawFromATM
+        Withdraw money from a account.
+      operationId: withdraw
       parameters:
         - name: atm_id
           in: path
@@ -604,7 +605,6 @@ paths:
           schema:
             type: integer
             format: int64
-            example: 1
         - name: user_id
           in: path
           description: User ID
@@ -612,7 +612,6 @@ paths:
           schema:
             type: integer
             format: int64
-            example: 1
         - name: account_id
           in: path
           description: Account ID
@@ -620,30 +619,35 @@ paths:
           schema:
             type: integer
             format: int64
-            example: 1
+      security:
+        - bearerAuth: []
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Transfer"
+              $ref: "#/components/schemas/TransactionWithdrawRequest"
+            example:
+              sender_iban: "NL00INHL2234567890"
+              amount: 100.00
+              description: "Withdraw"
       responses:
         "200":
-          description: "Withdraw amount is withdrawn!"
+          description: "Withdraw successful!"
           content:
             application/json:
               schema:
                 type: object
                 items:
-                  $ref: "#/components/schemas/Account"
+                  $ref: "#/components/schemas/TransactionResponse"
                 example:
                   id: 1
-                  kind: current
-                  iban: "NL00INHL1234567890"
-                  amount: 100.00
+                  sender_iban: "NL00INHL2234567890"
+                  receiver_iban: "NL00INHL1234567890"
+                  amount: 50.00
+                  timestamp: "2021-06-01T12:00:00.000Z"
+                  description: "Withdraw"
         "401":
           $ref: "#/components/responses/Unauthorized"
-        "404":
-          $ref: "#/components/responses/NotFound"
         "400":
           $ref: "#/components/responses/BadRequest"
   /auth/login:
@@ -926,7 +930,14 @@ components:
   responses:
     Unauthorized:
       description: "Authorization information is missing or is invalid."
+    NotAllowed:
+      description: "User is not allowed to perform this action."
     BadRequest:
       description: "Request body is incorrect."
     NotFound:
       description: "Element does not exist."
+    Created:
+      description: "Element created."
+    InternalServerError:
+      description: "Internal server error."
+
