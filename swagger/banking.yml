@@ -434,16 +434,16 @@ paths:
               type: object
               properties:
                 items:
-                  $ref: "#/components/schemas/Transfer"
+                  $ref: "#/components/schemas/TransactionRequest"
       responses:
         "200":
-          description: "Transfer successful!"
+          description: "Transaction successful!"
           content:
             application/json:
               schema:
                 type: object
                 items:
-                  $ref: "#/components/schemas/Transfer"
+                  $ref: "#/components/schemas/TransactionResponse"
                 example:
                   id: 1
                   senderiban: "NL00INHL1234567890"
@@ -457,7 +457,7 @@ paths:
       tags:
         - Transaction
       description: >
-        Returns all transfers.
+        Returns all transactions.
       operationId: getAllTransfers
       security:
         - bearerAuth: []
@@ -469,7 +469,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Transfer"
+                  $ref: "#/components/schemas/TransactionResponse"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "400":
@@ -479,7 +479,7 @@ paths:
       tags:
         - Transaction
       description: >
-        Returns all transfers for a given user.
+        Returns all transactions for a given user.
       operationId: getTransfers
       security:
         - bearerAuth: []
@@ -499,7 +499,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Transfer"
+                  $ref: "#/components/schemas/TransactionResponse"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "404":
