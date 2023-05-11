@@ -356,6 +356,119 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "404":
           $ref: "#/components/responses/NotFound"
+  /accounts:
+    get:
+      tags:
+        - Accounts
+        - Employee
+        - Client
+      security:
+        - bearerAuth: []
+      description: >
+        Returns the list of all accounts belonging to user.<br>
+        For **client**, only his own accounts are visible to him.
+      operationId: getAccounts
+      responses:
+        "200":
+          description: A complete list of all accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AccountForClientResponse"
+                example:
+                  - id: 1
+                    kind: current
+                    iban: "NL00INHL1234567890"
+                    amount: 420.69
+                  - id: 2
+                    kind: savings
+                    iban: "NL00INHL1234567891"
+                    amount: 2137.12
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      tags:
+        - Accounts
+        - Employee
+      security:
+        - bearerAuth: []
+      description: >
+        Creates a new account for "user id" user.
+      operationId: createAccount
+      parameters:
+        - name: user_id
+          required: true
+          in: query
+          description: User ID for which the account is created.
+          schema:
+            type: integer
+            format: int64
+          example: 1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountRequest"
+      responses:
+        "200":
+          description: "Account created!"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountForClientResponse"
+              example:
+                id: 1
+                iban: "NL00INHL1234567890"
+                kind: current
+                amount: 0.00
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /accounts/{account_id}:
+    get:
+      tags:
+        - Accounts
+        - Employee
+        - Client
+      security:
+        - bearerAuth: []
+      description: >
+        Returns details of specified account.<br><br>
+        _Note: **Client** can only see his own user details._
+      operationId: getAccount
+      parameters:
+        - name: account_id
+          in: path
+          description: Account ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: "Account details"
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: "#/components/schemas/User"
+                example:
+                  id: 1
+                  kind: current
+                  iban: "NL00INHL1234567890"
+                  amount: 100.00
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
   /transactions:
     post:
       tags:
