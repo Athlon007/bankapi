@@ -514,21 +514,21 @@ paths:
       operationId: deposit
       parameters:
         - name: atm_id
-          in: path
+          in: query
           description: ATM ID
           required: true
           schema:
             type: integer
             format: int64
         - name: user_id
-          in: path
+          in: query
           description: User ID
           required: true
           schema:
             type: integer
             format: int64
         - name: account_id
-          in: path
+          in: query
           description: Account ID
           required: true
           schema:
@@ -574,21 +574,21 @@ paths:
       operationId: withdraw
       parameters:
         - name: atm_id
-          in: path
+          in: query
           description: ATM ID
           required: true
           schema:
             type: integer
             format: int64
         - name: user_id
-          in: path
+          in: query
           description: User ID
           required: true
           schema:
             type: integer
             format: int64
         - name: account_id
-          in: path
+          in: query
           description: Account ID
           required: true
           schema:
