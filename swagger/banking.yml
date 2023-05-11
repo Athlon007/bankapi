@@ -394,7 +394,7 @@ paths:
                   refresh_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
         "401":
           $ref: "#/components/responses/Unauthorized"
-  /accounts/transfer:
+  /accounts/transfers:
     post:
       tags:
         - Transfer
@@ -426,6 +426,55 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "400":
           description: Invalid request
+    get:
+      tags:
+        - Transfer
+      description: >
+        Returns all transfers.
+      operationId: getAllTransfers
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: "Returns all transfers."
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Transfer"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /accounts/{id}/transfers:
+    get:
+      tags:
+        - Transfer
+      description: >
+        Returns all transfers for a given account.
+      operationId: getTransfers
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: Account id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: "Returns all transfers for a given account."
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Transfer"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Account not found
 components:
   schemas:
     Account:
