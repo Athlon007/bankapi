@@ -366,9 +366,7 @@ paths:
           application/json:
             schema:
               type: object
-              properties:
-                items:
-                  $ref: "#/components/schemas/Transfer"
+              $ref: "#/components/schemas/Transfer"
       responses:
         "200":
           description: "Deposit amount deposited!"
@@ -376,8 +374,7 @@ paths:
             application/json:
               schema:
                 type: object
-                items:
-                  $ref: "#/components/schemas/Deposit"
+                $ref: "#/components/schemas/Deposit"
                 example:
                   id: 1
                   kind: current
