@@ -103,7 +103,7 @@ paths:
               phone_number: "0612345678"
               birth_date: "2000-01-01"
       responses:
-        "200":
+        "201":
           description: User has been registered.
           content:
             application/json:
@@ -152,9 +152,23 @@ paths:
                   - $ref: "#/components/schemas/User"
                   - $ref: "#/components/schemas/UserForClientResponse"
                 example:
-                  firstname: "Bobby"
-                  lastname: "Bobberson"
-                  iban: "NL00INHL1234567890"
+                  id: 1
+                  user_type: "client"
+                  email: "bobby@mail.com"
+                  first_name: "Bobby"
+                  last_name: "Bobberson"
+                  bsn: "123456789"
+                  phone_number: "0612345678"
+                  birth_date: "2000-01-01"
+                  accounts:
+                    [
+                      {
+                        id: 1,
+                        iban: "NL00INHL1234567890",
+                        balance: 1000,
+                        type: "savings",
+                      },
+                    ]
         "401":
           $ref: "#/components/responses/Unauthorized"
         "404":
@@ -171,7 +185,8 @@ paths:
       description: >
         Updates the information of the provdied user ID.<br><br>
         **Clients** can only update their own user.<br>
-        **Employees** can update anyone's user.
+        **Employees** can update anyone's user.<br><br>
+        In both cases, it returns User schema.
       operationId: updateUser
       parameters:
         - name: id
@@ -182,24 +197,46 @@ paths:
             type: integer
             format: int64
       requestBody:
+        description: User details to register
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/User"
+              $ref: "#/components/schemas/UserRequest"
             example:
-              id: 0
-              name: "Namey"
+              email: "bobby@mail.com"
+              password: "123456"
+              firstname: "Bobby"
+              lastname: "Bobberson"
+              bsn: "123456789"
+              phone_number: "0612345678"
+              birth_date: "2000-01-01"
       responses:
         "200":
-          description: User has been updated
+          description: Requested user
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/User"
-              example:
-                id: 1
-                name: "Namey"
+                oneOf:
+                  - $ref: "#/components/schemas/User"
+                example:
+                  id: 1
+                  user_type: "client"
+                  email: "bobby@mail.com"
+                  first_name: "Bobby"
+                  last_name: "Bobberson"
+                  bsn: "123456789"
+                  phone_number: "0612345678"
+                  birth_date: "2000-01-01"
+                  accounts:
+                    [
+                      {
+                        id: 1,
+                        iban: "NL00INHL1234567890",
+                        balance: 1000,
+                        type: "savings",
+                      },
+                    ]
         "401":
           $ref: "#/components/responses/Unauthorized"
         "404":
@@ -233,134 +270,8 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "404":
           $ref: "#/components/responses/NotFound"
-  /users/{user_id}/accounts:
-    get:
-      tags:
-        - Accounts
-        - Employee
-        - Client
-      security:
-        - bearerAuth: []
-      description: >
-        Returns the list of all accounts belonging to user.<br>
-        For **client**, only his own accounts are visible to him.
-      operationId: getAccounts
-      parameters:
-        - name: user_id
-          in: path
-          description: User ID
-          required: true
-          schema:
-            type: integer
-            format: int64
-      responses:
-        "200":
-          description: A complete list of all accounts
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Account"
-                example:
-                  - id: 1
-                    kind: current
-                    iban: "NL00INHL1234567890"
-                    amount: 420.69
-                  - id: 2
-                    kind: savings
-                    iban: "NL00INHL1234567891"
-                    amount: 2137.12
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "404":
-          $ref: "#/components/responses/NotFound"
-    post:
-      tags:
-        - Accounts
-        - Employee
-      security:
-        - bearerAuth: []
-      description: >
-        Creates a new account for "user id" user.
-      operationId: createAccount
-      parameters:
-        - name: user_id
-          required: true
-          in: path
-          description: User ID for which the account is created.
-          schema:
-            type: integer
-            format: int64
-          example: 1
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/AccountCreateDTO"
-      responses:
-        "200":
-          description: "Account created!"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Account"
-              example:
-                id: 1
-                iban: "NL00INHL1234567890"
-                kind: current
-                amount: 0.00
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "404":
-          $ref: "#/components/responses/NotFound"
-  /users/{user_id}/accounts/{account_id}:
-    get:
-      tags:
-        - Accounts
-        - Employee
-        - Client
-      security:
-        - bearerAuth: []
-      description: >
-        Returns details of specified account.<br><br>
-        _Note: **Client** can only see his own user details._
-      operationId: getAccount
-      parameters:
-        - name: user_id
-          in: path
-          description: User ID
-          required: true
-          schema:
-            type: integer
-            format: int64
-        - name: account_id
-          in: path
-          description: Account ID
-          required: true
-          schema:
-            type: integer
-            format: int64
-      responses:
-        "200":
-          description: "Account details"
-          content:
-            application/json:
-              schema:
-                type: object
-                items:
-                  $ref: "#/components/schemas/User"
-                example:
-                  id: 1
-                  kind: current
-                  iban: "NL00INHL1234567890"
-                  amount: 100.00
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "404":
-          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
   /users/{user_id}/limits:
     get:
       tags:
@@ -388,6 +299,8 @@ paths:
           description: List of limits
           content:
             application/json:
+              schema:
+                $ref: "#/components/schemas/UserLimits"
               example:
                 daily_withdraw_limit: 1000
                 daily_transfer_limit: 5000
@@ -940,4 +853,3 @@ components:
       description: "Element created."
     InternalServerError:
       description: "Internal server error."
-
