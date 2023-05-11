@@ -20,6 +20,8 @@ tags:
     description: "Operations accessible to employees."
   - name: Client
     description: "Operations accessible to bank's clients."
+  - name: Transaction
+    description: "Operations related to transactions."
 paths:
   /users:
     get:
@@ -416,10 +418,10 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "404":
           $ref: "#/components/responses/NotFound"
-  /users/transfer:
+  /transactions:
     post:
       tags:
-        - Transfer
+        - Transaction
       description: >
         Transfers money from one user to another.
       operationId: transfer
@@ -453,7 +455,7 @@ paths:
           $ref: "#/components/responses/BadRequest"
     get:
       tags:
-        - Transfer
+        - Transaction
       description: >
         Returns all transfers.
       operationId: getAllTransfers
@@ -472,19 +474,19 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "400":
           $ref: "#/components/responses/BadRequest"
-  /users/{id}/transfers:
+  /transactions/{transaction_id}:
     get:
       tags:
-        - Transfer
+        - Transaction
       description: >
         Returns all transfers for a given user.
       operationId: getTransfers
       security:
         - bearerAuth: []
       parameters:
-        - name: id
+        - name: user_id
           in: path
-          description: User id
+          description: User ID
           required: true
           schema:
             type: integer
@@ -887,7 +889,14 @@ components:
   responses:
     Unauthorized:
       description: "Authorization information is missing or is invalid."
+    NotAllowed:
+      description: "User is not allowed to perform this action."
     BadRequest:
       description: "Request body is incorrect."
     NotFound:
       description: "Element does not exist."
+    Created:
+      description: "Element created."
+    InternalServerError:
+      description: "Internal server error."
+
