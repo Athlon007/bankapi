@@ -30,9 +30,9 @@ paths:
         - Employee
       description: returns all accounts
       operationId: getAcounts
-      security:
+      security: 
         - bearerAuth: []
-      parameters:
+      parameters: 
         - in: query
           name: skip
           description: number of records to skip
@@ -42,7 +42,7 @@ paths:
         - in: query
           name: limit
           description: max number of records to return
-          schema:
+          schema: 
             type: integer
             format: int32
             maximum: 100
@@ -52,14 +52,14 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: all the accounts
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Account"
+                      $ref: '#/components/schemas/Account'
                 example:
                   - id: 1
                     name: Bobby
@@ -77,13 +77,13 @@ paths:
                     name: Bobbina
                     deposits:
                       -
-        "401":
-          $ref: "#/components/responses/Unauthorized"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
     post:
-      tags:
-        - Account
-        - Guest
-        - Employee
+      tags: 
+      - Account
+      - Guest
+      - Employee
       description: register a new account
       operationId: registerAccount
       requestBody:
@@ -95,15 +95,15 @@ paths:
               properties:
                 name:
                   type: string
-                  example: "Bobby"
+                  example: 'Bobby'
               required:
                 - name
       responses:
-        "200":
+        '200':
           description: successfully registered new account
-        "400":
+        '400':
           description: invalid request
-          content:
+          content: 
             application/json:
               schema:
                 type: object
@@ -112,16 +112,16 @@ paths:
                     type: string
   /accounts/{id}:
     get:
-      tags:
-        - Account
-        - Employee
-        - Client
-      security:
+      tags: 
+      - Account
+      - Employee
+      - Client
+      security: 
         - bearerAuth: []
       description: >
         Returns an account with following ID.<br><br>For **client**, only his user's ID will return the **200**.<br>For **employee**, it will return **200**.
       operationId: getAccount
-      parameters:
+      parameters: 
         - name: id
           in: path
           description: User ID
@@ -130,30 +130,30 @@ paths:
             type: integer
             format: int64
       responses:
-        "200":
+        '200':
           description: Requested account
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Account"
+                $ref: '#/components/schemas/Account'
               example:
                 id: 0
-                name: "Bobby"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
+                name: 'Bobby'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
     put:
       tags:
-        - Account
-        - Employee
-        - Client
-      security:
+      - Account
+      - Employee
+      - Client
+      security: 
         - bearerAuth: []
       description: >
         Updates the information of the provdied account ID.<br><br>
         **Clients** can only update their own account.<br>
         **Employees** can update anyone's account.
       operationId: updateAccount
-      parameters:
+      parameters: 
         - name: id
           in: path
           description: User ID
@@ -166,33 +166,33 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Account"
+              $ref: '#/components/schemas/Account'
             example:
               id: 0
-              name: "Namey"
+              name: 'Namey'
       responses:
-        "200":
+        '200':
           description: Account has been updated
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Account"
+                $ref: '#/components/schemas/Account'
               example:
                 id: 1
-                name: "Namey"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
+                name: 'Namey'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
     delete:
-      tags:
-        - Account
-        - Employee
-      security:
+      tags:      
+      - Account      
+      - Employee
+      security: 
         - bearerAuth: []
-      description: >
+      description: > 
         Closes the user account IF no banking account has been tied to this account.<br>
         Otherwise, deactivates the user account.
       operationId: deleteAccount
-      parameters:
+      parameters: 
         - name: id
           in: path
           description: User ID
@@ -201,18 +201,18 @@ paths:
             type: integer
             format: int64
       responses:
-        "200":
+        '200':
           description: Account successfully deleted
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "400":
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '400':
           description: Invalid request
   /accounts/{account_id}/deposits:
     get:
       tags:
-        - Deposits
-        - Employee
-        - Client
+      - Deposits
+      - Employee
+      - Client
       security:
         - bearerAuth: []
       description: >
@@ -228,14 +228,14 @@ paths:
             type: integer
             format: int64
       responses:
-        "200":
+        '200':
           description: A complete list of all deposits
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Deposit"
+                  $ref: '#/components/schemas/Deposit'
                 example:
                   - id: 1
                     kind: current
@@ -245,18 +245,18 @@ paths:
                     kind: savings
                     iban: "NL00INHL1234567891"
                     amount: 2137.12
-        "401":
-          $ref: "#/components/responses/Unauthorized"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
     post:
       tags:
-        - Deposits
-        - Employee
-      security:
+      - Deposits
+      - Employee
+      security: 
         - bearerAuth: []
       description: >
         Creates a new deposit for "account id" account.
       operationId: createDeposit
-      parameters:
+      parameters: 
         - name: account_id
           required: true
           in: path
@@ -271,25 +271,25 @@ paths:
             schema:
               $ref: "#/components/schemas/DepositCreateDTO"
       responses:
-        "200":
+        '200':
           description: "Deposit created!"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Deposit"
+                $ref: '#/components/schemas/Deposit'
               example:
                 id: 1
-                iban: "NL00INHL1234567890"
+                iban: 'NL00INHL1234567890'
                 kind: current
                 amount: 0.00
-        "401":
-          $ref: "#/components/responses/Unauthorized"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /accounts/{account_id}/deposits/{deposit_id}:
     get:
       tags:
-        - Deposits
-        - Employee
-        - Client
+      - Deposits
+      - Employee
+      - Client
       security:
         - bearerAuth: []
       description: >
@@ -312,14 +312,128 @@ paths:
             type: integer
             format: int64
       responses:
-        "200":
+        '200':
           description: "Deposit details"
           content:
             application/json:
               schema:
                 type: object
                 items:
-                  $ref: "#/components/schemas/Account"
+                  $ref: '#/components/schemas/Account'
+                example:
+                  id: 1
+                  kind: current
+                  iban: "NL00INHL1234567890"
+                  amount: 100.00
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /atms/{atm_id}/accounts/{account_id}/deposits/{deposit_id}/deposit:
+    post:
+      tags:
+        - Employee
+        - Client
+      security:
+        - bearerAuth: []
+      description: >
+        Deposit money to a deposit associated with the ATM.
+      operationId: depositToATM
+      parameters:
+        - name: atm_id
+          in: path
+          description: ATM ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+            example: 1
+        - name: account_id
+          in: path
+          description: Account ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+            example: 1
+        - name: deposit_id
+          in: path
+          description: Deposit ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              $ref: "#/components/schemas/Transfer"
+      responses:
+        "200":
+          description: "Deposit amount deposited!"
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/Deposit"
+                example:
+                  id: 1
+                  kind: current
+                  iban: "NL00INHL1234567890"
+                  amount: 100.00
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /atms/{atm_id}/accounts/{account_id}/deposits/{deposit_id}/withdraw:
+    post:
+      tags:
+        - Employee
+        - Client
+      security:
+        - bearerAuth: []
+      description: >
+        Withdraw money from a deposit associated with the ATM.
+      operationId: withdrawFromATM
+      parameters:
+        - name: atm_id
+          in: path
+          description: ATM ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+            example: 1
+        - name: account_id
+          in: path
+          description: Account ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+            example: 1
+        - name: deposit_id
+          in: path
+          description: Deposit ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+            example: 1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              $ref: '#/components/schemas/Transfer'
+      responses:
+        "200":
+          description: "Withdraw amount is withdrawn!"
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: "#/components/schemas/Deposit"
                 example:
                   id: 1
                   kind: current
@@ -330,8 +444,8 @@ paths:
   /auth/login:
     post:
       tags:
-        - Authentication
-        - Guest
+      - Authentication
+      - Guest
       description: >
         Upon successful login, returns authentication token
       operationId: login
@@ -339,13 +453,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/LoginDTO"
+              $ref: '#/components/schemas/LoginDTO'
             example:
-              username: "abcd123"
-              password: "TremendouslySecurePassword1!"
+              username: 'abcd123'
+              password: 'TremendouslySecurePassword1!'
       responses:
-        "200":
-          description: >
+        '200':
+          description: > 
             User has been logged in successfully!<br><br>
             **Note:** Refresh token is valid only for the next 15 minutes. Please refer to /auth/refresh.
           content:
@@ -353,18 +467,18 @@ paths:
               schema:
                 type: object
                 items:
-                  $ref: "#/components/schemas/jwt"
+                  $ref: '#/components/schemas/jwt'
                 example:
                   access_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
                   refresh_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /auth/refresh:
     post:
       tags:
-        - Authentication
-        - Employee
-        - Client
+      - Authentication
+      - Employee
+      - Client
       description: >
         Returns a new 'auth_token" and 'refresh_token'.<br>
         **Important:** refresh_token CANNOT be expired.
@@ -381,14 +495,14 @@ paths:
                   type: string
                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
       responses:
-        "200":
+        '200':
           description: "A fresh access_token and refresh_token."
           content:
             application/json:
               schema:
                 type: object
                 items:
-                  $ref: "#/components/schemas/jwt"
+                  $ref: '#/components/schemas/jwt'
                 example:
                   access_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
                   refresh_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
@@ -490,7 +604,7 @@ components:
           items:
             type: object
             properties:
-              id:
+              id: 
                 type: integer
                 format: int64
               iban:
@@ -505,7 +619,7 @@ components:
           format: int64
         kind:
           type: string
-          enum: ["current", "savings"]
+          enum: [ "current", "savings" ]
         iban:
           type: string
           pattern: "[A-Z]{2,2}[0-9]{2,2}[A-Z]{4,4}[0-9]{10,10}"
@@ -532,19 +646,19 @@ components:
       properties:
         kind:
           type: string
-          enum: ["current", "savings"]
+          enum: [ "current", "savings" ]
     LoginDTO:
       type: object
       properties:
-        username:
+        username: 
           type: string
         password:
           type: string
-    jwt:
-      type: object
-      properties:
-        access_token:
-          type: string
+    jwt:      
+      type: object      
+      properties:        
+        access_token:          
+          type: string          
         refresh_token:
           type: string
   securitySchemes:
