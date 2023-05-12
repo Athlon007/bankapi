@@ -57,6 +57,12 @@ paths:
           required: false
           schema:
             type: string
+        - in: query
+          name: has_no_accounts
+          description: Filter by users that have no accounts
+          required: false
+          schema:
+            type: boolean
       responses:
         "200":
           description: List of users with basic information.
@@ -300,10 +306,11 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/UserLimits"
+                $ref: "#/components/schemas/UserLimitsResponse"
               example:
-                daily_withdraw_limit: 1000
-                daily_transfer_limit: 5000
+                transaction_limit: 1000
+                daily_transaction_limit: 5000
+                remaining_daily_transaction_limit: 420.69
         "401":
           $ref: "#/components/responses/Unauthorized"
         "404":
@@ -340,20 +347,21 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UserLimits"
+              $ref: "#/components/schemas/UserLimitsRequest"
             example:
-              daily_withdraw_limit: 1000
-              daily_transfer_limit: 5000
+              transaction_limit: 1000
+              daily_transaction_limit: 10000
       responses:
         "200":
           description: User limits have been updated
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/UserLimits"
+                $ref: "#/components/schemas/UserLimitsResponse"
               example:
-                daily_withdraw_limit: 1000
-                daily_transfer_limit: 5000
+                transaction_limit: 1000
+                daily_transaction_limit: 10000
+                remaining_daily_transaction_limit: 5420.69
         "401":
           $ref: "#/components/responses/Unauthorized"
         "404":
@@ -942,17 +950,29 @@ components:
           type: string
         refresh_token:
           type: string
-    UserLimits:
+    UserLimitsRequest:
       type: object
       properties:
-        daily_withdraw_limit:
-          type: number
-          format: int64
-          maximum: 10000
-        daily_transfer_limit:
+        transaction_limit:
           type: number
           format: int64
           maximum: 100000
+        daily_transaction_limit:
+          type: number
+          format: int64
+          maximum: 100000
+    UserLimitsResponse:
+      type: object
+      properties:
+        transaction_limit:
+          type: number
+          format: int64
+        daily_transaction_limit:
+          type: number
+          format: int64
+        remaining_daily_transaction_limit:
+          type: number
+          format: double
   securitySchemes:
     bearerAuth:
       type: http
@@ -962,7 +982,7 @@ components:
     Unauthorized:
       description: "Authorization information is missing or is invalid."
     NotAllowed:
-      description: "User is not allowed to perform this action."  
+      description: "User is not allowed to perform this action."
     BadRequest:
       description: "Request body is incorrect."
     NotFound:
