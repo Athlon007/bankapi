@@ -31,7 +31,8 @@ public class UserTests {
             "12345678",
             "0612345678",
             LocalDate.of(1990, 1, 1),
-            UserType.CUSTOMER);
+            UserType.CUSTOMER,
+            "password");
     }
 
     @Test

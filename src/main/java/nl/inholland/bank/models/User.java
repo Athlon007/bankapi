@@ -29,7 +29,7 @@ public class User {
     private List<Account> accounts = new ArrayList<>();
     private String passwordHash;
 
-    public User(String firstName, String lastName, String email, String bsn, String phoneNumber, LocalDate dateOfBirth, UserType userType) {
+    public User(String firstName, String lastName, String email, String bsn, String phoneNumber, LocalDate dateOfBirth, UserType userType, String passwordHash) {
         this.setFirstName(firstName);
         this.setLastName(lastName);
         this.setEmail(email);
@@ -37,6 +37,7 @@ public class User {
         this.setPhoneNumber(phoneNumber);
         this.setDateOfBirth(dateOfBirth);
         this.setUserType(userType);
+        this.setPasswordHash(passwordHash);
     }
 
     public void setBsn(String bsn) {
@@ -56,7 +57,7 @@ public class User {
     public void setPhoneNumber(String phoneNumber) {
         // Check if the phone number only contains numbers.
         // Phone number may also start with a '+' sign.
-        if (!phoneNumber.matches("[0-9]+") && !phoneNumber.matches("\\+[0-9]+")) {
+        if (!phoneNumber.matches("\\d+") && !phoneNumber.matches("\\+\\d+")) {
             throw new IllegalArgumentException("Phone number must only contain numbers");
         }
 
