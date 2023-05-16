@@ -27,6 +27,7 @@ public class User {
     private UserType userType;
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Account> accounts = new ArrayList<>();
+    private String passwordHash;
 
     public User(String firstName, String lastName, String email, String bsn, String phoneNumber, LocalDate dateOfBirth, UserType userType) {
         this.setFirstName(firstName);
