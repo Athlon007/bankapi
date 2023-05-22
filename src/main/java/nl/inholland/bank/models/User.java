@@ -1,14 +1,11 @@
 package nl.inholland.bank.models;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.NonNull;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 @Entity
@@ -27,9 +24,19 @@ public class User {
     private UserType userType;
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Account> accounts = new ArrayList<>();
-    private String passwordHash;
+    private String username;
+    private String password;
+    private List<Role> roles;
 
-    public User(String firstName, String lastName, String email, String bsn, String phoneNumber, LocalDate dateOfBirth, UserType userType, String passwordHash) {
+    public User(String firstName,
+                String lastName,
+                String email,
+                String bsn,
+                String phoneNumber,
+                LocalDate dateOfBirth,
+                UserType userType,
+                String username,
+                String password) {
         this.setFirstName(firstName);
         this.setLastName(lastName);
         this.setEmail(email);
@@ -37,7 +44,8 @@ public class User {
         this.setPhoneNumber(phoneNumber);
         this.setDateOfBirth(dateOfBirth);
         this.setUserType(userType);
-        this.setPasswordHash(passwordHash);
+        this.setUsername(username);
+        this.setPassword(password);
     }
 
     public void setBsn(String bsn) {
