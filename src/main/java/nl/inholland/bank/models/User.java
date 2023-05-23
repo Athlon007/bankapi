@@ -11,18 +11,21 @@ import java.util.List;
 @Entity
 @Data
 @NoArgsConstructor
+@Table(name = "users")
 public class User {
     @Id
     @GeneratedValue
     private int id;
     private String firstName;
     private String lastName;
+    @Column(unique = true)
     private String email;
     private String bsn;
     private String phoneNumber;
     private LocalDate dateOfBirth;
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Account> accounts = new ArrayList<>();
+    @Column(unique = true)
     private String username;
     private String password;
     private List<Role> roles;

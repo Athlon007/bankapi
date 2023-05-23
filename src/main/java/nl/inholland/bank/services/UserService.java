@@ -2,16 +2,18 @@ package nl.inholland.bank.services;
 
 import nl.inholland.bank.models.Role;
 import nl.inholland.bank.models.User;
-import nl.inholland.bank.models.dtos.UserForAdminRequest;
-import nl.inholland.bank.models.dtos.UserRequest;
+import nl.inholland.bank.models.dtos.*;
 import nl.inholland.bank.repositories.UserRepository;
 import nl.inholland.bank.utils.JwtTokenProvider;
+import javax.naming.AuthenticationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+@Service
 public class UserService {
     protected final UserRepository userRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
@@ -23,13 +25,46 @@ public class UserService {
         this.jwtTokenProvider = jwtTokenProvider;
     }
 
-    public void addUser(UserRequest userRequest) {
+    public User addUser(UserRequest userRequest) {
         User user = mapUserRequestToUser(userRequest);
         userRepository.save(user);
+        return userRepository.findUserByUsername(user.getUsername()).get();
+    }
+
+    public User addUserForAdmin(UserForAdminRequest userForAdminRequest) {
+        User user = mapUserForAdminRequestToUser(userForAdminRequest);
+        userRepository.save(user);
+        return userRepository.findUserByUsername(user.getUsername()).get();
     }
 
     public List<User> getAllUsers() {
         return (List<User>)userRepository.findAll();
+    }
+
+    public String login(LoginRequest loginRequest) throws AuthenticationException {
+        User user = userRepository.findUserByUsername(loginRequest.username())
+                .orElseThrow(() -> new AuthenticationException("Username not found"));
+
+        if (!bCryptPasswordEncoder.matches(loginRequest.password(), user.getPassword()))
+            throw new AuthenticationException("Password incorrect");
+
+        return jwtTokenProvider.createToken(user.getUsername(), user.getRoles());
+    }
+
+    public String createRefreshToken(String username) throws AuthenticationException {
+        User user = userRepository.findUserByUsername(username)
+                .orElseThrow(() -> new AuthenticationException("Username not found"));
+
+        return jwtTokenProvider.createRefreshToken(user.getUsername());
+    }
+
+    public jwt refresh(RefreshTokenRequest refreshTokenRequest) throws AuthenticationException {
+        // Check if it's not expired
+        String username = jwtTokenProvider.refreshTokenUsername(refreshTokenRequest.refresh_token());
+        User user = userRepository.findUserByUsername(username)
+                .orElseThrow(() -> new AuthenticationException("Username not found"));
+
+        return new jwt(jwtTokenProvider.createToken(username, user.getRoles()), jwtTokenProvider.createRefreshToken(username));
     }
 
     public User mapUserRequestToUser(UserRequest userRequest) {
@@ -60,7 +95,7 @@ public class UserService {
         user.setDateOfBirth(dateOfBirth);
         user.setUsername(userForAdminRequest.username());
         user.setPassword(bCryptPasswordEncoder.encode(userForAdminRequest.password()));
-        user.setRoles(List.of(Role.USER));
+        user.setRoles(mapStringArrayToRole(userForAdminRequest.roles()));
         return user;
     }
 
@@ -70,16 +105,13 @@ public class UserService {
         for (String role : roles) {
             role = role.toUpperCase();
             switch (role) {
-                case "ADMIN":
-                    roleList.add(Role.ADMIN);
-                    break;
-                case "EMPLOYEE":
-                    roleList.add(Role.EMPLOYEE);
-                    break;
-                case "USER":
-                    roleList.add(Role.USER);
-                    break;
+                case "ADMIN" -> roleList.add(Role.ADMIN);
+                case "EMPLOYEE" -> roleList.add(Role.EMPLOYEE);
+                case "USER" -> roleList.add(Role.USER);
+                default -> throw new IllegalArgumentException("Invalid role: " + role);
             }
         }
+
+        return roleList;
     }
 }

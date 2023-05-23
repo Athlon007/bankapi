@@ -16,7 +16,7 @@ import java.util.List;
 
 @Component
 public class JwtTokenProvider {
-    @Value("${security.jwt.token.secret-key:secret}")
+    @Value("${bankapi.token.expiration}")
     private long validityInMilliseconds;
 
     private UserDetailsService userDetailsService;
@@ -42,6 +42,20 @@ public class JwtTokenProvider {
                 .compact();
     }
 
+    public String createRefreshToken(String username) {
+        Claims claims = Jwts.claims().setSubject(username);
+        Date issuedAt = new Date();
+        Date expiresAt = new Date(issuedAt.getTime() + validityInMilliseconds);
+        claims.put("auth", "refresh");
+
+        return Jwts.builder()
+                .setClaims(claims)
+                .setIssuedAt(issuedAt)
+                .setExpiration(expiresAt)
+                .signWith(jwtKeyProvider.getPrivateKey())
+                .compact();
+    }
+
     public Authentication getAuthentication(String token) {
         try {
             Jws<Claims> claims = Jwts.parserBuilder()
@@ -52,7 +66,23 @@ public class JwtTokenProvider {
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
             return new UsernamePasswordAuthenticationToken(userDetails, token, userDetails.getAuthorities());
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+
+    public String refreshTokenUsername(String refreshToken) {
+        try {
+            Jws<Claims> claims = Jwts.parserBuilder()
+                    .setSigningKey(jwtKeyProvider.getPrivateKey())
+                    .build()
+                    .parseClaimsJws(refreshToken);
+            // Return only if token is still valid.
+            if (claims.getBody().getExpiration().after(new Date())) {
+                return claims.getBody().getSubject();
+            } else {
+                throw new RuntimeException("Refresh token is expired.");
+            }
+        } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
         }
     }
