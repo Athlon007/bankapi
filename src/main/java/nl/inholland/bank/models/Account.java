@@ -11,7 +11,4 @@ public class Account {
     @Id
     @GeneratedValue
     private int id;
-    @ManyToOne
-    @JsonIgnore
-    private User user;
 }

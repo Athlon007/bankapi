@@ -25,7 +25,7 @@ public class UserTests {
             LocalDate.of(1990, 1, 1),
             "username",
             "password",
-            List.of(Role.USER));
+            Role.USER);
     }
 
     @Test

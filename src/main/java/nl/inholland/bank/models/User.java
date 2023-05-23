@@ -23,12 +23,14 @@ public class User {
     private String bsn;
     private String phoneNumber;
     private LocalDate dateOfBirth;
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private List<Account> accounts = new ArrayList<>();
+    @OneToOne(cascade = CascadeType.ALL)
+    private Account currentAccount;
+    @OneToOne(cascade = CascadeType.ALL)
+    private Account savingAccount;
     @Column(unique = true)
     private String username;
     private String password;
-    private List<Role> roles;
+    private Role role;
 
     public User(String firstName,
                 String lastName,
@@ -38,7 +40,7 @@ public class User {
                 LocalDate dateOfBirth,
                 String username,
                 String password,
-                List<Role> roles) {
+                Role role) {
         this.setFirstName(firstName);
         this.setLastName(lastName);
         this.setEmail(email);
@@ -47,7 +49,7 @@ public class User {
         this.setDateOfBirth(dateOfBirth);
         this.setUsername(username);
         this.setPassword(password);
-        this.setRoles(roles);
+        this.setRole(role);
     }
 
     public void setBsn(String bsn) {

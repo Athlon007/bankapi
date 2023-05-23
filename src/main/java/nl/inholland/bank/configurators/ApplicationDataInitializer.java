@@ -31,7 +31,7 @@ public class ApplicationDataInitializer implements ApplicationRunner {
                 "123456789",
                 "0612345678",
                 "2000-01-01",
-                new String[]{"ADMIN"}
+                "ADMIN"
         );
 
         User admin = userService.addUserForAdmin(adminRequest);
@@ -45,7 +45,7 @@ public class ApplicationDataInitializer implements ApplicationRunner {
                 "123456789",
                 "0612345678",
                 "2000-01-01",
-                new String[]{"EMPLOYEE"}
+                "EMPLOYEE"
         );
 
         userService.addUserForAdmin(employeeRequest);
@@ -63,6 +63,6 @@ public class ApplicationDataInitializer implements ApplicationRunner {
 
         userService.addUser(userRequest);
 
-        System.out.println("Added data to the database");
+        System.out.println(userService.getAllUsers());
     }
 }

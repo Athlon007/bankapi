@@ -28,11 +28,11 @@ public class JwtTokenProvider {
         this.jwtKeyProvider = jwtKeyProvider;
     }
 
-    public String createToken(String username, List<Role> roles) {
+    public String createToken(String username, Role role) {
         Claims claims = Jwts.claims().setSubject(username);
         Date issuedAt = new Date();
         Date expiresAt = new Date(issuedAt.getTime() + validityInMilliseconds);
-        claims.put("auth", roles);
+        claims.put("auth", role);
 
         return Jwts.builder()
                 .setClaims(claims)

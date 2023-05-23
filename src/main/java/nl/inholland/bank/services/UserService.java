@@ -6,6 +6,8 @@ import nl.inholland.bank.models.dtos.*;
 import nl.inholland.bank.repositories.UserRepository;
 import nl.inholland.bank.utils.JwtTokenProvider;
 import javax.naming.AuthenticationException;
+
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -38,6 +40,8 @@ public class UserService {
     }
 
     public List<User> getAllUsers() {
+        // If user has role ADMIN, return all users.
+        // Otherwise, return only users that have accounts.
         return (List<User>)userRepository.findAll();
     }
 
@@ -48,7 +52,7 @@ public class UserService {
         if (!bCryptPasswordEncoder.matches(loginRequest.password(), user.getPassword()))
             throw new AuthenticationException("Password incorrect");
 
-        return jwtTokenProvider.createToken(user.getUsername(), user.getRoles());
+        return jwtTokenProvider.createToken(user.getUsername(), user.getRole());
     }
 
     public String createRefreshToken(String username) throws AuthenticationException {
@@ -64,7 +68,7 @@ public class UserService {
         User user = userRepository.findUserByUsername(username)
                 .orElseThrow(() -> new AuthenticationException("Username not found"));
 
-        return new jwt(jwtTokenProvider.createToken(username, user.getRoles()), jwtTokenProvider.createRefreshToken(username));
+        return new jwt(jwtTokenProvider.createToken(username, user.getRole()), jwtTokenProvider.createRefreshToken(username));
     }
 
     public User mapUserRequestToUser(UserRequest userRequest) {
@@ -79,7 +83,7 @@ public class UserService {
         user.setDateOfBirth(dateOfBirth);
         user.setUsername(userRequest.username());
         user.setPassword(bCryptPasswordEncoder.encode(userRequest.password()));
-        user.setRoles(List.of(Role.USER));
+        user.setRole(Role.USER);
         return user;
     }
 
@@ -95,23 +99,22 @@ public class UserService {
         user.setDateOfBirth(dateOfBirth);
         user.setUsername(userForAdminRequest.username());
         user.setPassword(bCryptPasswordEncoder.encode(userForAdminRequest.password()));
-        user.setRoles(mapStringArrayToRole(userForAdminRequest.roles()));
+        user.setRole(mapStringToRole(userForAdminRequest.role()));
         return user;
     }
 
-    public List<Role> mapStringArrayToRole(String[] roles) {
-        // User may have multiple roles, so we need to check for each role.
-        List<Role> roleList = new ArrayList<>();
-        for (String role : roles) {
-            role = role.toUpperCase();
-            switch (role) {
-                case "ADMIN" -> roleList.add(Role.ADMIN);
-                case "EMPLOYEE" -> roleList.add(Role.EMPLOYEE);
-                case "USER" -> roleList.add(Role.USER);
-                default -> throw new IllegalArgumentException("Invalid role: " + role);
+    public Role mapStringToRole(String role) {
+        switch (role) {
+            case "ADMIN" -> {
+                return Role.ADMIN;
             }
+            case "EMPLOYEE" -> {
+                return Role.EMPLOYEE;
+            }
+            case "USER" -> {
+                return Role.USER;
+            }
+            default -> throw new IllegalArgumentException("Invalid role: " + role);
         }
-
-        return roleList;
     }
 }
