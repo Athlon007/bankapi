@@ -117,4 +117,8 @@ public class UserService {
             default -> throw new IllegalArgumentException("Invalid role: " + role);
         }
     }
+
+    public Role getUserRole() {
+        return jwtTokenProvider.getRole();
+    }
 }

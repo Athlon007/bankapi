@@ -1,7 +1,9 @@
 package nl.inholland.bank.controllers;
 
+import nl.inholland.bank.models.Role;
 import nl.inholland.bank.models.User;
 import nl.inholland.bank.models.dtos.ExceptionResponse;
+import nl.inholland.bank.models.dtos.UserForClientResponse;
 import nl.inholland.bank.models.dtos.UserResponse;
 import nl.inholland.bank.services.UserService;
 import org.apache.coyote.Response;
@@ -28,26 +30,48 @@ public class UserController {
     //@PreAuthorize("hasAnyRole('ADMIN', 'EMPLOYEE')")
     public ResponseEntity getAllUsers() {
         try {
+            // If USER is requesting, provide less detailed information.
+
             List<User> users = userService.getAllUsers();
-            List<UserResponse> userResponses = new ArrayList<>();
-            for (User user : users) {
-                String dateOfBirth = user.getDateOfBirth().toString();
+            
+            if (userService.getUserRole() == Role.USER) {
+                List<UserForClientResponse> userForClientResponses = new ArrayList<>();
+                for (User user : users) {
+                    UserForClientResponse userForClientResponse = new UserForClientResponse(
+                            user.getId(),
+                            user.getFirstName(),
+                            user.getLastName(),
+                            //user.getIban()
+                            // TODO: Get IBAN from account
+                            "IBAN"
+                    );
 
-                UserResponse userResponse = new UserResponse(
-                        user.getId(),
-                        user.getEmail(),
-                        user.getFirstName(),
-                        user.getLastName(),
-                        user.getBsn(),
-                        user.getPhoneNumber(),
-                        dateOfBirth
-                );
+                    userForClientResponses.add(userForClientResponse);
+                }
 
-                userResponses.add(userResponse);
+                return ResponseEntity.status(200).body(userForClientResponses);
+            } else {
+                List<UserResponse> userResponses = new ArrayList<>();
+                for (User user : users) {
+                    String dateOfBirth = user.getDateOfBirth().toString();
+
+                    UserResponse userResponse = new UserResponse(
+                            user.getId(),
+                            user.getEmail(),
+                            user.getFirstName(),
+                            user.getLastName(),
+                            user.getBsn(),
+                            user.getPhoneNumber(),
+                            dateOfBirth
+                    );
+
+                    userResponses.add(userResponse);
+                }
+
+                return ResponseEntity.status(200).body(userResponses);
             }
-
-            return ResponseEntity.status(200).body(userResponses);
         } catch (Exception e) {
+            System.out.println(e.getMessage());
             return ResponseEntity.badRequest().body(new ExceptionResponse("Unable to get users"));
         }
     }

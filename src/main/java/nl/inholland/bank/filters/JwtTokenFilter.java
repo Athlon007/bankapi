@@ -25,11 +25,6 @@ public class JwtTokenFilter extends OncePerRequestFilter {
     public void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws IOException, ServletException {
         String token = getToken(request);
 
-        if (token != null) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
         // Skip this check, if permitAll() is used in the security configuration
         if (request.getRequestURI().equals("/auth/login")) {
             filterChain.doFilter(request, response);
@@ -37,6 +32,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         }
 
         try {
+            System.out.println("Token: " + token);
             Authentication authentication = jwtTokenProvider.getAuthentication(token);
             SecurityContextHolder.getContext().setAuthentication(authentication);
         } catch (Exception e) {

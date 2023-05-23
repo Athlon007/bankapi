@@ -22,6 +22,8 @@ public class JwtTokenProvider {
     private UserDetailsService userDetailsService;
     private JwtKeyProvider jwtKeyProvider;
 
+    private Authentication authentication;
+
 
     public JwtTokenProvider(UserDetailsService userDetailsService, JwtKeyProvider jwtKeyProvider) {
         this.userDetailsService = userDetailsService;
@@ -64,7 +66,8 @@ public class JwtTokenProvider {
                     .parseClaimsJws(token);
             String username = claims.getBody().getSubject();
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-            return new UsernamePasswordAuthenticationToken(userDetails, token, userDetails.getAuthorities());
+            this.authentication = new UsernamePasswordAuthenticationToken(userDetails, token, userDetails.getAuthorities());
+            return authentication;
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
         }
@@ -87,16 +90,8 @@ public class JwtTokenProvider {
         }
     }
 
-    public List<Role> getRoles(String token) {
-        try {
-            Jws<Claims> claims = Jwts.parserBuilder()
-                    .setSigningKey(jwtKeyProvider.getPrivateKey())
-                    .build()
-                    .parseClaimsJws(token);
-            return (List<Role>) claims.getBody().get("auth");
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-            throw new RuntimeException(e.getMessage());
-        }
+    public Role getRole() {
+        // Get role from authentication.
+        return (Role) authentication.getAuthorities().stream().findFirst().get();
     }
 }
