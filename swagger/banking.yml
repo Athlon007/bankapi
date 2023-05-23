@@ -830,9 +830,9 @@ components:
       properties:
         email:
           type: string
-        password:
-          type: string
         username:
+          type: string
+        password:
           type: string
         first_name:
           type: string
