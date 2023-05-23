@@ -99,7 +99,9 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UserRequest"
+              oneOf:
+                - $ref: "#/components/schemas/UserRequest"
+                - $ref: "#/components/schemas/UserForAdminRequest"
             example:
               email: "bobby@mail.com"
               password: "123456"
@@ -848,6 +850,34 @@ components:
           type: string
           format: date
           pattern: "[0-9]{4}-[0-9]{2}-[0-9]{2}"
+    UserForAdminRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        username:
+          type: string
+        password:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        bsn:
+          type: string
+          pattern: "[0-9]{8,9}"
+        phone_number:
+          type: string
+          pattern: "[0-9]{10,10}"
+        birth_date:
+          type: string
+          format: date
+          pattern: "[0-9]{4}-[0-9]{2}-[0-9]{2}"
+        roles:
+          type: array
+          items:
+            type: string
+            enum: [admin, employee, client]
     AccountRequest:
       type: object
       properties:
