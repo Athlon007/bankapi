@@ -23,7 +23,7 @@ public class UserDetailsService implements org.springframework.security.core.use
 
         return User.withUsername(member.getUsername())
                 .password(member.getPassword())
-                .authorities(member.getRoles())
+                .authorities(member.getRole())
                 .build();
     }
 }

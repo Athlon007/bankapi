@@ -16,11 +16,13 @@ import java.util.List;
 
 @Component
 public class JwtTokenProvider {
-    @Value("${security.jwt.token.secret-key:secret}")
+    @Value("${bankapi.token.expiration}")
     private long validityInMilliseconds;
 
     private UserDetailsService userDetailsService;
     private JwtKeyProvider jwtKeyProvider;
+
+    private Authentication authentication;
 
 
     public JwtTokenProvider(UserDetailsService userDetailsService, JwtKeyProvider jwtKeyProvider) {
@@ -28,11 +30,25 @@ public class JwtTokenProvider {
         this.jwtKeyProvider = jwtKeyProvider;
     }
 
-    public String createToken(String username, List<Role> roles) {
+    public String createToken(String username, Role role) {
         Claims claims = Jwts.claims().setSubject(username);
         Date issuedAt = new Date();
         Date expiresAt = new Date(issuedAt.getTime() + validityInMilliseconds);
-        claims.put("auth", roles);
+        claims.put("auth", role);
+
+        return Jwts.builder()
+                .setClaims(claims)
+                .setIssuedAt(issuedAt)
+                .setExpiration(expiresAt)
+                .signWith(jwtKeyProvider.getPrivateKey())
+                .compact();
+    }
+
+    public String createRefreshToken(String username) {
+        Claims claims = Jwts.claims().setSubject(username);
+        Date issuedAt = new Date();
+        Date expiresAt = new Date(issuedAt.getTime() + validityInMilliseconds);
+        claims.put("auth", "refresh");
 
         return Jwts.builder()
                 .setClaims(claims)
@@ -50,23 +66,32 @@ public class JwtTokenProvider {
                     .parseClaimsJws(token);
             String username = claims.getBody().getSubject();
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-            return new UsernamePasswordAuthenticationToken(userDetails, token, userDetails.getAuthorities());
+            this.authentication = new UsernamePasswordAuthenticationToken(userDetails, token, userDetails.getAuthorities());
+            return authentication;
         } catch (Exception e) {
-            System.out.println(e.getMessage());
             throw new RuntimeException(e.getMessage());
         }
     }
 
-    public List<Role> getRoles(String token) {
+    public String refreshTokenUsername(String refreshToken) {
         try {
             Jws<Claims> claims = Jwts.parserBuilder()
                     .setSigningKey(jwtKeyProvider.getPrivateKey())
                     .build()
-                    .parseClaimsJws(token);
-            return (List<Role>) claims.getBody().get("auth");
+                    .parseClaimsJws(refreshToken);
+            // Return only if token is still valid.
+            if (claims.getBody().getExpiration().after(new Date())) {
+                return claims.getBody().getSubject();
+            } else {
+                throw new RuntimeException("Refresh token is expired.");
+            }
         } catch (Exception e) {
-            System.out.println(e.getMessage());
             throw new RuntimeException(e.getMessage());
         }
+    }
+
+    public Role getRole() {
+        // Get role from authentication.
+        return (Role) authentication.getAuthorities().stream().findFirst().get();
     }
 }
