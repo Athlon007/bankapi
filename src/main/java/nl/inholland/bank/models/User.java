@@ -21,7 +21,6 @@ public class User {
     private String bsn;
     private String phoneNumber;
     private LocalDate dateOfBirth;
-    private UserType userType;
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Account> accounts = new ArrayList<>();
     private String username;
@@ -43,7 +42,6 @@ public class User {
         this.setBsn(bsn);
         this.setPhoneNumber(phoneNumber);
         this.setDateOfBirth(dateOfBirth);
-        this.setUserType(userType);
         this.setUsername(username);
         this.setPassword(password);
     }
