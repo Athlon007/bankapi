@@ -57,6 +57,12 @@ paths:
           required: false
           schema:
             type: string
+        - in: query
+          name: has_no_accounts
+          description: Filter by users that have no accounts
+          required: false
+          schema:
+            type: boolean
       responses:
         "200":
           description: List of users with basic information.
@@ -108,7 +114,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/User"
+                $ref: "#/components/schemas/UserResponse"
               example:
                 id: 1
                 user_type: "client"
@@ -149,7 +155,7 @@ paths:
             application/json:
               schema:
                 oneOf:
-                  - $ref: "#/components/schemas/User"
+                  - $ref: "#/components/schemas/UserResponse"
                   - $ref: "#/components/schemas/UserForClientResponse"
                 example:
                   id: 1
@@ -218,7 +224,7 @@ paths:
             application/json:
               schema:
                 oneOf:
-                  - $ref: "#/components/schemas/User"
+                  - $ref: "#/components/schemas/UserResponse"
                 example:
                   id: 1
                   user_type: "client"
@@ -284,7 +290,7 @@ paths:
         Returns all user limits.<br>
         Employee can edit any user.<br>
         Client can only edit his own limits.<br><br>
-        User Users that are employee-only do NOT have limits. In this case, 400 will be returned.
+        Users that are employee-only and do not have currents accounts can't access it. In this case, 405 will be returned.
       operationId: getUserLimits
       parameters:
         - name: user_id
@@ -300,16 +306,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/UserLimits"
+                $ref: "#/components/schemas/UserLimitsResponse"
               example:
-                daily_withdraw_limit: 1000
-                daily_transfer_limit: 5000
+                transaction_limit: 1000
+                daily_transaction_limit: 5000
+                remaining_daily_transaction_limit: 420.69
         "401":
           $ref: "#/components/responses/Unauthorized"
         "404":
           $ref: "#/components/responses/NotFound"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "405":
+          $ref: "#/components/responses/NotAllowed"
     put:
       tags:
         - User
@@ -338,20 +347,134 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UserLimits"
+              $ref: "#/components/schemas/UserLimitsRequest"
             example:
-              daily_withdraw_limit: 1000
-              daily_transfer_limit: 5000
+              transaction_limit: 1000
+              daily_transaction_limit: 10000
       responses:
         "200":
           description: User limits have been updated
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/UserLimits"
+                $ref: "#/components/schemas/UserLimitsResponse"
               example:
-                daily_withdraw_limit: 1000
-                daily_transfer_limit: 5000
+                transaction_limit: 1000
+                daily_transaction_limit: 10000
+                remaining_daily_transaction_limit: 5420.69
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /accounts:
+    get:
+      tags:
+        - Accounts
+        - Employee
+        - Client
+      security:
+        - bearerAuth: []
+      description: >
+        Returns the list of all accounts belonging to user.<br>
+        For **client**, only his own accounts are visible to him.
+      operationId: getAccounts
+      responses:
+        "200":
+          description: A complete list of all accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AccountForClientResponse"
+                example:
+                  - id: 1
+                    kind: current
+                    iban: "NL00INHL1234567890"
+                    amount: 420.69
+                  - id: 2
+                    kind: savings
+                    iban: "NL00INHL1234567891"
+                    amount: 2137.12
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      tags:
+        - Accounts
+        - Employee
+      security:
+        - bearerAuth: []
+      description: >
+        Creates a new account for "user id" user.
+      operationId: createAccount
+      parameters:
+        - name: user_id
+          required: true
+          in: query
+          description: User ID for which the account is created.
+          schema:
+            type: integer
+            format: int64
+          example: 1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountRequest"
+      responses:
+        "200":
+          description: "Account created!"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountForClientResponse"
+              example:
+                id: 1
+                iban: "NL00INHL1234567890"
+                kind: current
+                amount: 0.00
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /accounts/{account_id}:
+    get:
+      tags:
+        - Accounts
+        - Employee
+        - Client
+      security:
+        - bearerAuth: []
+      description: >
+        Returns details of specified account.<br><br>
+        _Note: **Client** can only see his own user details._
+      operationId: getAccount
+      parameters:
+        - name: account_id
+          in: path
+          description: Account ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: "Account details"
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: "#/components/schemas/UserResponse"
+                example:
+                  id: 1
+                  kind: current
+                  iban: "NL00INHL1234567890"
+                  amount: 100.00
         "401":
           $ref: "#/components/responses/Unauthorized"
         "404":
@@ -640,7 +763,7 @@ paths:
 
 components:
   schemas:
-    User:
+    UserResponse:
       type: object
       properties:
         id:
@@ -658,16 +781,15 @@ components:
         last_name:
           type: string
         bsn:
-          type: integer
-          format: int64
+          type: string
           pattern: "[0-9]{8,9}"
         phone_number:
-          type: integer
-          format: int64
+          type: string
           pattern: "[0-9]{10,10}"
         birth_date:
           type: string
           format: date
+          pattern: "[0-9]{4}-[0-9]{2}-[0-9]{2}"
         accounts:
           type: array
           items:
@@ -708,21 +830,19 @@ components:
       properties:
         email:
           type: string
-        password:
-          type: string
         username:
+          type: string
+        password:
           type: string
         first_name:
           type: string
         last_name:
           type: string
         bsn:
-          type: integer
-          format: int64
+          type: string
           pattern: "[0-9]{8,9}"
         phone_number:
-          type: integer
-          format: int64
+          type: string
           pattern: "[0-9]{10,10}"
         birth_date:
           type: string
@@ -827,17 +947,29 @@ components:
           type: string
         refresh_token:
           type: string
-    UserLimits:
+    UserLimitsRequest:
       type: object
       properties:
-        daily_withdraw_limit:
-          type: number
-          format: int64
-          maximum: 10000
-        daily_transfer_limit:
+        transaction_limit:
           type: number
           format: int64
           maximum: 100000
+        daily_transaction_limit:
+          type: number
+          format: int64
+          maximum: 100000
+    UserLimitsResponse:
+      type: object
+      properties:
+        transaction_limit:
+          type: number
+          format: int64
+        daily_transaction_limit:
+          type: number
+          format: int64
+        remaining_daily_transaction_limit:
+          type: number
+          format: double
   securitySchemes:
     bearerAuth:
       type: http
@@ -847,7 +979,7 @@ components:
     Unauthorized:
       description: "Authorization information is missing or is invalid."
     NotAllowed:
-      description: "User is not allowed to perform this action."  
+      description: "User is not allowed to perform this action."
     BadRequest:
       description: "Request body is incorrect."
     NotFound:
