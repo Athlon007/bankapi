@@ -1,22 +1,14 @@
 package nl.inholland.bank;
 
-import nl.inholland.bank.controllers.UserController;
+import nl.inholland.bank.models.Role;
 import nl.inholland.bank.models.User;
-import nl.inholland.bank.models.UserType;
-import nl.inholland.bank.services.UserService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.util.Assert;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @SpringBootTest
 public class UserTests {
@@ -31,9 +23,9 @@ public class UserTests {
             "12345678",
             "0612345678",
             LocalDate.of(1990, 1, 1),
-            UserType.CUSTOMER,
             "username",
-            "password");
+            "password",
+            List.of(Role.USER));
     }
 
     @Test

@@ -36,9 +36,9 @@ public class User {
                 String bsn,
                 String phoneNumber,
                 LocalDate dateOfBirth,
-                UserType userType,
                 String username,
-                String password) {
+                String password,
+                List<Role> roles) {
         this.setFirstName(firstName);
         this.setLastName(lastName);
         this.setEmail(email);
@@ -47,6 +47,7 @@ public class User {
         this.setDateOfBirth(dateOfBirth);
         this.setUsername(username);
         this.setPassword(password);
+        this.setRoles(roles);
     }
 
     public void setBsn(String bsn) {
