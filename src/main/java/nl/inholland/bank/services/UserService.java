@@ -7,12 +7,11 @@ import nl.inholland.bank.repositories.UserRepository;
 import nl.inholland.bank.utils.JwtTokenProvider;
 import javax.naming.AuthenticationException;
 
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.hibernate.ObjectNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -43,6 +42,10 @@ public class UserService {
         // If user has role ADMIN, return all users.
         // Otherwise, return only users that have accounts.
         return (List<User>)userRepository.findAll();
+    }
+
+    public User getUserById(int id) {
+        return userRepository.findById(id).orElseThrow(()-> new ObjectNotFoundException(id, "User not found"));
     }
 
     public String login(LoginRequest loginRequest) throws AuthenticationException {
@@ -104,6 +107,8 @@ public class UserService {
     }
 
     public Role mapStringToRole(String role) {
+        role = role.toUpperCase();
+
         switch (role) {
             case "ADMIN" -> {
                 return Role.ADMIN;
@@ -118,7 +123,10 @@ public class UserService {
         }
     }
 
-    public Role getUserRole() {
+    public String getBearerUsername() {
+        return jwtTokenProvider.getUsername();
+    }
+    public Role getBearerUserRole() {
         return jwtTokenProvider.getRole();
     }
 }

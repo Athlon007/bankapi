@@ -10,7 +10,7 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(securedEnabled = true)
+@EnableMethodSecurity(securedEnabled = true, prePostEnabled = true)
 public class WebSecurityConfiguration {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {

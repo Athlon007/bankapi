@@ -25,14 +25,16 @@ public class JwtTokenFilter extends OncePerRequestFilter {
     public void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws IOException, ServletException {
         String token = getToken(request);
 
-        // Skip this check, if permitAll() is used in the security configuration
-        if (request.getRequestURI().equals("/auth/login")) {
+        // Skip for login endpoint and POST /users, so that we can create a user.
+        if (
+                (request.getRequestURI().equals("/auth/login")) ||
+                (request.getRequestURI().equals("/users") && request.getMethod().equals("POST"))
+        ) {
             filterChain.doFilter(request, response);
             return;
         }
 
         try {
-            System.out.println("Token: " + token);
             Authentication authentication = jwtTokenProvider.getAuthentication(token);
             SecurityContextHolder.getContext().setAuthentication(authentication);
         } catch (Exception e) {

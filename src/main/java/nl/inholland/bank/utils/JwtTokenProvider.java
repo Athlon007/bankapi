@@ -90,8 +90,21 @@ public class JwtTokenProvider {
         }
     }
 
+    public String getUsername() {
+        // Get username from authentication.
+        if (authentication == null) {
+            return null;
+        }
+
+        return authentication.getName();
+    }
+
     public Role getRole() {
         // Get role from authentication.
+        if (authentication == null) {
+            return null;
+        }
+
         return (Role) authentication.getAuthorities().stream().findFirst().get();
     }
 }

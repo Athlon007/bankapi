@@ -794,6 +794,10 @@ components:
           type: string
           format: date
           pattern: "[0-9]{4}-[0-9]{2}-[0-9]{2}"
+        role:
+          type: enum
+          format: string
+          enum: [admin, employee, client]
         current_account:
           type: object
           properties:

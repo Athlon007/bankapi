@@ -11,6 +11,6 @@ public class ErrorHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public String handleIllegalArgumentException(IllegalArgumentException e) {
-        return "\"error_message\": \"" + e.getMessage() + "\"";
+        return "{\"error_message\": \"" + e.getMessage() + "\"}";
     }
 }
