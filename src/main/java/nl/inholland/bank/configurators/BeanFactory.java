@@ -13,6 +13,7 @@ public class BeanFactory {
         return new BCryptPasswordEncoder();
     }
 
+    @Bean
     public Random random() {
         return new Random();
     }

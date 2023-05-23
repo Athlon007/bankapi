@@ -11,22 +11,26 @@ import java.util.List;
 @Entity
 @Data
 @NoArgsConstructor
+@Table(name = "users")
 public class User {
     @Id
     @GeneratedValue
     private int id;
     private String firstName;
     private String lastName;
+    @Column(unique = true)
     private String email;
     private String bsn;
     private String phoneNumber;
     private LocalDate dateOfBirth;
-    private UserType userType;
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private List<Account> accounts = new ArrayList<>();
+    @OneToOne(cascade = CascadeType.ALL)
+    private Account currentAccount;
+    @OneToOne(cascade = CascadeType.ALL)
+    private Account savingAccount;
+    @Column(unique = true)
     private String username;
     private String password;
-    private List<Role> roles;
+    private Role role;
 
     public User(String firstName,
                 String lastName,
@@ -34,18 +38,18 @@ public class User {
                 String bsn,
                 String phoneNumber,
                 LocalDate dateOfBirth,
-                UserType userType,
                 String username,
-                String password) {
+                String password,
+                Role role) {
         this.setFirstName(firstName);
         this.setLastName(lastName);
         this.setEmail(email);
         this.setBsn(bsn);
         this.setPhoneNumber(phoneNumber);
         this.setDateOfBirth(dateOfBirth);
-        this.setUserType(userType);
         this.setUsername(username);
         this.setPassword(password);
+        this.setRole(role);
     }
 
     public void setBsn(String bsn) {
