@@ -9,6 +9,8 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
+
 @Component
 public class ApplicationDataInitializer implements ApplicationRunner {
     private final UserService userService;
@@ -40,8 +42,8 @@ public class ApplicationDataInitializer implements ApplicationRunner {
                 "employee@example.com",
                 "employee",
                 "password1",
-                "Yo",
-                "Lo",
+                "Goofy",
+                "Ahh",
                 "123456789",
                 "0612345678",
                 "2000-01-01",
@@ -63,6 +65,9 @@ public class ApplicationDataInitializer implements ApplicationRunner {
 
         userService.addUser(userRequest);
 
-        System.out.println(userService.getAllUsers());
+        // Set empty optional to null
+
+
+        System.out.println(userService.getAllUsers(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()));
     }
 }

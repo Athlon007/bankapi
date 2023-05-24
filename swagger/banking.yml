@@ -37,15 +37,15 @@ paths:
         - bearerAuth: []
       parameters:
         - in: query
-          name: skip
-          description: number of records to skip
+          name: page
+          description: Page number of results
           required: false
           schema:
             type: integer
             format: int32
         - in: query
           name: limit
-          description: max number of records to return
+          description: Maximum number of results per page
           required: false
           schema:
             type: integer
@@ -196,7 +196,8 @@ paths:
         Updates the information of the provdied user ID.<br><br>
         **Clients** can only update their own user.<br>
         **Employees** can update anyone's user.<br><br>
-        In both cases, it returns User schema.
+        In both cases, it returns User schema.<br><br>
+        **Note:** Clients cannot update their names, BSN, birth date, or user type.
       operationId: updateUser
       parameters:
         - name: id

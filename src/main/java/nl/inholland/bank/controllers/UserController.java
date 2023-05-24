@@ -5,12 +5,14 @@ import nl.inholland.bank.models.User;
 import nl.inholland.bank.models.dtos.*;
 import nl.inholland.bank.services.UserService;
 import org.hibernate.cfg.NotYetImplementedException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/users")
@@ -22,14 +24,16 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity getAllUsers() {
+    public ResponseEntity getAllUsers(
+            @RequestParam(required = false) Optional<Integer> page,
+            @RequestParam(required = false) Optional<Integer> limit,
+            @RequestParam Optional<String> name,
+            @RequestParam(name = "has_no_accounts") Optional<Boolean> hasNoAccounts
+    ) {
         try {
-            // If USER is requesting, provide less detailed information.
-
-            List<User> users = userService.getAllUsers();
+            List<User> users = userService.getAllUsers(page, limit, name, hasNoAccounts);
 
             if (userService.getBearerUserRole() == Role.USER) {
-                // TODO: Users may only see users that have accounts.
                 List<UserForClientResponse> userForClientResponses = new ArrayList<>();
                 for (User user : users) {
                     UserForClientResponse userForClientResponse = new UserForClientResponse(

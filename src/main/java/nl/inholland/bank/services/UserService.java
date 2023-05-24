@@ -8,17 +8,24 @@ import nl.inholland.bank.utils.JwtTokenProvider;
 import javax.naming.AuthenticationException;
 
 import org.hibernate.ObjectNotFoundException;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class UserService {
     protected final UserRepository userRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+
+    @Value("${bankapi.application.request.limits}")
+    private int defaultGetAllUsersLimit;
 
     public UserService(UserRepository userRepository, BCryptPasswordEncoder bCryptPasswordEncoder, JwtTokenProvider jwtTokenProvider) {
         this.userRepository = userRepository;
@@ -38,10 +45,32 @@ public class UserService {
         return userRepository.findUserByUsername(user.getUsername()).get();
     }
 
-    public List<User> getAllUsers() {
+    public List<User> getAllUsers(Optional<Integer> page, Optional<Integer> limit, Optional<String> name, Optional<Boolean> hasNoAccounts) {
         // If user has role ADMIN, return all users.
         // Otherwise, return only users that have accounts.
-        return (List<User>)userRepository.findAll();
+
+        // Limit may be not present, so we need to check for that.
+        int pageValue = page.orElse(0);
+        int limitValue = limit.orElse(defaultGetAllUsersLimit);
+
+        Role userRole = getBearerUserRole();
+
+        // Declare pageable, so we can limit the results.
+        Pageable pageable = PageRequest.of(pageValue, limitValue);
+
+        // TODO: hasNoAccounts
+
+        if (userRole == Role.ADMIN || userRole == Role.EMPLOYEE) {
+            return name.map(
+                    s -> userRepository.findAllByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(s, s, pageable).getContent())
+                    .orElseGet(() -> userRepository.findAll(pageable).getContent()
+                    );
+        }
+
+        return name.map(
+                s -> userRepository.findAllByRoleAndFirstNameContainingIgnoreCaseOrRoleAndLastNameContainingIgnoreCase(Role.USER, s, Role.USER, s, pageable).getContent())
+                .orElseGet(() -> userRepository.findAllByRole(Role.USER, pageable).getContent()
+                );
     }
 
     public User getUserById(int id) {

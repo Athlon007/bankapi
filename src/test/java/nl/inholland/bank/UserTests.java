@@ -177,4 +177,20 @@ public class UserTests {
         user.setPassword("aA1!12345");
         Assertions.assertEquals("aA1!12345", user.getPassword());
     }
+
+    @Test
+    void usernameCannotBeNullOrEmpty()
+    {
+        Exception exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            user.setUsername(null);
+        });
+
+        Assertions.assertEquals("Username cannot be null or empty", exception.getMessage());
+
+        exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            user.setUsername("");
+        });
+
+        Assertions.assertEquals("Username cannot be null or empty", exception.getMessage());
+    }
 }

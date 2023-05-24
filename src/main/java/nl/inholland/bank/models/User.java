@@ -32,15 +32,17 @@ public class User {
     private String password;
     private Role role;
 
-    public User(String firstName,
-                String lastName,
-                String email,
-                String bsn,
-                String phoneNumber,
-                LocalDate dateOfBirth,
-                String username,
-                String password,
-                Role role) {
+    public User(
+            String firstName,
+            String lastName,
+            String email,
+            String bsn,
+            String phoneNumber,
+            LocalDate dateOfBirth,
+            String username,
+            String password,
+            Role role
+    ) {
         this.setFirstName(firstName);
         this.setLastName(lastName);
         this.setEmail(email);
@@ -127,5 +129,12 @@ public class User {
         }
 
         this.password = password;
+    }
+
+    public void setUsername(String username) {
+        if (username == null || username.length() == 0) {
+            throw new IllegalArgumentException("Username cannot be null or empty");
+        }
+        this.username = username;
     }
 }
