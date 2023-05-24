@@ -98,4 +98,34 @@ public class User {
 
         this.dateOfBirth = dateOfBirth;
     }
+
+    public void setRole(Role role) {
+        if (role == null) {
+            throw new IllegalArgumentException("Role cannot be null");
+        }
+
+        this.role = role;
+    }
+
+    public void setPassword(String password) {
+        if (password == null || password.length() < 8) {
+            throw new IllegalArgumentException("Password must be at least 8 characters long");
+        }
+
+        // Password cannot have repeating character only (e.g. 'aaaaaaaa')
+        if (password.matches("(.)\\1+")) {
+            throw new IllegalArgumentException("Password cannot have repeating characters only");
+        }
+
+        // Password must adhere to the following rules:
+        // - Must contain at least one digit
+        // - Must contain at least one lowercase character
+        // - Must contain at least one uppercase character
+        // - Must contain at least one special character
+        if (!password.matches("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*()_+-={}:;'\",./<>?]).{8,}$")) {
+            throw new IllegalArgumentException("Password must contain at least one digit, one lowercase character, one uppercase character and one special character");
+        }
+
+        this.password = password;
+    }
 }

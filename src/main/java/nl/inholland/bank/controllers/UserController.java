@@ -4,10 +4,9 @@ import nl.inholland.bank.models.Role;
 import nl.inholland.bank.models.User;
 import nl.inholland.bank.models.dtos.*;
 import nl.inholland.bank.services.UserService;
+import org.hibernate.cfg.NotYetImplementedException;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -162,8 +161,13 @@ public class UserController {
 
 
     @PutMapping("/{id}")
-    public ResponseEntity updateUser(@RequestBody UserForAdminRequest userForAdminRequest)
+    public ResponseEntity updateUser(@PathVariable int id, @RequestBody UserForAdminRequest userForAdminRequest)
     {
+        throw new NotYetImplementedException("Updating users is not yet implemented.");
+    }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity deleteUser(@PathVariable int id) {
+        throw new NotYetImplementedException("Deleting users is not yet implemented.");
     }
 }
