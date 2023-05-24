@@ -31,6 +31,8 @@ public class User {
     private String username;
     private String password;
     private Role role;
+    @OneToOne(cascade = CascadeType.ALL)
+    private Limits limits;
 
     public User(
             String firstName,

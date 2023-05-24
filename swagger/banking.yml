@@ -198,6 +198,7 @@ paths:
         **Employees** can update anyone's user.<br><br>
         In both cases, it returns User schema.<br><br>
         **Note:** Clients cannot update their names, BSN, birth date, or user type.
+        **Note:** Employees cannot update user type.
       operationId: updateUser
       parameters:
         - name: id
@@ -292,9 +293,10 @@ paths:
       security:
         - bearerAuth: []
       description: >
-        Returns all user limits.<br>
-        Employee can edit any user.<br>
-        Client can only edit his own limits.<br><br>
+        Returns all limits for specific user.<br>
+        Employee can see all User limits.<br>
+        Client can only see his own limits.<br><br>
+        '**absolute_limit**' refers to minimum money that must always be present on the account.<br><br>
         Users that are employee-only and do not have currents accounts can't access it. In this case, 405 will be returned.
       operationId: getUserLimits
       parameters:
@@ -315,6 +317,7 @@ paths:
               example:
                 transaction_limit: 1000
                 daily_transaction_limit: 5000
+                absolute_limit: 0
                 remaining_daily_transaction_limit: 420.69
         "401":
           $ref: "#/components/responses/Unauthorized"
@@ -333,10 +336,10 @@ paths:
         - bearerAuth: []
       description: >
         Updates the user limits.<br>
-        Employee can edit any user.<br>
-        Client can only edit his own limits.<br><br>
-        <b>'daily_withdraw_limit'</b> refers to the maximum amount of money that can be withdrawn from the user in a day.<br>
-        <b>'daily_transfer_limit'</b> refers to the maximum amount of money that can be transferred from the user in a day.<br>
+        Only Employee can edit User limits.<br><br>
+        <b>'transaction_limit'</b> refers to maximum amount of money that can be transfered in a single transfer.<br>
+        <b>'daily_transfaction_limit'</b> refers to the maximum amount of money that can be transferred from the user during a single day.<br>
+        <b>'absolute_limit'</b> refers to the minimum amount of money that must always be present on the account.<br><br>
         <i>Note: daily transfer limit does not apply to transfers between users of the same user.</i>
       operationId: updateUserLimits
       parameters:
@@ -356,6 +359,7 @@ paths:
             example:
               transaction_limit: 1000
               daily_transaction_limit: 10000
+              absolute_limit: 0
       responses:
         "200":
           description: User limits have been updated
@@ -366,6 +370,7 @@ paths:
               example:
                 transaction_limit: 1000
                 daily_transaction_limit: 10000
+                absolute_limit: 0
                 remaining_daily_transaction_limit: 5420.69
         "401":
           $ref: "#/components/responses/Unauthorized"
@@ -983,6 +988,10 @@ components:
           type: number
           format: int64
           maximum: 100000
+        absolute_limit:
+          type: number
+          format: int64
+          maximum: 100000
     UserLimitsResponse:
       type: object
       properties:
@@ -990,6 +999,9 @@ components:
           type: number
           format: int64
         daily_transaction_limit:
+          type: number
+          format: int64
+        absolute_limit:
           type: number
           format: int64
         remaining_daily_transaction_limit:

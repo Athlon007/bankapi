@@ -5,9 +5,9 @@ import nl.inholland.bank.models.User;
 import nl.inholland.bank.models.dtos.*;
 import nl.inholland.bank.services.UserService;
 import org.hibernate.cfg.NotYetImplementedException;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -173,5 +173,17 @@ public class UserController {
     @DeleteMapping("/{id}")
     public ResponseEntity deleteUser(@PathVariable int id) {
         throw new NotYetImplementedException("Deleting users is not yet implemented.");
+    }
+
+    @GetMapping("/{id}/limits")
+    public ResponseEntity getUserLimits(@PathVariable int id)
+    {
+        throw new NotYetImplementedException("Getting user limits is not yet implemented.");
+    }
+
+    @PutMapping("/{id}/limits")
+    public ResponseEntity updateUserLimits(@PathVariable int id, @Validated @RequestBody UserLimitsRequest userLimitsRequest)
+    {
+        throw new NotYetImplementedException("Updating user limits is not yet implemented.");
     }
 }

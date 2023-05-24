@@ -34,12 +34,29 @@ public class UserService {
     }
 
     public User addUser(UserRequest userRequest) {
+        if (userRepository.findUserByUsername(userRequest.username()).isPresent()) {
+            throw new IllegalArgumentException("Username already exists.");
+        }
+
+        if (!isPasswordValid(userRequest.password())) {
+            throw new IllegalArgumentException("Password does not meet requirements.");
+        }
+
         User user = mapUserRequestToUser(userRequest);
         userRepository.save(user);
-        return userRepository.findUserByUsername(user.getUsername()).get();
+        return userRepository.findUserByUsername(user.getUsername()).orElseThrow(() -> new ObjectNotFoundException(user.getId(), "User"));
     }
 
     public User addUserForAdmin(UserForAdminRequest userForAdminRequest) {
+        if (userRepository.findUserByUsername(userForAdminRequest.username()).isPresent()) {
+            throw new IllegalArgumentException("Username already exists.");
+        }
+
+        if (!isPasswordValid(userForAdminRequest.password())) {
+            throw new IllegalArgumentException("Password does not meet requirements.");
+        }
+
+
         User user = mapUserForAdminRequestToUser(userForAdminRequest);
         userRepository.save(user);
         return userRepository.findUserByUsername(user.getUsername()).get();
@@ -157,5 +174,28 @@ public class UserService {
     }
     public Role getBearerUserRole() {
         return jwtTokenProvider.getRole();
+    }
+
+    // Password validator.
+    public boolean isPasswordValid(String password) {
+        if (password == null || password.length() < 8) {
+            return false;
+        }
+
+        // Password cannot have repeating character only (e.g. 'aaaaaaaa')
+        if (password.matches("(.)\\1+")) {
+            return false;
+        }
+
+        // Password must adhere to the following rules:
+        // - Must contain at least one digit
+        // - Must contain at least one lowercase character
+        // - Must contain at least one uppercase character
+        // - Must contain at least one special character
+        if (!password.matches("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*()_+-={}:;'\",./<>?]).{8,}$")) {
+            return false;
+        }
+
+        return true;
     }
 }

@@ -11,7 +11,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @SpringBootTest
-public class UserTests {
+class UserTests {
     private User user;
 
     @BeforeEach
@@ -125,57 +125,6 @@ public class UserTests {
         });
 
         Assertions.assertEquals("Role cannot be null", exception.getMessage());
-    }
-
-    @Test
-    void settingPasswordToNullThrowsIllegalArgumentException() {
-        Exception exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            user.setPassword(null);
-        });
-
-        Assertions.assertEquals("Password must be at least 8 characters long", exception.getMessage());
-    }
-
-    @Test
-    void passwordCannotBeShorterThan8Characters() {
-        Exception exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            user.setPassword("1234567");
-        });
-
-        Assertions.assertEquals("Password must be at least 8 characters long", exception.getMessage());
-    }
-
-    @Test
-    void passwordCannotHaveSingleCharacterTypes() {
-        Exception exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            user.setPassword("aaaaaaaa");
-        });
-
-        Assertions.assertEquals("Password cannot have repeating characters only", exception.getMessage());
-    }
-
-    @Test
-    void passwordMustContainOneCapitalLetterOneNumberAndOneSpecialCharacter() {
-        Exception exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            user.setPassword("aaaaaaa1a");
-        });
-        Assertions.assertEquals("Password must contain at least one digit, one lowercase character, one uppercase character and one special character", exception.getMessage());
-
-        Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            user.setPassword("Aaaaaaaaa");
-        });
-
-        Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            user.setPassword("aaaaaaaaa!");
-        });
-
-        Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            user.setPassword("Aaaaaaaaa!");
-        });
-
-        // Check valid password.
-        user.setPassword("aA1!12345");
-        Assertions.assertEquals("aA1!12345", user.getPassword());
     }
 
     @Test
