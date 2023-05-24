@@ -1,5 +1,6 @@
 package nl.inholland.bank.services;
 
+import nl.inholland.bank.models.Limits;
 import nl.inholland.bank.models.Role;
 import nl.inholland.bank.models.User;
 import nl.inholland.bank.models.dtos.*;
@@ -27,6 +28,13 @@ public class UserService {
     @Value("${bankapi.application.request.limits}")
     private int defaultGetAllUsersLimit;
 
+    @Value("${bankapi.user.defaults.dailyTransactionLimit}")
+    private int defaultDailyTransactionLimit;
+    @Value("${bankapi.user.defaults.transactionLimit}")
+    private int defaultTransactionLimit;
+    @Value("${bankapi.user.defaults.absoluteLimit}")
+    private int defaultAbsoluteLimit;
+
     public UserService(UserRepository userRepository, BCryptPasswordEncoder bCryptPasswordEncoder, JwtTokenProvider jwtTokenProvider) {
         this.userRepository = userRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
@@ -43,6 +51,7 @@ public class UserService {
         }
 
         User user = mapUserRequestToUser(userRequest);
+        user.setLimits(this.getDefaultLimits());
         userRepository.save(user);
         return userRepository.findUserByUsername(user.getUsername()).orElseThrow(() -> new ObjectNotFoundException(user.getId(), "User"));
     }
@@ -58,8 +67,9 @@ public class UserService {
 
 
         User user = mapUserForAdminRequestToUser(userForAdminRequest);
+        user.setLimits(this.getDefaultLimits());
         userRepository.save(user);
-        return userRepository.findUserByUsername(user.getUsername()).get();
+        return userRepository.findUserByUsername(user.getUsername()).orElseThrow(() -> new ObjectNotFoundException(user.getId(), "User"));
     }
 
     public List<User> getAllUsers(Optional<Integer> page, Optional<Integer> limit, Optional<String> name, Optional<Boolean> hasNoAccounts) {
@@ -76,6 +86,7 @@ public class UserService {
         Pageable pageable = PageRequest.of(pageValue, limitValue);
 
         // TODO: hasNoAccounts
+        // TODO: Calculate remaining limits for today.
 
         if (userRole == Role.ADMIN || userRole == Role.EMPLOYEE) {
             return name.map(
@@ -197,5 +208,13 @@ public class UserService {
         }
 
         return true;
+    }
+
+    private Limits getDefaultLimits() {
+        Limits limits = new Limits();
+        limits.setDailyTransactionLimit(this.defaultDailyTransactionLimit);
+        limits.setTransactionLimit(this.defaultTransactionLimit);
+        limits.setAbsoluteLimit(this.defaultAbsoluteLimit);
+        return limits;
     }
 }
