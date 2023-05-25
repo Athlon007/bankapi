@@ -29,4 +29,8 @@ public class AccountService {
         return account.isActive();
     }
 
+    public Account getAccountById(int id){
+        return null;
+    }
+
 }
