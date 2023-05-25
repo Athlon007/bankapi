@@ -20,7 +20,7 @@ public class Transaction {
     private LocalDate timestamp;
 
     @OneToOne
-    @Column
+    @PrimaryKeyJoinColumn
     private User user;
 
     @OneToOne

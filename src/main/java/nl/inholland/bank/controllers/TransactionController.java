@@ -3,6 +3,7 @@ package nl.inholland.bank.controllers;
 import nl.inholland.bank.models.Account;
 import nl.inholland.bank.models.Transaction;
 import nl.inholland.bank.models.User;
+import nl.inholland.bank.models.dtos.ExceptionResponse;
 import nl.inholland.bank.models.dtos.TransactionDTO.WithdrawRequest;
 import nl.inholland.bank.models.dtos.TransactionDTO.TransactionResponse;
 import nl.inholland.bank.services.AccountService;
@@ -35,10 +36,10 @@ public class TransactionController {
     }
 
     @PostMapping("/withdraw")
-    public ResponseEntity<TransactionResponse> withdrawMoney(@RequestParam int user_id,
-                                                             @RequestParam int account_id,
-                                                             @RequestBody WithdrawRequest request){
-        try{
+    public ResponseEntity<Object> withdrawMoney(@RequestParam int user_id,
+                                                @RequestParam int account_id,
+                                                             @RequestBody WithdrawRequest request) {
+        try {
             // Retrieve the user and account based on the IDs
             User user = userService.getUserById(user_id);
             Account account = accountService.getAccountById(account_id);
@@ -47,6 +48,8 @@ public class TransactionController {
             Transaction transaction = transactionService.withdrawMoney(user, account, request.amount());
 
             // Prepare the response
+            assert transaction.getAccountSender() != null;
+            assert transaction.getAccountReceiver() != null;
             TransactionResponse response = new TransactionResponse(
                     transaction.getId(),
                     transaction.getAccountSender().getIBAN(),
@@ -59,10 +62,12 @@ public class TransactionController {
             // Return the response
             return ResponseEntity.ok(response);
         } catch (InsufficientResourcesException e) {
-            throw new RuntimeException(e);
+            ResponseEntity.status(400).body(new ExceptionResponse("Account does not have enough balance"));
         } catch (AccountNotFoundException e) {
-            throw new RuntimeException(e);
+            ResponseEntity.status(400).body(new ExceptionResponse("Account does not exist"));
         }
+
+        return ResponseEntity.status(500).body(new ExceptionResponse("Something went wrong"));
     }
 
 

@@ -10,5 +10,5 @@ import java.util.Optional;
 
 @Repository
 public interface TransactionRepository extends CrudRepository<Transaction, Long> {
-    Optional<Transaction> findTransactionById(long id);
+
 }
