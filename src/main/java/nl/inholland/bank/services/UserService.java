@@ -1,5 +1,6 @@
 package nl.inholland.bank.services;
 
+import nl.inholland.bank.models.Limits;
 import nl.inholland.bank.models.Role;
 import nl.inholland.bank.models.User;
 import nl.inholland.bank.models.dtos.*;
@@ -7,19 +8,32 @@ import nl.inholland.bank.repositories.UserRepository;
 import nl.inholland.bank.utils.JwtTokenProvider;
 import javax.naming.AuthenticationException;
 
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.hibernate.ObjectNotFoundException;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class UserService {
     protected final UserRepository userRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+
+    @Value("${bankapi.application.request.limits}")
+    private int defaultGetAllUsersLimit;
+
+    @Value("${bankapi.user.defaults.dailyTransactionLimit}")
+    private int defaultDailyTransactionLimit;
+    @Value("${bankapi.user.defaults.transactionLimit}")
+    private int defaultTransactionLimit;
+    @Value("${bankapi.user.defaults.absoluteLimit}")
+    private int defaultAbsoluteLimit;
 
     public UserService(UserRepository userRepository, BCryptPasswordEncoder bCryptPasswordEncoder, JwtTokenProvider jwtTokenProvider) {
         this.userRepository = userRepository;
@@ -28,21 +42,67 @@ public class UserService {
     }
 
     public User addUser(UserRequest userRequest) {
+        if (userRepository.findUserByUsername(userRequest.username()).isPresent()) {
+            throw new IllegalArgumentException("Username already exists.");
+        }
+
+        if (!isPasswordValid(userRequest.password())) {
+            throw new IllegalArgumentException("Password does not meet requirements.");
+        }
+
         User user = mapUserRequestToUser(userRequest);
+        user.setLimits(this.getDefaultLimits());
         userRepository.save(user);
-        return userRepository.findUserByUsername(user.getUsername()).get();
+        return userRepository.findUserByUsername(user.getUsername()).orElseThrow(() -> new ObjectNotFoundException(user.getId(), "User"));
     }
 
     public User addUserForAdmin(UserForAdminRequest userForAdminRequest) {
+        if (userRepository.findUserByUsername(userForAdminRequest.username()).isPresent()) {
+            throw new IllegalArgumentException("Username already exists.");
+        }
+
+        if (!isPasswordValid(userForAdminRequest.password())) {
+            throw new IllegalArgumentException("Password does not meet requirements.");
+        }
+
+
         User user = mapUserForAdminRequestToUser(userForAdminRequest);
+        user.setLimits(this.getDefaultLimits());
         userRepository.save(user);
-        return userRepository.findUserByUsername(user.getUsername()).get();
+        return userRepository.findUserByUsername(user.getUsername()).orElseThrow(() -> new ObjectNotFoundException(user.getId(), "User"));
     }
 
-    public List<User> getAllUsers() {
+    public List<User> getAllUsers(Optional<Integer> page, Optional<Integer> limit, Optional<String> name, Optional<Boolean> hasNoAccounts) {
         // If user has role ADMIN, return all users.
         // Otherwise, return only users that have accounts.
-        return (List<User>)userRepository.findAll();
+
+        // Limit may be not present, so we need to check for that.
+        int pageValue = page.orElse(0);
+        int limitValue = limit.orElse(defaultGetAllUsersLimit);
+
+        Role userRole = getBearerUserRole();
+
+        // Declare pageable, so we can limit the results.
+        Pageable pageable = PageRequest.of(pageValue, limitValue);
+
+        // TODO: hasNoAccounts
+        // TODO: Calculate remaining limits for today.
+
+        if (userRole == Role.ADMIN || userRole == Role.EMPLOYEE) {
+            return name.map(
+                    s -> userRepository.findAllByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(s, s, pageable).getContent())
+                    .orElseGet(() -> userRepository.findAll(pageable).getContent()
+                    );
+        }
+
+        return name.map(
+                s -> userRepository.findAllByRoleAndFirstNameContainingIgnoreCaseOrRoleAndLastNameContainingIgnoreCase(Role.USER, s, Role.USER, s, pageable).getContent())
+                .orElseGet(() -> userRepository.findAllByRole(Role.USER, pageable).getContent()
+                );
+    }
+
+    public User getUserById(int id) {
+        return userRepository.findById(id).orElseThrow(()-> new ObjectNotFoundException(id, "User not found"));
     }
 
     public String login(LoginRequest loginRequest) throws AuthenticationException {
@@ -104,6 +164,8 @@ public class UserService {
     }
 
     public Role mapStringToRole(String role) {
+        role = role.toUpperCase();
+
         switch (role) {
             case "ADMIN" -> {
                 return Role.ADMIN;
@@ -118,7 +180,41 @@ public class UserService {
         }
     }
 
-    public Role getUserRole() {
+    public String getBearerUsername() {
+        return jwtTokenProvider.getUsername();
+    }
+    public Role getBearerUserRole() {
         return jwtTokenProvider.getRole();
+    }
+
+    // Password validator.
+    public boolean isPasswordValid(String password) {
+        if (password == null || password.length() < 8) {
+            return false;
+        }
+
+        // Password cannot have repeating character only (e.g. 'aaaaaaaa')
+        if (password.matches("(.)\\1+")) {
+            return false;
+        }
+
+        // Password must adhere to the following rules:
+        // - Must contain at least one digit
+        // - Must contain at least one lowercase character
+        // - Must contain at least one uppercase character
+        // - Must contain at least one special character
+        if (!password.matches("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*()_+-={}:;'\",./<>?]).{8,}$")) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private Limits getDefaultLimits() {
+        Limits limits = new Limits();
+        limits.setDailyTransactionLimit(this.defaultDailyTransactionLimit);
+        limits.setTransactionLimit(this.defaultTransactionLimit);
+        limits.setAbsoluteLimit(this.defaultAbsoluteLimit);
+        return limits;
     }
 }

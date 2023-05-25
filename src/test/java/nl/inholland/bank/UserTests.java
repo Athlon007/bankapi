@@ -11,7 +11,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @SpringBootTest
-public class UserTests {
+class UserTests {
     private User user;
 
     @BeforeEach
@@ -24,7 +24,7 @@ public class UserTests {
             "0612345678",
             LocalDate.of(1990, 1, 1),
             "username",
-            "password",
+            "Password1!",
             Role.USER);
     }
 
@@ -116,5 +116,30 @@ public class UserTests {
         });
 
         Assertions.assertEquals("Date of birth cannot be in the future", exception.getMessage());
+    }
+
+    @Test
+    void settingRoleToNullThrowsIllegalArgumentException() {
+        Exception exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            user.setRole(null);
+        });
+
+        Assertions.assertEquals("Role cannot be null", exception.getMessage());
+    }
+
+    @Test
+    void usernameCannotBeNullOrEmpty()
+    {
+        Exception exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            user.setUsername(null);
+        });
+
+        Assertions.assertEquals("Username cannot be null or empty", exception.getMessage());
+
+        exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            user.setUsername("");
+        });
+
+        Assertions.assertEquals("Username cannot be null or empty", exception.getMessage());
     }
 }

@@ -12,7 +12,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
-import java.util.List;
 
 @Component
 public class JwtTokenProvider {
@@ -90,8 +89,23 @@ public class JwtTokenProvider {
         }
     }
 
+    public String getUsername() {
+        // Get username from authentication.
+        if (authentication == null) {
+            return null;
+        }
+
+        return authentication.getName();
+    }
+
     public Role getRole() {
         // Get role from authentication.
-        return (Role) authentication.getAuthorities().stream().findFirst().get();
+        if (authentication == null) {
+            return null;
+        }
+
+        return (Role) authentication.getAuthorities().stream().findFirst().orElseThrow(
+                () -> new RuntimeException("No role found in authentication.")
+        );
     }
 }
