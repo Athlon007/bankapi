@@ -77,15 +77,16 @@ public class ApplicationDataInitializer implements ApplicationRunner {
 
 
         // Account
-
         AccountRequest accountRequest = new AccountRequest(
                 "NL01INHO0000000001",
                 0,
                 "EURO",
                 "CURRENT",
-                "1"
+                "3"
         );
 
         Account account = accountService.addAccount(accountRequest, admin);
+
+        System.out.println(accountService.getAllAccountsFromUser(Optional.empty(), Optional.empty(), Optional.empty(), admin));
     }
 }

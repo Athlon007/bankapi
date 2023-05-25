@@ -7,14 +7,22 @@ import nl.inholland.bank.models.User;
 import nl.inholland.bank.models.dtos.AccountDTO.AccountRequest;
 import nl.inholland.bank.repositories.AccountRepository;
 import org.hibernate.ObjectNotFoundException;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class AccountService {
     AccountRepository accountRepository;
 
-    public AccountService(AccountRepository accountRepository){
+    UserService userService;
+
+    public AccountService(AccountRepository accountRepository, UserService userService) {
         this.accountRepository = accountRepository;
+        this.userService = userService;
     }
 
     public Account createAccount(User user, String IBAN, AccountType accountType, CurrencyType currencyType){
@@ -42,11 +50,26 @@ public class AccountService {
     }
 
     public Account addAccount(AccountRequest accountRequest, User user){
-        Account account = mapAccountRequestToAccount(accountRequest, user);
+        Account account = mapAccountRequestToAccount(accountRequest, userService.getUserById(3));
 
-        accountRepository.save(account);
+        return accountRepository.save(account);
+    }
 
-        return accountRepository.findAccountByIBAN(account.getIBAN()).orElseThrow(() -> new ObjectNotFoundException(account.getId(), "Account"));
+    // Get all accounts from a user
+    public List<Account> getAllAccountsFromUser(Optional<Integer> page, Optional<Integer> limit, Optional<String> IBAN, User user){
+        int pageNumber = page.orElse(0);
+        int limitNumber = limit.orElse(10);
+
+        Pageable pageable = PageRequest.of(pageNumber, limitNumber);
+
+        if(IBAN.isPresent()){
+            return IBAN.map(
+                i -> accountRepository.findAllAccountsByUser(user, pageable).getContent()
+            ).orElseThrow(() -> new ObjectNotFoundException(IBAN, "IBAN"));
+        }
+        else {
+            return accountRepository.findAllAccountsByUser(user, pageable).getContent();
+        }
     }
 
     public Account mapAccountRequestToAccount(AccountRequest accountRequest, User user){
@@ -55,7 +78,7 @@ public class AccountService {
         account.setIBAN(accountRequest.IBAN());
         account.setType(mapAccountTypeToString(accountRequest.accountType()));
         account.setCurrencyType(mapCurrencyTypeToString(accountRequest.currencyType()));
-        account.setBalance(0);
+        account.setBalance(accountRequest.balance());
         account.setActive(true);
 
         return account;
