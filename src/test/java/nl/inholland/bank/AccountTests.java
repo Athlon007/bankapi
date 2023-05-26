@@ -106,4 +106,15 @@ public class AccountTests {
             throw new IllegalArgumentException("User cannot be null");
         });
     }
+
+    @Test
+    void deactivatedAccountCannotBeUsedInTransactions(){
+        account.setBalance(100);
+
+        account.setActive(false);
+
+        Assertions.assertFalse(account.isActive());
+
+
+    }
 }

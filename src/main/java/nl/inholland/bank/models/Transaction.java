@@ -39,4 +39,22 @@ public class Transaction {
 
     @Column
     private TransactionType transactionType;
+
+    public Transaction(User user, Account AccountSender, Account AccountReceiver, double amount, CurrencyType currencyType, TransactionType transactionType) {
+        this.timestamp = LocalDate.now();
+        this.user = user;
+        this.AccountSender = AccountSender;
+        this.AccountReceiver = AccountReceiver;
+        this.amount = amount;
+        this.currencyType = currencyType;
+        this.transactionType = transactionType;
+    }
+
+    public void setAmount(double amount) {
+        if (amount <= 0) {
+            throw new IllegalArgumentException("Amount cannot be negative or zero");
+        }
+
+        this.amount = amount;
+    }
 }
