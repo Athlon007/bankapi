@@ -45,8 +45,8 @@ public class AccountService {
         return null;
     }
 
-    public Account addAccount(AccountRequest accountRequest, User user){
-        Account account = mapAccountRequestToAccount(accountRequest, userService.getUserById(3));
+    public Account addAccount(AccountRequest accountRequest){
+        Account account = mapAccountRequestToAccount(accountRequest);
 
         return accountRepository.save(account);
     }
@@ -57,8 +57,9 @@ public class AccountService {
             return accountRepository.findAllByUser(user);
     }
 
-    public Account mapAccountRequestToAccount(AccountRequest accountRequest, User user){
+    public Account mapAccountRequestToAccount(AccountRequest accountRequest){
         Account account = new Account();
+        User user = userService.getUserById(Integer.parseInt(accountRequest.userId()));
         account.setUser(user);
         account.setIBAN(accountRequest.IBAN());
         account.setType(mapAccountTypeToString(accountRequest.accountType()));
@@ -82,7 +83,7 @@ public class AccountService {
         switch (accountType){
             case "CURRENT":
                 return AccountType.CURRENT;
-            case "SAVINGS":
+            case "SAVING":
                 return AccountType.SAVING;
             default:
                 return AccountType.CURRENT;

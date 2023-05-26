@@ -1,6 +1,7 @@
 package nl.inholland.bank.controllers;
 
 import nl.inholland.bank.models.Account;
+import nl.inholland.bank.models.Role;
 import nl.inholland.bank.models.User;
 import nl.inholland.bank.models.dtos.AccountDTO.AccountRequest;
 import nl.inholland.bank.models.dtos.AccountDTO.AccountResponse;
@@ -10,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Controller
@@ -28,7 +30,6 @@ public class AccountController {
             @PathVariable int id
     ) {
         try {
-
             User user = userService.getUserById(id);
 
             // Employee/Admin and the owner of the account can see the account
@@ -42,8 +43,19 @@ public class AccountController {
                 // Return a custom response when there are no accounts
                 return ResponseEntity.status(404).body("No accounts found");
             } else {
+                List<AccountResponse> accountResponses = new ArrayList<>();
                 // Return the list of accounts
-                return ResponseEntity.status(200).body(accounts);
+                for (Account account : accounts) {
+                    AccountResponse accountResponse = new AccountResponse(
+                            account.getId(),
+                            account.getIBAN(),
+                            account.getType().toString(),
+                            account.getCurrencyType().toString(),
+                            account.getBalance()
+                    );
+                    accountResponses.add(accountResponse);
+                }
+                return ResponseEntity.status(200).body(accountResponses);
             }
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -53,14 +65,25 @@ public class AccountController {
 
     @PostMapping
     public ResponseEntity addAccount(@RequestBody AccountRequest accountRequest) {
-        Account account = accountService.addAccount(accountRequest, userService.getUserById(3));
-        AccountResponse accountResponse = new AccountResponse(
-                account.getId(),
-                account.getIBAN(),
-                account.getType().toString(),
-                account.getCurrencyType().toString(),
-                account.getBalance()
-        );
-        return ResponseEntity.status(201).body(accountResponse);
+        if (userService.getBearerUserRole() != Role.EMPLOYEE) {
+            return ResponseEntity.status(401).body("Unauthorized");
+        } else {
+            try{
+                Account account = accountService.addAccount(accountRequest);
+
+                AccountResponse accountResponse = new AccountResponse(
+                        account.getId(),
+                        account.getIBAN(),
+                        account.getType().toString(),
+                        account.getCurrencyType().toString(),
+                        account.getBalance()
+                );
+
+                return ResponseEntity.status(201).body(accountResponse);
+            }
+            catch (Exception e){
+                return ResponseEntity.badRequest().body(e.getMessage());
+            }
+        }
     }
 }
