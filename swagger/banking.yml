@@ -977,13 +977,13 @@ components:
         transaction_limit:
           type: number
           format: double
+          maximum: 1000000
           minimum: 0
-          maximium: 1000000
         daily_transaction_limit:
           type: number
           format: double
+          maximum: 1000000
           minimum: 0
-          maximium: 1000000
         absolute_limit:
           type: number
           format: double
