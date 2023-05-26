@@ -982,28 +982,28 @@ components:
       properties:
         transaction_limit:
           type: number
-          format: int64
+          format: double
           maximum: 100000
         daily_transaction_limit:
           type: number
-          format: int64
+          format: double
           maximum: 100000
         absolute_limit:
           type: number
-          format: int64
+          format: double
           maximum: 100000
     UserLimitsResponse:
       type: object
       properties:
         transaction_limit:
           type: number
-          format: int64
+          format: double
         daily_transaction_limit:
           type: number
-          format: int64
+          format: double
         absolute_limit:
           type: number
-          format: int64
+          format: double
         remaining_daily_transaction_limit:
           type: number
           format: double
