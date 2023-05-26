@@ -69,15 +69,22 @@ public class TransactionService {
         return false;
     }
 
-    public void transferMoney(User user, Account accountSender, Account accountReceiver, double amount, CurrencyType currencyType){
-        // Check what account types are
+    public void transferMoney(User user, Account accountSender, Account accountReceiver, CurrencyType currencyType, double amount) {
+        // TODO: Retrieve user that owns the account
+        // If any account is a saving account...
         if (accountSender.getType() == AccountType.SAVING || accountReceiver.getType() == AccountType.SAVING) {
+            // Check if both the sender and receiver account belong to the user performing the transaction.
             if (accountSender.getUser() == accountReceiver.getUser()) {
-                System.out.println("You can transfer money to your own savings account");
-                return;
+                createTransaction(user, accountSender, accountReceiver, currencyType, amount);
+            } else {
+                throw new IllegalArgumentException("You can't transfer from/to a saving account that doesn't belong to you.");
             }
-            System.out.println("You can't transfer money from between these accounts");
-            return;
+        } else { // Proceed with transaction, check if the user (sender) has enough funds
+            if ((accountSender.getBalance() - amount) >= user.getLimits().getAbsoluteLimit()) {
+                createTransaction(user, accountSender, accountReceiver, currencyType, amount);
+            } else {
+                throw new IllegalArgumentException("Insufficient funds to proceed with the transaction.");
+            }
         }
     }
 

@@ -11,10 +11,7 @@ import nl.inholland.bank.services.TransactionService;
 import nl.inholland.bank.services.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import javax.naming.InsufficientResourcesException;
 import javax.security.auth.login.AccountNotFoundException;
@@ -70,5 +67,30 @@ public class TransactionController {
         return ResponseEntity.status(500).body(new ExceptionResponse("Something went wrong"));
     }
 
+    @PostMapping("/transactions")
+    public ResponseEntity<Object> transferMoney(@RequestParam String sender_iban,
+                                                @RequestParam String receiver_iban,
+                                                @RequestParam double amount,
+                                                @RequestParam String description)
+    {
+        try {
+            return ResponseEntity.status(201).body("info");
+        } catch (Exception e)
+        {
+            return ResponseEntity.badRequest().body(
+                    new ExceptionResponse("An error occurred...."));
+        }
+    }
 
+    @GetMapping("/transactions")
+    public ResponseEntity<Object> getAllTransactions()
+    {
+        try {
+            return ResponseEntity.status(201).body("info");
+        } catch (Exception e)
+        {
+            return ResponseEntity.badRequest().body(
+                    new ExceptionResponse("An error occurred trying to retrieve the transactions."));
+        }
+    }
 }
