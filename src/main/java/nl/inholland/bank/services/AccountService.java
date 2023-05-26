@@ -98,7 +98,7 @@ public class AccountService {
         account.setIBAN(accountRequest.IBAN());
         account.setType(mapAccountTypeToString(accountRequest.accountType()));
         account.setCurrencyType(mapCurrencyTypeToString(accountRequest.currencyType()));
-        account.setBalance(accountRequest.balance());
+        account.setBalance(0);
         account.setActive(true);
 
         return account;
