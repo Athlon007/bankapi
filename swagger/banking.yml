@@ -701,7 +701,9 @@ paths:
         - Authentication
         - Guest
       description: >
-        Upon successful login, returns authentication token
+        Upon successful login, returns authentication token and refresh token.<br<br>
+        **access_token** is valid for 6 minutes.<br>
+        **refresh_token** is valid for 60 minutes. After using it, it will be invalidated.
       operationId: login
       requestBody:
         content:
@@ -715,7 +717,7 @@ paths:
         "200":
           description: >
             User has been logged in successfully!<br><br>
-            **Note:** Refresh token is valid only for the next 15 minutes. Please refer to /auth/refresh.
+            **Note:** Refresh token is valid only for the next 6 minutes. Please refer to /auth/refresh.
           content:
             application/json:
               schema:
@@ -736,11 +738,9 @@ paths:
         - Employee
         - Client
       description: >
-        Returns a new 'auth_token" and 'refresh_token'.<br>
-        **Important:** refresh_token CANNOT be expired.
+        Returns a new 'access_token" and 'refresh_token'.<br>
+        **Important:** after using the refresh_token, it will be invalidated.
       operationId: refresh
-      security:
-        - bearerAuth: []
       requestBody:
         content:
           application/json:
