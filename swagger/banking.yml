@@ -194,11 +194,10 @@ paths:
         - bearerAuth: []
       description: >
         Updates the information of the provdied user ID.<br><br>
-        **Clients** can only update their own user.<br>
+        **Users** can only update their own user profile.<br>
         **Employees** can update anyone's user.<br><br>
-        In both cases, it returns User schema.<br><br>
-        **Note:** Clients cannot update their names, BSN, birth date, or user type.
-        **Note:** Employees cannot update user type.
+        In both cases, it returns UserResponse schema.<br><br>
+        **Note:** Clients and Employees cannot update user role.
       operationId: updateUser
       parameters:
         - name: id
