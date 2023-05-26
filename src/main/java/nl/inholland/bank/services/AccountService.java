@@ -46,16 +46,18 @@ public class AccountService {
     }
 
     public Account addAccount(AccountRequest accountRequest){
-        if (mapAccountTypeToString(accountRequest.accountType()) == AccountType.CURRENT){
-            if (doesUserHaveCurrentAccount(userService.getUserById(Integer.parseInt(accountRequest.userId())))){
+        User user = userService.getUserById(Integer.parseInt(accountRequest.userId()));
+        AccountType accountType = mapAccountTypeToString(accountRequest.accountType());
+
+        if(accountType == AccountType.CURRENT){
+            if (doesUserHaveAccountType(user, AccountType.CURRENT)){
                 throw new IllegalArgumentException("User already has a current account");
             }
-        }
-        if (mapAccountTypeToString(accountRequest.accountType()) == AccountType.SAVING){
-            if (!doesUserHaveCurrentAccount(userService.getUserById(Integer.parseInt(accountRequest.userId())))){
-                throw new IllegalArgumentException("You cannot create a saving account without a current account");
+        } else if (accountType == AccountType.SAVING) {
+            if(!doesUserHaveAccountType(user, AccountType.CURRENT)){
+                throw new IllegalArgumentException("User does not have a current account");
             }
-            if (doesUserHaveSavingAccount(userService.getUserById(Integer.parseInt(accountRequest.userId())))){
+            if(doesUserHaveAccountType(user, AccountType.SAVING)){
                 throw new IllegalArgumentException("User already has a saving account");
             }
         }
@@ -71,20 +73,30 @@ public class AccountService {
             return accountRepository.findAllByUser(user);
     }
 
-    public boolean doesUserHaveCurrentAccount(User user){
-        List<Account> accounts = getAccountsByUserId(user);
-        for (Account account : accounts) {
-            if (account.getType() == AccountType.CURRENT){
-                return true;
-            }
-        }
-        return false;
-    }
+//    public boolean doesUserHaveCurrentAccount(User user){
+//        List<Account> accounts = getAccountsByUserId(user);
+//        for (Account account : accounts) {
+//            if (account.getType() == AccountType.CURRENT){
+//                return true;
+//            }
+//        }
+//        return false;
+//    }
+//
+//    public boolean doesUserHaveSavingAccount(User user){
+//        List<Account> accounts = getAccountsByUserId(user);
+//        for (Account account : accounts) {
+//            if (account.getType() == AccountType.SAVING){
+//                return true;
+//            }
+//        }
+//        return false;
+//    }
 
-    public boolean doesUserHaveSavingAccount(User user){
+    public boolean doesUserHaveAccountType(User user, AccountType accountType){
         List<Account> accounts = getAccountsByUserId(user);
         for (Account account : accounts) {
-            if (account.getType() == AccountType.SAVING){
+            if (account.getType() == accountType){
                 return true;
             }
         }
