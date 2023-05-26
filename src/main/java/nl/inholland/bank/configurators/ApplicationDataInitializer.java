@@ -67,7 +67,6 @@ public class ApplicationDataInitializer implements ApplicationRunner {
                 "0612345678",
                 "2000-01-01"
         );
-
         userService.addUser(userRequest);
 
         // Set empty optional to null

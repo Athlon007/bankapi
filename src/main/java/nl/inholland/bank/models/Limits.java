@@ -14,9 +14,9 @@ public class Limits {
     @Id
     @GeneratedValue
     private Integer id;
-    private int transactionLimit;
-    private int dailyTransactionLimit;
-    private int absoluteLimit; // Minimum balance
+    private double transactionLimit;
+    private double dailyTransactionLimit;
+    private double absoluteLimit; // Minimum balance
     @Transient
     // Calculated by the service
     private double remainingDailyTransactionLimit;
