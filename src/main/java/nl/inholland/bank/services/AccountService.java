@@ -52,6 +52,8 @@ public class AccountService {
     public Account addAccount(AccountRequest accountRequest, User user){
         Account account = mapAccountRequestToAccount(accountRequest, userService.getUserById(3));
 
+        userService.assignAccountToUser(user, account);
+
         return accountRepository.save(account);
     }
 

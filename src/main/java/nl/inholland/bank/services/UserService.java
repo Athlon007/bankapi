@@ -1,13 +1,12 @@
 package nl.inholland.bank.services;
 
-import nl.inholland.bank.models.Limits;
-import nl.inholland.bank.models.Role;
-import nl.inholland.bank.models.User;
+import nl.inholland.bank.models.*;
 import nl.inholland.bank.models.dtos.AuthDTO.LoginRequest;
 import nl.inholland.bank.models.dtos.AuthDTO.RefreshTokenRequest;
 import nl.inholland.bank.models.dtos.AuthDTO.jwt;
 import nl.inholland.bank.models.dtos.UserDTO.UserForAdminRequest;
 import nl.inholland.bank.models.dtos.UserDTO.UserRequest;
+import nl.inholland.bank.models.exceptions.OperationNotAllowedException;
 import nl.inholland.bank.repositories.UserRepository;
 import nl.inholland.bank.utils.JwtTokenProvider;
 import javax.naming.AuthenticationException;
@@ -18,6 +17,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.MethodNotAllowedException;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -108,8 +108,8 @@ public class UserService {
 
         // FIXME: This should return all users that HAVE accounts, even if they are an employee.
         return name.map(
-                s -> userRepository.findAllByRoleAndFirstNameContainingIgnoreCaseOrRoleAndLastNameContainingIgnoreCase(Role.USER, s, Role.USER, s, pageable).getContent())
-                .orElseGet(() -> userRepository.findAllByRole(Role.USER, pageable).getContent()
+                s -> userRepository.findAllByCurrentAccountIsNotNullAndActiveIsTrueAndFirstNameContainingIgnoreCaseOrCurrentAccountIsNotNullAndActiveIsTrueAndLastNameContainingIgnoreCase(name.get(), name.get(), pageable).getContent())
+                .orElseGet(() -> userRepository.findAllByCurrentAccountIsNotNullAndActiveIsTrue(pageable).getContent()
                 );
     }
 
@@ -120,6 +120,9 @@ public class UserService {
     public String login(LoginRequest loginRequest) throws AuthenticationException {
         User user = userRepository.findUserByUsername(loginRequest.username())
                 .orElseThrow(() -> new AuthenticationException("Username not found"));
+
+        if (!user.isActive())
+            throw new AuthenticationException("User has been deactivated. Please contact customer support.");
 
         if (!bCryptPasswordEncoder.matches(loginRequest.password(), user.getPassword()))
             throw new AuthenticationException("Password incorrect");
@@ -221,6 +224,10 @@ public class UserService {
     }
 
     public User updateUser(int id, UserRequest userRequest) throws AuthenticationException {
+        if (userRequest instanceof UserForAdminRequest && getBearerUserRole() != Role.ADMIN) {
+            throw new AuthenticationException("You are not authorized to change the role of a user.");
+        }
+
         User user = userRepository.findById(id).orElseThrow(()-> new ObjectNotFoundException(id, "User not found"));
 
         String currentUserName = getBearerUsername();
@@ -238,6 +245,42 @@ public class UserService {
         User updatedUser = mapUserRequestToUser(userRequest);
         updatedUser.setId(id);
 
-        return userRepository.save(user);
+        return userRepository.save(updatedUser);
+    }
+
+    public void deleteUser(int id) throws AuthenticationException, OperationNotAllowedException {
+        User user = userRepository.findById(id).orElseThrow(()-> new ObjectNotFoundException(id, "User not found"));
+
+        // Check if user has savings or checking accounts.
+        // Users with any of these accounts cannot be deleted, but they can be deactivated.
+        if (user.getCurrentAccount() != null || user.getSavingAccount() != null) {
+            user.setActive(false);
+            userRepository.save(user);
+            return;
+        }
+
+        String currentUserName = getBearerUsername();
+        Role currentUserRole = getBearerUserRole();
+
+        // Users can only delete their own account.
+        // Employees can delete all accounts, except for admins.
+        if (
+                currentUserRole == Role.USER && !user.getUsername().equals(currentUserName)
+                || currentUserRole == Role.EMPLOYEE && user.getRole() == Role.ADMIN
+        ) {
+            throw new AuthenticationException("You are not authorized to delete this user.");
+        }
+
+        userRepository.delete(user);
+    }
+
+    protected void assignAccountToUser(User user, Account account) {
+        if (account.getType() == AccountType.CURRENT) {
+            user.setCurrentAccount(account);
+        } else if (account.getType() == AccountType.SAVING) {
+            user.setSavingAccount(account);
+        }
+
+        userRepository.save(user);
     }
 }

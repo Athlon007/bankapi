@@ -44,6 +44,8 @@ public class User {
     private Role role;
     @OneToOne(cascade = CascadeType.ALL)
     private Limits limits;
+    @NonNull
+    private boolean active = true; // User is active by default
 
     public User(
             String firstName,

@@ -1,5 +1,6 @@
 package nl.inholland.bank.utils;
 
+import org.hibernate.ObjectNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -46,6 +47,13 @@ public class ErrorHandler {
     @ExceptionHandler(AuthenticationException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public String handleAuthenticationException(AuthenticationException e) {
+        writeToFile(e);
+        return "{\"error_message\": \"" + e.getMessage() + "\"}";
+    }
+
+    @ExceptionHandler(ObjectNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public String handleObjectNotFoundException(ObjectNotFoundException e) {
         writeToFile(e);
         return "{\"error_message\": \"" + e.getMessage() + "\"}";
     }

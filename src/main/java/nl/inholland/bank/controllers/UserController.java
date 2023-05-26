@@ -43,9 +43,7 @@ public class UserController {
                             user.getId(),
                             user.getFirstName(),
                             user.getLastName(),
-                            //user.getIban()
-                            // TODO: Get IBAN from account
-                            "IBAN"
+                            user.getCurrentAccount().getIBAN()
                     );
 
                     userForClientResponses.add(userForClientResponse);
@@ -194,8 +192,9 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity deleteUser(@PathVariable int id) {
-        throw new NotYetImplementedException("Deleting users is not yet implemented.");
+    public ResponseEntity deleteUser(@PathVariable int id) throws AuthenticationException {
+        userService.deleteUser(id);
+        return ResponseEntity.status(200).build();
     }
 
     @GetMapping("/{id}/limits")
