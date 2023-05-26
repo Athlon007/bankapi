@@ -1,10 +1,20 @@
 package nl.inholland.bank.services;
 
 import nl.inholland.bank.models.*;
+import nl.inholland.bank.models.dtos.TransactionDTO.WithdrawRequest;
+import nl.inholland.bank.repositories.TransactionRepository;
 import org.springframework.stereotype.Service;
+
+import javax.naming.InsufficientResourcesException;
+import javax.security.auth.login.AccountNotFoundException;
 
 @Service
 public class TransactionService {
+    private final TransactionRepository transactionRepository;
+
+    public TransactionService(TransactionRepository transactionRepository) {
+        this.transactionRepository = transactionRepository;
+    }
     public Transaction createTransaction(User user, Account AccountSender, Account AccountReceiver, CurrencyType currencyType, double amount) {
         Transaction transaction = new Transaction();
         transaction.setUser(user);
@@ -16,16 +26,27 @@ public class TransactionService {
         return transaction;
     }
 
-    public void withdrawMoney(Account account, double amount) {
-        if (checkAccountExist(account)) {
-            return;
+    public Transaction withdrawMoney(User user, Account account, double amount) throws AccountNotFoundException, InsufficientResourcesException {
+        // Check if the account exists
+        if (checkAccountExist(account)){
+            // Check if the account has enough balance
+            if (checkAccountBalance(account, amount)){
+                // Update the account balance
+                Transaction transaction = createTransaction(user, account, null, account.getCurrencyType(), amount);
+                transactionRepository.save(transaction);
+
+                // Update the account balance
+                updateAccountBalance(account, amount, false);
+                //TODO: Update the account repository with the new balance
+
+                return transaction;
+            }
+            else {
+                throw new InsufficientResourcesException("Account does not have enough balance");
+            }
         }
-        if (checkAccountBalance(account, amount)) {
-            updateAccountBalance(account, amount, false);
-            // This transaction will be added to database
-            Transaction transaction = createTransaction(account.getUser(), account, null, account.getCurrencyType(), amount);
-        } else {
-            System.out.println("Insufficient funds");
+        else {
+            throw new AccountNotFoundException("Account does not exist");
         }
     }
 
@@ -71,5 +92,12 @@ public class TransactionService {
         } else {
             account.setBalance(account.getBalance() - amount);
         }
+    }
+
+    public Transaction mapWithdrawRequestToTransaction(WithdrawRequest withdrawRequest) {
+        Transaction transaction = new Transaction();
+        transaction.setAmount(withdrawRequest.amount());
+        transaction.setCurrencyType(CurrencyType.EURO);
+        return transaction;
     }
 }

@@ -3,8 +3,10 @@ package nl.inholland.bank.configurators;
 import jakarta.transaction.Transactional;
 import nl.inholland.bank.models.Account;
 import nl.inholland.bank.models.User;
+import nl.inholland.bank.models.dtos.AccountDTO.AccountRequest;
 import nl.inholland.bank.models.dtos.UserForAdminRequest;
 import nl.inholland.bank.models.dtos.UserRequest;
+import nl.inholland.bank.services.AccountService;
 import nl.inholland.bank.services.UserService;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -15,9 +17,11 @@ import java.util.Optional;
 @Component
 public class ApplicationDataInitializer implements ApplicationRunner {
     private final UserService userService;
+    private final AccountService accountService;
 
-    public ApplicationDataInitializer(UserService userService) {
+    public ApplicationDataInitializer(UserService userService, AccountService accountService) {
         this.userService = userService;
+        this.accountService = accountService;
     }
 
     @Transactional
@@ -69,5 +73,19 @@ public class ApplicationDataInitializer implements ApplicationRunner {
 
 
         System.out.println(userService.getAllUsers(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()));
+
+
+        // Account
+        AccountRequest accountRequest = new AccountRequest(
+                "NL01INHO0000000001",
+                0,
+                "EURO",
+                "CURRENT",
+                "3"
+        );
+
+        Account account = accountService.addAccount(accountRequest, admin);
+
+        System.out.println(accountService.getAllAccountsFromUser(admin));
     }
 }
