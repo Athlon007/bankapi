@@ -199,4 +199,13 @@ public class User {
 
         this.savingAccount = savingAccount;
     }
+
+    public void setLimits(Limits limits) {
+        if (limits == null) {
+            throw new IllegalArgumentException("Limits cannot be null");
+        }
+
+        limits.setUser(this);
+        this.limits = limits;
+    }
 }

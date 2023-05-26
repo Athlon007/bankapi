@@ -1,10 +1,12 @@
 package nl.inholland.bank.controllers;
 
+import nl.inholland.bank.models.Limits;
 import nl.inholland.bank.models.Role;
 import nl.inholland.bank.models.User;
 import nl.inholland.bank.models.dtos.*;
 import nl.inholland.bank.models.dtos.AccountDTO.AccountResponse;
 import nl.inholland.bank.models.dtos.UserDTO.*;
+import nl.inholland.bank.services.UserLimitsService;
 import nl.inholland.bank.services.UserService;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.springframework.http.HttpStatusCode;
@@ -22,9 +24,11 @@ import java.util.Optional;
 @RequestMapping("/users")
 public class UserController {
     private UserService userService;
+    private UserLimitsService userLimitsService;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, UserLimitsService userLimitsService) {
         this.userService = userService;
+        this.userLimitsService = userLimitsService;
     }
 
     @GetMapping
@@ -128,9 +132,15 @@ public class UserController {
     }
 
     @GetMapping("/{id}/limits")
-    public ResponseEntity getUserLimits(@PathVariable int id)
-    {
-        throw new NotYetImplementedException("Getting user limits is not yet implemented.");
+    public ResponseEntity getUserLimits(@PathVariable int id) {
+        Limits limits = userLimitsService.getUserLimits(id);
+        UserLimitsResponse userLimitsResponse = new UserLimitsResponse(
+                limits.getTransactionLimit(),
+                limits.getDailyTransactionLimit(),
+                limits.getAbsoluteLimit(),
+                limits.getRemainingDailyTransactionLimit()
+        );
+        return ResponseEntity.status(200).body(userLimitsResponse);
     }
 
     @PutMapping("/{id}/limits")

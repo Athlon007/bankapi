@@ -17,7 +17,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.MethodNotAllowedException;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -26,6 +25,7 @@ import java.util.Optional;
 @Service
 public class UserService {
     protected final UserRepository userRepository;
+    private final UserLimitsService userLimitsService;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
 
@@ -39,10 +39,11 @@ public class UserService {
     @Value("${bankapi.user.defaults.absoluteLimit}")
     private int defaultAbsoluteLimit;
 
-    public UserService(UserRepository userRepository, BCryptPasswordEncoder bCryptPasswordEncoder, JwtTokenProvider jwtTokenProvider) {
+    public UserService(UserRepository userRepository, BCryptPasswordEncoder bCryptPasswordEncoder, JwtTokenProvider jwtTokenProvider, UserLimitsService userLimitsService) {
         this.userRepository = userRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
         this.jwtTokenProvider = jwtTokenProvider;
+        this.userLimitsService = userLimitsService;
     }
 
     public User addUser(UserRequest userRequest) throws AuthenticationException {
@@ -62,6 +63,7 @@ public class UserService {
         User user = mapUserRequestToUser(userRequest);
         user.setLimits(this.getDefaultLimits());
         userRepository.save(user);
+        userLimitsService.updateUserLimits(user.getLimits());
         return userRepository.findUserByUsername(user.getUsername()).orElseThrow(() -> new ObjectNotFoundException(user.getId(), "User"));
     }
 
