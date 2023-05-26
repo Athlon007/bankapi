@@ -23,7 +23,7 @@ class UserTests {
                 "John",
                 "Doe",
                 "mail@test.com",
-                "12345678",
+                "111222333",
                 "0612345678",
                 LocalDate.of(1990, 1, 1),
                 "username",
@@ -262,5 +262,20 @@ class UserTests {
         });
 
         Assertions.assertEquals("Cannot set saving account without current account", exception.getMessage());
+    }
+
+    @Test
+    void bsnMustPass11Test() {
+        // Try setting falsey BSN: 192837465
+        Exception exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            user.setBsn("192837465");
+        });
+
+        // Try setting correct BSN: 123456782
+        user.setBsn("123456782");
+        Assertions.assertEquals("123456782", user.getBsn());
+
+        user.setBsn("10464554");
+        Assertions.assertEquals("10464554", user.getBsn());
     }
 }

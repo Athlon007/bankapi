@@ -35,7 +35,7 @@ public class ApplicationDataInitializer implements ApplicationRunner {
                                 "Password1!",
                                 "Namey",
                                 "McNameface",
-                                "123456789",
+                                "232262536",
                                 "0612345678",
                                 "2000-01-01",
                                 "ADMIN");
@@ -48,7 +48,7 @@ public class ApplicationDataInitializer implements ApplicationRunner {
                                 "Password2!",
                                 "Goofy",
                                 "Ahh",
-                                "123456789",
+                                "123456782",
                                 "0612345678",
                                 "2000-01-01",
                                 "EMPLOYEE");
@@ -61,7 +61,7 @@ public class ApplicationDataInitializer implements ApplicationRunner {
                                 "Password3!",
                                 "Yo",
                                 "Mama",
-                                "123456789",
+                                "111222333",
                                 "0612345678",
                                 "2000-01-01");
                 User user = userService.addUser(userRequest);
