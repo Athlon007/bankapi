@@ -1,9 +1,13 @@
 package nl.inholland.bank.services;
 
-import nl.inholland.bank.models.Limits;
-import nl.inholland.bank.models.Role;
-import nl.inholland.bank.models.User;
-import nl.inholland.bank.models.dtos.*;
+import nl.inholland.bank.models.*;
+import nl.inholland.bank.models.dtos.AuthDTO.LoginRequest;
+import nl.inholland.bank.models.dtos.AuthDTO.RefreshTokenRequest;
+import nl.inholland.bank.models.dtos.AuthDTO.jwt;
+import nl.inholland.bank.models.dtos.UserDTO.UserForAdminRequest;
+import nl.inholland.bank.models.dtos.UserDTO.UserLimitsRequest;
+import nl.inholland.bank.models.dtos.UserDTO.UserRequest;
+import nl.inholland.bank.models.exceptions.OperationNotAllowedException;
 import nl.inholland.bank.repositories.UserRepository;
 import nl.inholland.bank.utils.JwtTokenProvider;
 import javax.naming.AuthenticationException;
@@ -22,57 +26,63 @@ import java.util.Optional;
 @Service
 public class UserService {
     protected final UserRepository userRepository;
+    private final UserLimitsService userLimitsService;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
 
     @Value("${bankapi.application.request.limits}")
     private int defaultGetAllUsersLimit;
 
-    @Value("${bankapi.user.defaults.dailyTransactionLimit}")
-    private int defaultDailyTransactionLimit;
-    @Value("${bankapi.user.defaults.transactionLimit}")
-    private int defaultTransactionLimit;
-    @Value("${bankapi.user.defaults.absoluteLimit}")
-    private int defaultAbsoluteLimit;
 
-    public UserService(UserRepository userRepository, BCryptPasswordEncoder bCryptPasswordEncoder, JwtTokenProvider jwtTokenProvider) {
+
+    public UserService(UserRepository userRepository, BCryptPasswordEncoder bCryptPasswordEncoder, JwtTokenProvider jwtTokenProvider, UserLimitsService userLimitsService) {
         this.userRepository = userRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
         this.jwtTokenProvider = jwtTokenProvider;
+        this.userLimitsService = userLimitsService;
     }
 
-    public User addUser(UserRequest userRequest) {
-        if (userRepository.findUserByUsername(userRequest.username()).isPresent()) {
+    public User addUser(UserRequest userRequest) throws AuthenticationException {
+        if (userRepository.findUserByUsername(userRequest.getUsername()).isPresent()) {
             throw new IllegalArgumentException("Username already exists.");
         }
 
-        if (!isPasswordValid(userRequest.password())) {
+        if (!isPasswordValid(userRequest.getPassword())) {
+            throw new IllegalArgumentException("Password does not meet requirements.");
+        }
+
+        // If current token bearer is not an admin, and userRequest is type of UserForAdminRequest, throw exception.
+        if (getBearerUserRole() != Role.ADMIN && userRequest instanceof UserForAdminRequest) {
+            throw new AuthenticationException("You are not authorized to create accounts with roles. Remove 'role' from request body.");
+        }
+
+        User user = mapUserRequestToUser(userRequest);
+        user.setLimits(userLimitsService.getDefaultLimits());
+        userRepository.save(user);
+        userLimitsService.initialiseLimits(user);
+        return userRepository.findUserByUsername(user.getUsername()).orElseThrow(() -> new ObjectNotFoundException(user.getId(), "User"));
+    }
+
+    // This function is called during initial setup of the application.
+    // it is similar to addUser, but skips the role check.
+    // Should not be exposed to API.
+    public User addAdmin(UserForAdminRequest userRequest) {
+        if (userRepository.findUserByUsername(userRequest.getUsername()).isPresent()) {
+            throw new IllegalArgumentException("Username already exists.");
+        }
+
+        if (!isPasswordValid(userRequest.getPassword())) {
             throw new IllegalArgumentException("Password does not meet requirements.");
         }
 
         User user = mapUserRequestToUser(userRequest);
-        user.setLimits(this.getDefaultLimits());
+        user.setLimits(userLimitsService.getDefaultLimits());
         userRepository.save(user);
+        userLimitsService.initialiseLimits(user);
         return userRepository.findUserByUsername(user.getUsername()).orElseThrow(() -> new ObjectNotFoundException(user.getId(), "User"));
     }
 
-    public User addUserForAdmin(UserForAdminRequest userForAdminRequest) {
-        if (userRepository.findUserByUsername(userForAdminRequest.username()).isPresent()) {
-            throw new IllegalArgumentException("Username already exists.");
-        }
-
-        if (!isPasswordValid(userForAdminRequest.password())) {
-            throw new IllegalArgumentException("Password does not meet requirements.");
-        }
-
-
-        User user = mapUserForAdminRequestToUser(userForAdminRequest);
-        user.setLimits(this.getDefaultLimits());
-        userRepository.save(user);
-        return userRepository.findUserByUsername(user.getUsername()).orElseThrow(() -> new ObjectNotFoundException(user.getId(), "User"));
-    }
-
-    public List<User> getAllUsers(Optional<Integer> page, Optional<Integer> limit, Optional<String> name, Optional<Boolean> hasNoAccounts) {
+    public List<User> getAllUsers(Optional<Integer> page, Optional<Integer> limit, Optional<String> name) {
         // If user has role ADMIN, return all users.
         // Otherwise, return only users that have accounts.
 
@@ -95,11 +105,26 @@ public class UserService {
                     );
         }
 
-        // FIXME: This should return all users that HAVE accounts, even if they are an employee.
         return name.map(
-                s -> userRepository.findAllByRoleAndFirstNameContainingIgnoreCaseOrRoleAndLastNameContainingIgnoreCase(Role.USER, s, Role.USER, s, pageable).getContent())
-                .orElseGet(() -> userRepository.findAllByRole(Role.USER, pageable).getContent()
+                s -> userRepository.findAllByCurrentAccountIsNotNullAndActiveIsTrueAndFirstNameContainingIgnoreCaseOrCurrentAccountIsNotNullAndActiveIsTrueAndLastNameContainingIgnoreCase(name.get(), name.get(), pageable).getContent())
+                .orElseGet(() -> userRepository.findAllByCurrentAccountIsNotNullAndActiveIsTrue(pageable).getContent()
                 );
+    }
+
+    public List<User> getAllUsersWithNoAccounts(Optional<Integer> page, Optional<Integer> limit, Optional<String> name) {
+        // Users cannot see other users without accounts anyway.
+        // Might as well return empty array.
+        if (getBearerUserRole() == Role.USER) {
+            return List.of();
+        }
+
+        Pageable pageable = PageRequest.of(page.orElse(0), limit.orElse(defaultGetAllUsersLimit));
+
+        // We're only checking if current account is null,
+        // because user cannot have saving account without current account anyway.
+        return name.map(
+                s -> userRepository.findAllByCurrentAccountIsNullAndFirstNameContainingIgnoreCaseOrCurrentAccountIsNullAndLastNameContainingIgnoreCase(name.get(), name.get(), pageable))
+                .orElseGet(() -> userRepository.findAllByCurrentAccountIsNull(pageable)).getContent();
     }
 
     public User getUserById(int id) {
@@ -109,6 +134,9 @@ public class UserService {
     public String login(LoginRequest loginRequest) throws AuthenticationException {
         User user = userRepository.findUserByUsername(loginRequest.username())
                 .orElseThrow(() -> new AuthenticationException("Username not found"));
+
+        if (!user.isActive())
+            throw new AuthenticationException("User has been deactivated. Please contact customer support.");
 
         if (!bCryptPasswordEncoder.matches(loginRequest.password(), user.getPassword()))
             throw new AuthenticationException("Password incorrect");
@@ -134,33 +162,23 @@ public class UserService {
 
     public User mapUserRequestToUser(UserRequest userRequest) {
         User user = new User();
-        user.setFirstName(userRequest.first_name());
-        user.setLastName(userRequest.last_name());
-        user.setEmail(userRequest.email());
-        user.setBsn(userRequest.bsn());
-        user.setPhoneNumber(userRequest.phone_number());
+        user.setFirstName(userRequest.getFirst_name());
+        user.setLastName(userRequest.getLast_name());
+        user.setEmail(userRequest.getEmail());
+        user.setBsn(userRequest.getBsn());
+        user.setPhoneNumber(userRequest.getPhone_number());
         // Convert string of format "yyyy-MM-dd" to LocalDate
-        LocalDate dateOfBirth = LocalDate.parse(userRequest.birth_date());
+        if (userRequest.getBirth_date() == null) {
+            throw new IllegalArgumentException("Birth date is required.");
+        }
+        LocalDate dateOfBirth = LocalDate.parse(userRequest.getBirth_date());
         user.setDateOfBirth(dateOfBirth);
-        user.setUsername(userRequest.username());
-        user.setPassword(bCryptPasswordEncoder.encode(userRequest.password()));
+        user.setUsername(userRequest.getUsername());
+        user.setPassword(bCryptPasswordEncoder.encode(userRequest.getPassword()));
         user.setRole(Role.USER);
-        return user;
-    }
-
-    public User mapUserForAdminRequestToUser(UserForAdminRequest userForAdminRequest) {
-        User user = new User();
-        user.setFirstName(userForAdminRequest.first_name());
-        user.setLastName(userForAdminRequest.last_name());
-        user.setEmail(userForAdminRequest.email());
-        user.setBsn(userForAdminRequest.bsn());
-        user.setPhoneNumber(userForAdminRequest.phone_number());
-        // Convert string of format "yyyy-MM-dd" to LocalDate
-        LocalDate dateOfBirth = LocalDate.parse(userForAdminRequest.birth_date());
-        user.setDateOfBirth(dateOfBirth);
-        user.setUsername(userForAdminRequest.username());
-        user.setPassword(bCryptPasswordEncoder.encode(userForAdminRequest.password()));
-        user.setRole(mapStringToRole(userForAdminRequest.role()));
+        if (userRequest instanceof UserForAdminRequest) {
+            user.setRole(mapStringToRole(((UserForAdminRequest) userRequest).getRole()));
+        }
         return user;
     }
 
@@ -211,11 +229,66 @@ public class UserService {
         return true;
     }
 
-    private Limits getDefaultLimits() {
-        Limits limits = new Limits();
-        limits.setDailyTransactionLimit(this.defaultDailyTransactionLimit);
-        limits.setTransactionLimit(this.defaultTransactionLimit);
-        limits.setAbsoluteLimit(this.defaultAbsoluteLimit);
-        return limits;
+
+
+    public User updateUser(int id, UserRequest userRequest) throws AuthenticationException {
+        if (userRequest instanceof UserForAdminRequest && getBearerUserRole() != Role.ADMIN) {
+            throw new AuthenticationException("You are not authorized to change the role of a user.");
+        }
+
+        User user = userRepository.findById(id).orElseThrow(()-> new ObjectNotFoundException(id, "User not found"));
+
+        String currentUserName = getBearerUsername();
+        Role currentUserRole = getBearerUserRole();
+
+        // Users can only update their own account.
+        // Employees can update all accounts, except for admins.
+        if (
+                currentUserRole == Role.USER && !user.getUsername().equals(currentUserName)
+                || currentUserRole == Role.EMPLOYEE && user.getRole() == Role.ADMIN
+        ) {
+            throw new AuthenticationException("You are not authorized to update this user.");
+        }
+
+        User updatedUser = mapUserRequestToUser(userRequest);
+        updatedUser.setId(id);
+
+        return userRepository.save(updatedUser);
+    }
+
+    public void deleteUser(int id) throws AuthenticationException, OperationNotAllowedException {
+        User user = userRepository.findById(id).orElseThrow(()-> new ObjectNotFoundException(id, "User not found"));
+
+        // Check if user has savings or checking accounts.
+        // Users with any of these accounts cannot be deleted, but they can be deactivated.
+        if (user.getCurrentAccount() != null || user.getSavingAccount() != null) {
+            user.setActive(false);
+            userRepository.save(user);
+            return;
+        }
+
+        String currentUserName = getBearerUsername();
+        Role currentUserRole = getBearerUserRole();
+
+        // Users can only delete their own account.
+        // Employees can delete all accounts, except for admins.
+        if (
+                currentUserRole == Role.USER && !user.getUsername().equals(currentUserName)
+                || currentUserRole == Role.EMPLOYEE && user.getRole() == Role.ADMIN
+        ) {
+            throw new AuthenticationException("You are not authorized to delete this user.");
+        }
+
+        userRepository.delete(user);
+    }
+
+    public void assignAccountToUser(User user, Account account) {
+        if (account.getType() == AccountType.CURRENT) {
+            user.setCurrentAccount(account);
+        } else if (account.getType() == AccountType.SAVING) {
+            user.setSavingAccount(account);
+        }
+
+        userRepository.save(user);
     }
 }

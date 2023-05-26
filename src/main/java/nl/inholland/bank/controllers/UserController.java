@@ -1,15 +1,22 @@
 package nl.inholland.bank.controllers;
 
+import nl.inholland.bank.models.Limits;
 import nl.inholland.bank.models.Role;
 import nl.inholland.bank.models.User;
 import nl.inholland.bank.models.dtos.*;
+import nl.inholland.bank.models.dtos.AccountDTO.AccountResponse;
+import nl.inholland.bank.models.dtos.UserDTO.*;
+import nl.inholland.bank.services.UserLimitsService;
 import nl.inholland.bank.services.UserService;
 import org.hibernate.cfg.NotYetImplementedException;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import javax.naming.AuthenticationException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -18,9 +25,11 @@ import java.util.Optional;
 @RequestMapping("/users")
 public class UserController {
     private UserService userService;
+    private UserLimitsService userLimitsService;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, UserLimitsService userLimitsService) {
         this.userService = userService;
+        this.userLimitsService = userLimitsService;
     }
 
     @GetMapping
@@ -31,41 +40,22 @@ public class UserController {
             @RequestParam(name = "has_no_accounts") Optional<Boolean> hasNoAccounts
     ) {
         try {
-            List<User> users = userService.getAllUsers(page, limit, name, hasNoAccounts);
+            // If hasNoAccount is true, use the correct method
+            List<User> users = hasNoAccounts.isPresent() && hasNoAccounts.get() ?
+                    userService.getAllUsersWithNoAccounts(page, limit, name) :
+                    userService.getAllUsers(page, limit, name);
 
             if (userService.getBearerUserRole() == Role.USER) {
                 List<UserForClientResponse> userForClientResponses = new ArrayList<>();
                 for (User user : users) {
-                    UserForClientResponse userForClientResponse = new UserForClientResponse(
-                            user.getId(),
-                            user.getFirstName(),
-                            user.getLastName(),
-                            //user.getIban()
-                            // TODO: Get IBAN from account
-                            "IBAN"
-                    );
-
-                    userForClientResponses.add(userForClientResponse);
+                    userForClientResponses.add(mapUserToUserForClientResponse(user));
                 }
 
                 return ResponseEntity.status(200).body(userForClientResponses);
             }
             List<UserResponse> userResponses = new ArrayList<>();
             for (User user : users) {
-                String dateOfBirth = user.getDateOfBirth().toString();
-
-                UserResponse userResponse = new UserResponse(
-                        user.getId(),
-                        user.getEmail(),
-                        user.getFirstName(),
-                        user.getLastName(),
-                        user.getBsn(),
-                        user.getPhoneNumber(),
-                        dateOfBirth,
-                        user.getRole().toString()
-                );
-
-                userResponses.add(userResponse);
+                userResponses.add(mapUserToUserResponse(user));
             }
 
             return ResponseEntity.status(200).body(userResponses);
@@ -79,32 +69,10 @@ public class UserController {
     public ResponseEntity getUserById(@PathVariable int id) {
         try {
             User user = userService.getUserById(id);
-            if (userService.getBearerUserRole() == Role.USER && userService.getBearerUsername() != user.getUsername()) {
-                // TODO: User may only see users that have accounts.
-                UserForClientResponse userForClientResponse = new UserForClientResponse(
-                        user.getId(),
-                        user.getFirstName(),
-                        user.getLastName(),
-                        //user.getIban()
-                        // TODO: Get IBAN from account
-                        "IBAN"
-                );
-
-                return ResponseEntity.status(200).body(userForClientResponse);
+            if (userService.getBearerUserRole() == Role.USER && !userService.getBearerUsername().equals(user.getUsername())) {
+                return ResponseEntity.status(200).body(mapUserToUserForClientResponse(user));
             }
-            String dateOfBirth = user.getDateOfBirth().toString();
-            UserResponse userResponse = new UserResponse(
-                    user.getId(),
-                    user.getEmail(),
-                    user.getFirstName(),
-                    user.getLastName(),
-                    user.getBsn(),
-                    user.getPhoneNumber(),
-                    dateOfBirth,
-                    user.getRole().toString()
-            );
-
-            return ResponseEntity.status(200).body(userResponse);
+            return ResponseEntity.status(200).body(mapUserToUserResponse(user));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new ExceptionResponse("Unable to get user"));
         }
@@ -112,78 +80,133 @@ public class UserController {
 
     @PostMapping
     //@PreAuthorize("hasAuthority('ADMIN') or hasAuthority('EMPLOYEE')")
-    public ResponseEntity addUser(@RequestBody UserForAdminRequest userForAdminRequest) {
-        try {
+    public ResponseEntity addUser(@RequestBody UserForAdminRequest request) throws AuthenticationException, IllegalArgumentException {
+        UserRequest userRequest = request;
+        // If request has not role, it is a request from a client
+        if (request.getRole() == null) {
+            userRequest = new UserRequest(
+                    request.getEmail(),
+                    request.getUsername(),
+                    request.getPassword(),
+                    request.getFirst_name(),
+                    request.getLast_name(),
+                    request.getBsn(),
+                    request.getPhone_number(),
+                    request.getBirth_date()
+            );
+        }
 
-            User user = null;
-            if (userService.getBearerUserRole() == null || userService.getBearerUserRole() == Role.EMPLOYEE) {
-                UserRequest userRequest = new UserRequest(
-                        userForAdminRequest.email(),
-                        userForAdminRequest.username(),
-                        userForAdminRequest.password(),
-                        userForAdminRequest.first_name(),
-                        userForAdminRequest.last_name(),
-                        userForAdminRequest.bsn(),
-                        userForAdminRequest.phone_number(),
-                        userForAdminRequest.birth_date()
-                );
-                user = userService.addUser(userRequest);
-            } else {
-                user = userService.addUserForAdmin(userForAdminRequest);
-            }
-            if (userService.getBearerUserRole() == null) {
-                UserForClientResponse userForClientResponse = new UserForClientResponse(
-                        user.getId(),
-                        user.getFirstName(),
-                        user.getLastName(),
-                        //user.getIban()
-                        "IBAN"
-                );
+        User user = userService.addUser(userRequest);
 
-                return ResponseEntity.status(201).body(userForClientResponse);
-            } else {
-                UserResponse userResponse = new UserResponse(
-                        user.getId(),
-                        user.getEmail(),
-                        user.getFirstName(),
-                        user.getLastName(),
-                        user.getBsn(),
-                        user.getPhoneNumber(),
-                        user.getDateOfBirth().toString(),
-                        user.getRole().toString()
-                );
-
-                return ResponseEntity.status(201).body(userResponse);
-            }
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(new ExceptionResponse(e.getMessage()));
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-            return ResponseEntity.badRequest().body(new ExceptionResponse("Unable to create user"));
+        if (userService.getBearerUserRole() == null) {
+            return ResponseEntity.status(201).body(mapUserToUserForClientResponse(user));
+        } else {
+            return ResponseEntity.status(201).body(mapUserToUserResponse(user));
         }
     }
 
 
     @PutMapping("/{id}")
-    public ResponseEntity updateUser(@PathVariable int id, @RequestBody UserForAdminRequest userForAdminRequest)
-    {
-        throw new NotYetImplementedException("Updating users is not yet implemented.");
+    public ResponseEntity updateUser(@PathVariable int id, @RequestBody UserForAdminRequest request) throws AuthenticationException {
+        UserRequest userRequest = request;
+        if (request.getRole() == null) {
+            userRequest = new UserRequest(
+                    request.getEmail(),
+                    request.getUsername(),
+                    request.getPassword(),
+                    request.getFirst_name(),
+                    request.getLast_name(),
+                    request.getBsn(),
+                    request.getPhone_number(),
+                    request.getBirth_date()
+            );
+        }
+
+        User user = userService.updateUser(id, userRequest);
+        return ResponseEntity.status(200).body(mapUserToUserResponse(user));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity deleteUser(@PathVariable int id) {
-        throw new NotYetImplementedException("Deleting users is not yet implemented.");
+    public ResponseEntity deleteUser(@PathVariable int id) throws AuthenticationException {
+        userService.deleteUser(id);
+        return ResponseEntity.status(200).build();
     }
 
     @GetMapping("/{id}/limits")
-    public ResponseEntity getUserLimits(@PathVariable int id)
-    {
-        throw new NotYetImplementedException("Getting user limits is not yet implemented.");
+    public ResponseEntity getUserLimits(@PathVariable int id) throws AuthenticationException {
+        Limits limits = userLimitsService.getUserLimits(id);
+        UserLimitsResponse userLimitsResponse = new UserLimitsResponse(
+                limits.getTransactionLimit(),
+                limits.getDailyTransactionLimit(),
+                limits.getAbsoluteLimit(),
+                limits.getRemainingDailyTransactionLimit()
+        );
+        return ResponseEntity.status(200).body(userLimitsResponse);
     }
 
     @PutMapping("/{id}/limits")
-    public ResponseEntity updateUserLimits(@PathVariable int id, @Validated @RequestBody UserLimitsRequest userLimitsRequest)
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('EMPLOYEE')")
+    public ResponseEntity updateUserLimits(@PathVariable int id, @Validated @RequestBody UserLimitsRequest userLimitsRequest) throws AuthenticationException
     {
-        throw new NotYetImplementedException("Updating user limits is not yet implemented.");
+        Limits limits = userLimitsService.updateUserLimits(id, userLimitsRequest);
+        UserLimitsResponse userLimitsResponse = new UserLimitsResponse(
+                limits.getTransactionLimit(),
+                limits.getDailyTransactionLimit(),
+                limits.getAbsoluteLimit(),
+                limits.getRemainingDailyTransactionLimit()
+        );
+        return ResponseEntity.status(200).body(userLimitsResponse);
+    }
+
+    private UserResponse mapUserToUserResponse(User user) {
+        AccountResponse currentAccountResponse;
+        if (user.getCurrentAccount() != null) {
+            currentAccountResponse = new AccountResponse(
+                    user.getCurrentAccount().getId(),
+                    user.getCurrentAccount().getIBAN(),
+                    user.getCurrentAccount().getType().toString(),
+                    user.getCurrentAccount().getCurrencyType().toString(),
+                    user.getCurrentAccount().getBalance()
+            );
+        } else {
+            currentAccountResponse = null;
+        }
+
+        AccountResponse savingAccountResponse;
+        if (user.getSavingAccount() != null) {
+            savingAccountResponse = new AccountResponse(
+                    user.getSavingAccount().getId(),
+                    user.getSavingAccount().getIBAN(),
+                    user.getSavingAccount().getType().toString(),
+                    user.getSavingAccount().getCurrencyType().toString(),
+                    user.getSavingAccount().getBalance()
+            );
+        } else {
+            savingAccountResponse = null;
+        }
+
+        String dateOfBirth = user.getDateOfBirth().toString();
+
+        return new UserResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getFirstName(),
+                user.getLastName(),
+                user.getBsn(),
+                user.getPhoneNumber(),
+                dateOfBirth,
+                user.getRole().toString(),
+                currentAccountResponse,
+                savingAccountResponse
+        );
+    }
+
+    private UserForClientResponse mapUserToUserForClientResponse(User user) {
+        return new UserForClientResponse(
+                user.getId(),
+                user.getFirstName(),
+                user.getLastName(),
+                user.getCurrentAccount() == null ? null : user.getCurrentAccount().getIBAN()
+        );
     }
 }
