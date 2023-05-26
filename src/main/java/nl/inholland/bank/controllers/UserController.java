@@ -132,7 +132,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}/limits")
-    public ResponseEntity getUserLimits(@PathVariable int id) {
+    public ResponseEntity getUserLimits(@PathVariable int id) throws AuthenticationException {
         Limits limits = userLimitsService.getUserLimits(id);
         UserLimitsResponse userLimitsResponse = new UserLimitsResponse(
                 limits.getTransactionLimit(),
