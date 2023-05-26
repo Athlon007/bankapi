@@ -95,6 +95,7 @@ public class UserService {
                     );
         }
 
+        // FIXME: This should return all users that HAVE accounts, even if they are an employee.
         return name.map(
                 s -> userRepository.findAllByRoleAndFirstNameContainingIgnoreCaseOrRoleAndLastNameContainingIgnoreCase(Role.USER, s, Role.USER, s, pageable).getContent())
                 .orElseGet(() -> userRepository.findAllByRole(Role.USER, pageable).getContent()
