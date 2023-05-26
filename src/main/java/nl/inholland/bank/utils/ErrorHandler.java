@@ -13,4 +13,11 @@ public class ErrorHandler {
     public String handleIllegalArgumentException(IllegalArgumentException e) {
         return "{\"error_message\": \"" + e.getMessage() + "\"}";
     }
+
+    @ExceptionHandler(Exception.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    // This one catches all other exceptions.
+    public String handleException(Exception e) {
+        return "{\"error_message\": \"" + e.getMessage() + "\"}";
+    }
 }
