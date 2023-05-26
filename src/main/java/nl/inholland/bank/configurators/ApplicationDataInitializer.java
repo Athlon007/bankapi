@@ -1,6 +1,7 @@
 package nl.inholland.bank.configurators;
 
 import jakarta.transaction.Transactional;
+import nl.inholland.bank.models.Account;
 import nl.inholland.bank.models.User;
 import nl.inholland.bank.models.dtos.UserForAdminRequest;
 import nl.inholland.bank.models.dtos.UserRequest;
@@ -62,7 +63,6 @@ public class ApplicationDataInitializer implements ApplicationRunner {
                 "0612345678",
                 "2000-01-01"
         );
-
         userService.addUser(userRequest);
 
         // Set empty optional to null
