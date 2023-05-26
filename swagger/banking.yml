@@ -172,9 +172,11 @@ paths:
                   birth_date: "2000-01-01"
                   role: "client"
                   current_account:
-                    iban: "NL00INHL1234567890"
-                    balance: 1000
-                    type: "savings"
+                    id: 1
+                    IBAN: "NL00INHL1234567890"
+                    account_type: "CURRENT"
+                    currency_type: "EURO"
+                    balance: 1000.0
                   saving_account: null
         "401":
           $ref: "#/components/responses/Unauthorized"
@@ -237,9 +239,11 @@ paths:
                   birth_date: "2000-01-01"
                   role: "client"
                   current_account:
-                    iban: "NL00INHL1234567890"
-                    balance: 1000
-                    type: "savings"
+                    id: 1
+                    IBAN: "NL00INHL1234567890"
+                    account_type: "CURRENT"
+                    currency_type: "EURO"
+                    balance: 1000.0
                   saving_account: null
         "401":
           $ref: "#/components/responses/Unauthorized"
@@ -880,12 +884,18 @@ components:
     AccountForClientResponse:
       type: object
       properties:
-        type:
-          type: string
-          enum: ["current", "saving"]
+        id:
+          type: integer
+          format: int64
         iban:
           type: string
           pattern: "[A-Z]{2,2}[0-9]{2,2}[A-Z]{4,4}[0-9]{10,10}"
+        type:
+          type: string
+          enum: ["CURRENT", "SAVING"]
+        currency_type:
+            type: string
+            enum: [ "EURO" ]
         balance:
           type: number
           format: double
