@@ -2,6 +2,7 @@ package nl.inholland.bank.utils;
 
 import org.hibernate.ObjectNotFoundException;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -55,6 +56,12 @@ public class ErrorHandler {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public String handleObjectNotFoundException(ObjectNotFoundException e) {
         writeToFile(e);
+        return "{\"error_message\": \"" + e.getMessage() + "\"}";
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
+    public String handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException e) {
         return "{\"error_message\": \"" + e.getMessage() + "\"}";
     }
 

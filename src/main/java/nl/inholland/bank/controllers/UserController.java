@@ -146,9 +146,16 @@ public class UserController {
 
     @PutMapping("/{id}/limits")
     @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('EMPLOYEE')")
-    public ResponseEntity updateUserLimits(@PathVariable int id, @Validated @RequestBody UserLimitsRequest userLimitsRequest)
+    public ResponseEntity updateUserLimits(@PathVariable int id, @Validated @RequestBody UserLimitsRequest userLimitsRequest) throws AuthenticationException
     {
-        throw new NotYetImplementedException("Updating user limits is not yet implemented.");
+        Limits limits = userLimitsService.updateUserLimits(id, userLimitsRequest);
+        UserLimitsResponse userLimitsResponse = new UserLimitsResponse(
+                limits.getTransactionLimit(),
+                limits.getDailyTransactionLimit(),
+                limits.getAbsoluteLimit(),
+                limits.getRemainingDailyTransactionLimit()
+        );
+        return ResponseEntity.status(200).body(userLimitsResponse);
     }
 
     private UserResponse mapUserToUserResponse(User user) {

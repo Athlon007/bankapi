@@ -54,16 +54,20 @@ public class UserLimitsService {
         userLimitsRepository.save(limits);
     }
 
-    public void updateUserLimits(int userId, UserLimitsRequest userLimitsRequest) throws  AuthenticationException {
-        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
-
+    public Limits updateUserLimits(int userId, UserLimitsRequest userLimitsRequest) throws  AuthenticationException {
         // Users cannot update limits: theirs or others.
         if (jwtTokenProvider.getRole() == Role.USER) {
             throw new AuthenticationException("You are not allowed to update limits");
         }
 
-        Limits limits = mapUserLimitsRequestToLimits(userLimitsRequest);
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        Limits limits = userLimitsRepository.findFirstByUserId(userId);
+        limits.setTransactionLimit(userLimitsRequest.transaction_limit());
+        limits.setDailyTransactionLimit(userLimitsRequest.daily_transaction_limit());
+        limits.setAbsoluteLimit(userLimitsRequest.absolute_limit());
+
         userLimitsRepository.save(limits);
+        return userLimitsRepository.findFirstByUserId(userId);
     }
 
     private Limits mapUserLimitsRequestToLimits(UserLimitsRequest userLimitsRequest) {
