@@ -52,6 +52,9 @@ public class AccountService {
             }
         }
         if (mapAccountTypeToString(accountRequest.accountType()) == AccountType.SAVING){
+            if (!doesUserHaveCurrentAccount(userService.getUserById(Integer.parseInt(accountRequest.userId())))){
+                throw new IllegalArgumentException("You cannot create a saving account without a current account");
+            }
             if (doesUserHaveSavingAccount(userService.getUserById(Integer.parseInt(accountRequest.userId())))){
                 throw new IllegalArgumentException("User already has a saving account");
             }

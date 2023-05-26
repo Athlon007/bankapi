@@ -76,16 +76,16 @@ public class ApplicationDataInitializer implements ApplicationRunner {
 
 
         // Account
-        AccountRequest accountRequest = new AccountRequest(
-                "NL01INHO0000000001",
-                0,
-                "EURO",
-                "CURRENT",
-                "3"
-        );
-
-        Account account = accountService.addAccount(accountRequest);
-        User user = userService.getUserById(Integer.parseInt(accountRequest.userId()));
-        System.out.println(accountService.getAccountsByUserId(user));
+//        AccountRequest accountRequest = new AccountRequest(
+//                "NL01INHO0000000001",
+//                0,
+//                "EURO",
+//                "CURRENT",
+//                "3"
+//        );
+//
+//        Account account = accountService.addAccount(accountRequest);
+//        User user = userService.getUserById(Integer.parseInt(accountRequest.userId()));
+//        System.out.println(accountService.getAccountsByUserId(user));
     }
 }
