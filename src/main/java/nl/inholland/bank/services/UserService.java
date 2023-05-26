@@ -41,6 +41,12 @@ public class UserService {
         this.jwtTokenProvider = jwtTokenProvider;
     }
 
+    private User addUser(User user) {
+        user.setLimits(this.getDefaultLimits());
+        userRepository.save(user);
+        return userRepository.findUserByUsername(user.getUsername()).orElseThrow(() -> new ObjectNotFoundException(user.getId(), "User"));
+    }
+
     public User addUser(UserRequest userRequest) {
         if (userRepository.findUserByUsername(userRequest.username()).isPresent()) {
             throw new IllegalArgumentException("Username already exists.");
@@ -51,9 +57,7 @@ public class UserService {
         }
 
         User user = mapUserRequestToUser(userRequest);
-        user.setLimits(this.getDefaultLimits());
-        userRepository.save(user);
-        return userRepository.findUserByUsername(user.getUsername()).orElseThrow(() -> new ObjectNotFoundException(user.getId(), "User"));
+        return addUser(user);
     }
 
     public User addUserForAdmin(UserForAdminRequest userForAdminRequest) {
@@ -67,9 +71,7 @@ public class UserService {
 
 
         User user = mapUserForAdminRequestToUser(userForAdminRequest);
-        user.setLimits(this.getDefaultLimits());
-        userRepository.save(user);
-        return userRepository.findUserByUsername(user.getUsername()).orElseThrow(() -> new ObjectNotFoundException(user.getId(), "User"));
+        return addUser(user);
     }
 
     public List<User> getAllUsers(Optional<Integer> page, Optional<Integer> limit, Optional<String> name, Optional<Boolean> hasNoAccounts) {
@@ -217,5 +219,23 @@ public class UserService {
         limits.setTransactionLimit(this.defaultTransactionLimit);
         limits.setAbsoluteLimit(this.defaultAbsoluteLimit);
         return limits;
+    }
+
+    public User updateUserForAdmin(int id, UserForAdminRequest userForAdminRequest) {
+        User user = userRepository.findById(id).orElseThrow(()-> new ObjectNotFoundException(id, "User not found"));
+
+        user.setFirstName(userForAdminRequest.first_name());
+        user.setLastName(userForAdminRequest.last_name());
+        user.setEmail(userForAdminRequest.email());
+        user.setBsn(userForAdminRequest.bsn());
+        user.setPhoneNumber(userForAdminRequest.phone_number());
+        // Convert string of format "yyyy-MM-dd" to LocalDate
+        LocalDate dateOfBirth = LocalDate.parse(userForAdminRequest.birth_date());
+        user.setDateOfBirth(dateOfBirth);
+        user.setUsername(userForAdminRequest.username());
+        user.setPassword(bCryptPasswordEncoder.encode(userForAdminRequest.password()));
+        user.setRole(mapStringToRole(userForAdminRequest.role()));
+
+        return userRepository.save(user);
     }
 }
