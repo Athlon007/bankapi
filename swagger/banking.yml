@@ -121,13 +121,13 @@ paths:
                 $ref: "#/components/schemas/UserResponse"
               example:
                 id: 1
-                user_type: "client"
                 email: "bobby@mail.com"
                 firstname: "Bobby"
                 lastname: "Bobberson"
                 bsn: "123456789"
                 phone_number: "0612345678"
                 birth_date: "2000-01-01"
+                role: "client"
                 current_account: null
                 saving_account: null
         "400":
@@ -164,13 +164,13 @@ paths:
                   - $ref: "#/components/schemas/UserForClientResponse"
                 example:
                   id: 1
-                  user_type: "client"
                   email: "bobby@mail.com"
                   first_name: "Bobby"
                   last_name: "Bobberson"
                   bsn: "123456789"
                   phone_number: "0612345678"
                   birth_date: "2000-01-01"
+                  role: "client"
                   current_account:
                     iban: "NL00INHL1234567890"
                     balance: 1000
@@ -229,13 +229,13 @@ paths:
                   - $ref: "#/components/schemas/UserResponse"
                 example:
                   id: 1
-                  user_type: "client"
                   email: "bobby@mail.com"
                   first_name: "Bobby"
                   last_name: "Bobberson"
                   bsn: "123456789"
                   phone_number: "0612345678"
                   birth_date: "2000-01-01"
+                  role: "client"
                   current_account:
                     iban: "NL00INHL1234567890"
                     balance: 1000
@@ -771,9 +771,6 @@ components:
         id:
           type: integer
           format: int64
-        user_type:
-          type: string
-          enum: [employee, client]
         email:
           type: string
         username:
