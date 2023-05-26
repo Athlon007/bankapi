@@ -1,6 +1,7 @@
 package nl.inholland.bank.controllers;
 
 import nl.inholland.bank.models.Account;
+import nl.inholland.bank.models.Role;
 import nl.inholland.bank.models.User;
 import nl.inholland.bank.models.dtos.AccountDTO.AccountRequest;
 import nl.inholland.bank.services.AccountService;
@@ -28,7 +29,14 @@ public class AccountController {
             @PathVariable int id
     ) {
         try {
+
             User user = userService.getUserById(id);
+
+            // Employee/Admin and the owner of the account can see the account
+            if (userService.getBearerUserRole() == null) {
+                return ResponseEntity.status(401).body("Unauthorized");
+            }
+
             List<Account> accounts = accountService.getAllAccountsFromUser(user);
 
             if (accounts.isEmpty()) {
@@ -36,7 +44,7 @@ public class AccountController {
                 return ResponseEntity.status(404).body("No accounts found");
             } else {
                 // Return the list of accounts
-                return ResponseEntity.ok(accounts);
+                return ResponseEntity.status(200).body(accounts);
             }
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
