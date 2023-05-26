@@ -1,9 +1,9 @@
 package nl.inholland.bank.controllers;
 
 import nl.inholland.bank.models.dtos.ExceptionResponse;
-import nl.inholland.bank.models.dtos.LoginRequest;
-import nl.inholland.bank.models.dtos.RefreshTokenRequest;
-import nl.inholland.bank.models.dtos.jwt;
+import nl.inholland.bank.models.dtos.AuthDTO.LoginRequest;
+import nl.inholland.bank.models.dtos.AuthDTO.RefreshTokenRequest;
+import nl.inholland.bank.models.dtos.AuthDTO.jwt;
 import nl.inholland.bank.services.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

@@ -3,6 +3,7 @@ package nl.inholland.bank.controllers;
 import nl.inholland.bank.models.Role;
 import nl.inholland.bank.models.User;
 import nl.inholland.bank.models.dtos.*;
+import nl.inholland.bank.models.dtos.UserDTO.*;
 import nl.inholland.bank.services.UserService;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.springframework.http.ResponseEntity;
@@ -86,9 +87,7 @@ public class UserController {
                         user.getId(),
                         user.getFirstName(),
                         user.getLastName(),
-                        //user.getIban()
-                        // TODO: Get IBAN from account
-                        "IBAN"
+                        user.getCurrentAccount() == null ? null : user.getCurrentAccount().getIBAN()
                 );
 
                 return ResponseEntity.status(200).body(userForClientResponse);

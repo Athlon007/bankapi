@@ -1,4 +1,4 @@
-package nl.inholland.bank.models.dtos;
+package nl.inholland.bank.models.dtos.UserDTO;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

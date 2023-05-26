@@ -1,8 +1,4 @@
-package nl.inholland.bank.models.dtos;
-
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+package nl.inholland.bank.models.dtos.UserDTO;
 
 public class UserForAdminRequest extends UserRequest {
     private String role;
