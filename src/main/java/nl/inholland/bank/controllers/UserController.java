@@ -26,7 +26,7 @@ public class UserController {
     @GetMapping
     public ResponseEntity getAllUsers(
             @RequestParam(required = false) Optional<Integer> page,
-            @RequestParam(required = false) Optional<Integer> limit,
+            @RequestParam Optional<Integer> limit,
             @RequestParam Optional<String> name,
             @RequestParam(name = "has_no_accounts") Optional<Boolean> hasNoAccounts
     ) {
