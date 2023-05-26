@@ -73,25 +73,6 @@ public class AccountService {
             return accountRepository.findAllByUser(user);
     }
 
-//    public boolean doesUserHaveCurrentAccount(User user){
-//        List<Account> accounts = getAccountsByUserId(user);
-//        for (Account account : accounts) {
-//            if (account.getType() == AccountType.CURRENT){
-//                return true;
-//            }
-//        }
-//        return false;
-//    }
-//
-//    public boolean doesUserHaveSavingAccount(User user){
-//        List<Account> accounts = getAccountsByUserId(user);
-//        for (Account account : accounts) {
-//            if (account.getType() == AccountType.SAVING){
-//                return true;
-//            }
-//        }
-//        return false;
-//    }
 
     public boolean doesUserHaveAccountType(User user, AccountType accountType){
         List<Account> accounts = getAccountsByUserId(user);
