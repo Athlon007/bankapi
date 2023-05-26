@@ -87,6 +87,6 @@ public class ApplicationDataInitializer implements ApplicationRunner {
 
         Account account = accountService.addAccount(accountRequest, admin);
 
-        System.out.println(accountService.getAllAccountsFromUser(Optional.empty(), Optional.empty(), Optional.empty(), admin));
+        System.out.println(accountService.getAllAccountsFromUser(admin));
     }
 }

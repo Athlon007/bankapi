@@ -12,7 +12,5 @@ import java.util.Optional;
 
 @Repository
 public interface AccountRepository extends CrudRepository<Account, Long> {
-    Optional<Account> findAccountByIBAN(String IBAN);
-
-    Page<Account> findAllAccountsByUser(User user, Pageable pageable);
+    List<Account> findAllByUser(User user);
 }

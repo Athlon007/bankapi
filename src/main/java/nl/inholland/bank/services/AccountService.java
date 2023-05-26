@@ -56,20 +56,9 @@ public class AccountService {
     }
 
     // Get all accounts from a user
-    public List<Account> getAllAccountsFromUser(Optional<Integer> page, Optional<Integer> limit, Optional<String> IBAN, User user){
-        int pageNumber = page.orElse(0);
-        int limitNumber = limit.orElse(10);
+    public List<Account> getAllAccountsFromUser(User user){
 
-        Pageable pageable = PageRequest.of(pageNumber, limitNumber);
-
-        if(IBAN.isPresent()){
-            return IBAN.map(
-                i -> accountRepository.findAllAccountsByUser(user, pageable).getContent()
-            ).orElseThrow(() -> new ObjectNotFoundException(IBAN, "IBAN"));
-        }
-        else {
-            return accountRepository.findAllAccountsByUser(user, pageable).getContent();
-        }
+            return accountRepository.findAllByUser(user);
     }
 
     public Account mapAccountRequestToAccount(AccountRequest accountRequest, User user){

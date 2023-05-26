@@ -25,19 +25,15 @@ public class AccountController {
 
     @GetMapping("/{id}")
     public ResponseEntity getAllAccountsByUserId(
-            @RequestParam(required = false) Optional<Integer> page,
-            @RequestParam(required = false) Optional<Integer> limit,
-            @RequestParam Optional<String> IBAN,
             @PathVariable int id
     ) {
         try {
-            id = 3;
             User user = userService.getUserById(id);
-            List<Account> accounts = accountService.getAllAccountsFromUser(page, limit, IBAN, user);
+            List<Account> accounts = accountService.getAllAccountsFromUser(user);
 
             if (accounts.isEmpty()) {
                 // Return a custom response when there are no accounts
-                return ResponseEntity.ok("No accounts found for the user.");
+                return ResponseEntity.status(404).body("No accounts found");
             } else {
                 // Return the list of accounts
                 return ResponseEntity.ok(accounts);
