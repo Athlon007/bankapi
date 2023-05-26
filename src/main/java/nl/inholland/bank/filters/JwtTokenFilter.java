@@ -27,8 +27,9 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
         // Skip for login endpoint and POST /users, so that we can create a user.
         if (
-                (request.getRequestURI().equals("/auth/login")) ||
-                (request.getRequestURI().equals("/users") && request.getMethod().equals("POST"))
+                (request.getRequestURI().equals("/auth/login"))
+                || (request.getRequestURI().equals("/auth/refresh")
+                || (request.getRequestURI().equals("/users") && request.getMethod().equals("POST")))
         ) {
             filterChain.doFilter(request, response);
             return;
