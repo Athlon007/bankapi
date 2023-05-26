@@ -11,6 +11,7 @@ import nl.inholland.bank.services.UserService;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -144,6 +145,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}/limits")
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('EMPLOYEE')")
     public ResponseEntity updateUserLimits(@PathVariable int id, @Validated @RequestBody UserLimitsRequest userLimitsRequest)
     {
         throw new NotYetImplementedException("Updating user limits is not yet implemented.");

@@ -5,6 +5,7 @@ import nl.inholland.bank.models.dtos.AuthDTO.LoginRequest;
 import nl.inholland.bank.models.dtos.AuthDTO.RefreshTokenRequest;
 import nl.inholland.bank.models.dtos.AuthDTO.jwt;
 import nl.inholland.bank.models.dtos.UserDTO.UserForAdminRequest;
+import nl.inholland.bank.models.dtos.UserDTO.UserLimitsRequest;
 import nl.inholland.bank.models.dtos.UserDTO.UserRequest;
 import nl.inholland.bank.models.exceptions.OperationNotAllowedException;
 import nl.inholland.bank.repositories.UserRepository;
@@ -32,12 +33,7 @@ public class UserService {
     @Value("${bankapi.application.request.limits}")
     private int defaultGetAllUsersLimit;
 
-    @Value("${bankapi.user.defaults.dailyTransactionLimit}")
-    private int defaultDailyTransactionLimit;
-    @Value("${bankapi.user.defaults.transactionLimit}")
-    private int defaultTransactionLimit;
-    @Value("${bankapi.user.defaults.absoluteLimit}")
-    private int defaultAbsoluteLimit;
+
 
     public UserService(UserRepository userRepository, BCryptPasswordEncoder bCryptPasswordEncoder, JwtTokenProvider jwtTokenProvider, UserLimitsService userLimitsService) {
         this.userRepository = userRepository;
@@ -61,9 +57,9 @@ public class UserService {
         }
 
         User user = mapUserRequestToUser(userRequest);
-        user.setLimits(this.getDefaultLimits());
+        user.setLimits(userLimitsService.getDefaultLimits());
         userRepository.save(user);
-        userLimitsService.updateUserLimits(user.getLimits());
+        userLimitsService.initialiseLimits(user);
         return userRepository.findUserByUsername(user.getUsername()).orElseThrow(() -> new ObjectNotFoundException(user.getId(), "User"));
     }
 
@@ -80,8 +76,9 @@ public class UserService {
         }
 
         User user = mapUserRequestToUser(userRequest);
-        user.setLimits(this.getDefaultLimits());
+        user.setLimits(userLimitsService.getDefaultLimits());
         userRepository.save(user);
+        userLimitsService.initialiseLimits(user);
         return userRepository.findUserByUsername(user.getUsername()).orElseThrow(() -> new ObjectNotFoundException(user.getId(), "User"));
     }
 
@@ -232,13 +229,7 @@ public class UserService {
         return true;
     }
 
-    private Limits getDefaultLimits() {
-        Limits limits = new Limits();
-        limits.setDailyTransactionLimit(this.defaultDailyTransactionLimit);
-        limits.setTransactionLimit(this.defaultTransactionLimit);
-        limits.setAbsoluteLimit(this.defaultAbsoluteLimit);
-        return limits;
-    }
+
 
     public User updateUser(int id, UserRequest userRequest) throws AuthenticationException {
         if (userRequest instanceof UserForAdminRequest && getBearerUserRole() != Role.ADMIN) {
