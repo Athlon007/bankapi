@@ -3,6 +3,7 @@ package nl.inholland.bank.controllers;
 import nl.inholland.bank.models.Role;
 import nl.inholland.bank.models.User;
 import nl.inholland.bank.models.dtos.*;
+import nl.inholland.bank.models.dtos.AccountDTO.AccountResponse;
 import nl.inholland.bank.models.dtos.UserDTO.*;
 import nl.inholland.bank.services.UserService;
 import org.hibernate.cfg.NotYetImplementedException;
@@ -42,34 +43,14 @@ public class UserController {
             if (userService.getBearerUserRole() == Role.USER) {
                 List<UserForClientResponse> userForClientResponses = new ArrayList<>();
                 for (User user : users) {
-                    UserForClientResponse userForClientResponse = new UserForClientResponse(
-                            user.getId(),
-                            user.getFirstName(),
-                            user.getLastName(),
-                            user.getCurrentAccount().getIBAN()
-                    );
-
-                    userForClientResponses.add(userForClientResponse);
+                    userForClientResponses.add(mapUserToUserForClientResponse(user));
                 }
 
                 return ResponseEntity.status(200).body(userForClientResponses);
             }
             List<UserResponse> userResponses = new ArrayList<>();
             for (User user : users) {
-                String dateOfBirth = user.getDateOfBirth().toString();
-
-                UserResponse userResponse = new UserResponse(
-                        user.getId(),
-                        user.getEmail(),
-                        user.getFirstName(),
-                        user.getLastName(),
-                        user.getBsn(),
-                        user.getPhoneNumber(),
-                        dateOfBirth,
-                        user.getRole().toString()
-                );
-
-                userResponses.add(userResponse);
+                userResponses.add(mapUserToUserResponse(user));
             }
 
             return ResponseEntity.status(200).body(userResponses);
@@ -83,31 +64,10 @@ public class UserController {
     public ResponseEntity getUserById(@PathVariable int id) {
         try {
             User user = userService.getUserById(id);
-            if (userService.getBearerUserRole() == Role.USER && userService.getBearerUsername() != user.getUsername()) {
-                // TODO: User may only see users that have accounts.
-                UserForClientResponse userForClientResponse = new UserForClientResponse(
-                        user.getId(),
-                        user.getFirstName(),
-                        user.getLastName(),
-                        user.getCurrentAccount() == null ? null : user.getCurrentAccount().getIBAN()
-                );
-
-                return ResponseEntity.status(200).body(userForClientResponse);
+            if (userService.getBearerUserRole() == Role.USER && !userService.getBearerUsername().equals(user.getUsername())) {
+                return ResponseEntity.status(200).body(mapUserToUserForClientResponse(user));
             }
-            String dateOfBirth = user.getDateOfBirth().toString();
-            UserResponse userResponse = new UserResponse(
-                    user.getId(),
-                    user.getEmail(),
-                    user.getFirstName(),
-                    user.getLastName(),
-                    user.getBsn(),
-                    user.getPhoneNumber(),
-                    dateOfBirth,
-                    user.getRole().toString()
-                    // TODO: Get IBAN from current_account and savings_account
-            );
-
-            return ResponseEntity.status(200).body(userResponse);
+            return ResponseEntity.status(200).body(mapUserToUserResponse(user));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new ExceptionResponse("Unable to get user"));
         }
@@ -134,29 +94,9 @@ public class UserController {
         User user = userService.addUser(userRequest);
 
         if (userService.getBearerUserRole() == null) {
-            UserForClientResponse userForClientResponse = new UserForClientResponse(
-                    user.getId(),
-                    user.getFirstName(),
-                    user.getLastName(),
-                    //user.getIban()
-                    "IBAN"
-            );
-
-            return ResponseEntity.status(201).body(userForClientResponse);
+            return ResponseEntity.status(201).body(mapUserToUserForClientResponse(user));
         } else {
-            UserResponse userResponse = new UserResponse(
-                    user.getId(),
-                    user.getEmail(),
-                    user.getFirstName(),
-                    user.getLastName(),
-                    user.getBsn(),
-                    user.getPhoneNumber(),
-                    user.getDateOfBirth().toString(),
-                    user.getRole().toString()
-                    // TODO: Get IBAN from current_account and savings_account
-            );
-
-            return ResponseEntity.status(201).body(userResponse);
+            return ResponseEntity.status(201).body(mapUserToUserResponse(user));
         }
     }
 
@@ -178,20 +118,7 @@ public class UserController {
         }
 
         User user = userService.updateUser(id, userRequest);
-
-        UserResponse userResponse = new UserResponse(
-                user.getId(),
-                user.getEmail(),
-                user.getFirstName(),
-                user.getLastName(),
-                user.getBsn(),
-                user.getPhoneNumber(),
-                user.getDateOfBirth().toString(),
-                user.getRole().toString()
-                // TODO: Get IBAN from current_account and savings_account
-        );
-
-        return ResponseEntity.status(200).body(userResponse);
+        return ResponseEntity.status(200).body(mapUserToUserResponse(user));
     }
 
     @DeleteMapping("/{id}")
@@ -210,5 +137,57 @@ public class UserController {
     public ResponseEntity updateUserLimits(@PathVariable int id, @Validated @RequestBody UserLimitsRequest userLimitsRequest)
     {
         throw new NotYetImplementedException("Updating user limits is not yet implemented.");
+    }
+
+    private UserResponse mapUserToUserResponse(User user) {
+        AccountResponse currentAccountResponse;
+        if (user.getCurrentAccount() != null) {
+            currentAccountResponse = new AccountResponse(
+                    user.getCurrentAccount().getId(),
+                    user.getCurrentAccount().getIBAN(),
+                    user.getCurrentAccount().getType().toString(),
+                    user.getCurrentAccount().getCurrencyType().toString(),
+                    user.getCurrentAccount().getBalance()
+            );
+        } else {
+            currentAccountResponse = null;
+        }
+
+        AccountResponse savingAccountResponse;
+        if (user.getSavingAccount() != null) {
+            savingAccountResponse = new AccountResponse(
+                    user.getSavingAccount().getId(),
+                    user.getSavingAccount().getIBAN(),
+                    user.getSavingAccount().getType().toString(),
+                    user.getSavingAccount().getCurrencyType().toString(),
+                    user.getSavingAccount().getBalance()
+            );
+        } else {
+            savingAccountResponse = null;
+        }
+
+        String dateOfBirth = user.getDateOfBirth().toString();
+
+        return new UserResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getFirstName(),
+                user.getLastName(),
+                user.getBsn(),
+                user.getPhoneNumber(),
+                dateOfBirth,
+                user.getRole().toString(),
+                currentAccountResponse,
+                savingAccountResponse
+        );
+    }
+
+    private UserForClientResponse mapUserToUserForClientResponse(User user) {
+        return new UserForClientResponse(
+                user.getId(),
+                user.getFirstName(),
+                user.getLastName(),
+                user.getCurrentAccount() == null ? null : user.getCurrentAccount().getIBAN()
+        );
     }
 }

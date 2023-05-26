@@ -1,11 +1,10 @@
 package nl.inholland.bank.models;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.Transient;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Data
 @Entity
@@ -20,4 +19,9 @@ public class Limits {
     @Transient
     // Calculated by the service
     private double remainingDailyTransactionLimit;
+
+    @ToString.Exclude
+    @JsonIgnore
+    @OneToOne
+    private User user;
 }

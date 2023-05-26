@@ -78,7 +78,9 @@ public class ApplicationDataInitializer implements ApplicationRunner {
                                 "CURRENT",
                                 "3");
 
-                Account account = accountService.addAccount(accountRequest, admin);
+                Account account = accountService.addAccount(accountRequest);
+                userService.assignAccountToUser(admin, account);
+
 
                 AccountRequest userAccount = new AccountRequest(
                                 "NL01INHO0000000002",
@@ -86,8 +88,7 @@ public class ApplicationDataInitializer implements ApplicationRunner {
                                 "EURO",
                                 "CURRENT",
                                 "3");
-                System.out.println(accountService.addAccount(userAccount, user));
-
-                System.out.println(accountService.getAllAccountsFromUser(admin));
+                Account accountUser = accountService.addAccount(userAccount);
+                userService.assignAccountToUser(user, accountUser);
         }
 }

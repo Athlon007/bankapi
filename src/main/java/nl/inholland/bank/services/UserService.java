@@ -289,7 +289,7 @@ public class UserService {
         userRepository.delete(user);
     }
 
-    protected void assignAccountToUser(User user, Account account) {
+    public void assignAccountToUser(User user, Account account) {
         if (account.getType() == AccountType.CURRENT) {
             user.setCurrentAccount(account);
         } else if (account.getType() == AccountType.SAVING) {
