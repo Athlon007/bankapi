@@ -41,37 +41,42 @@ public class UserService {
         this.jwtTokenProvider = jwtTokenProvider;
     }
 
-    private User addUser(User user) {
+    public User addUser(UserRequest userRequest) throws AuthenticationException {
+        if (userRepository.findUserByUsername(userRequest.getUsername()).isPresent()) {
+            throw new IllegalArgumentException("Username already exists.");
+        }
+
+        if (!isPasswordValid(userRequest.getPassword())) {
+            throw new IllegalArgumentException("Password does not meet requirements.");
+        }
+
+        // If current token bearer is not an admin, and userRequest is type of UserForAdminRequest, throw exception.
+        if (getBearerUserRole() != Role.ADMIN && userRequest instanceof UserForAdminRequest) {
+            throw new AuthenticationException("You are not authorized to create accounts with roles. Remove 'role' from request body.");
+        }
+
+        User user = mapUserRequestToUser(userRequest);
         user.setLimits(this.getDefaultLimits());
         userRepository.save(user);
         return userRepository.findUserByUsername(user.getUsername()).orElseThrow(() -> new ObjectNotFoundException(user.getId(), "User"));
     }
 
-    public User addUser(UserRequest userRequest) {
-        if (userRepository.findUserByUsername(userRequest.username()).isPresent()) {
+    // This function is called during initial setup of the application.
+    // it is similar to addUser, but skips the role check.
+    // Should not be exposed to API.
+    public User addAdmin(UserForAdminRequest userRequest) {
+        if (userRepository.findUserByUsername(userRequest.getUsername()).isPresent()) {
             throw new IllegalArgumentException("Username already exists.");
         }
 
-        if (!isPasswordValid(userRequest.password())) {
+        if (!isPasswordValid(userRequest.getPassword())) {
             throw new IllegalArgumentException("Password does not meet requirements.");
         }
 
         User user = mapUserRequestToUser(userRequest);
-        return addUser(user);
-    }
-
-    public User addUserForAdmin(UserForAdminRequest userForAdminRequest) {
-        if (userRepository.findUserByUsername(userForAdminRequest.username()).isPresent()) {
-            throw new IllegalArgumentException("Username already exists.");
-        }
-
-        if (!isPasswordValid(userForAdminRequest.password())) {
-            throw new IllegalArgumentException("Password does not meet requirements.");
-        }
-
-
-        User user = mapUserForAdminRequestToUser(userForAdminRequest);
-        return addUser(user);
+        user.setLimits(this.getDefaultLimits());
+        userRepository.save(user);
+        return userRepository.findUserByUsername(user.getUsername()).orElseThrow(() -> new ObjectNotFoundException(user.getId(), "User"));
     }
 
     public List<User> getAllUsers(Optional<Integer> page, Optional<Integer> limit, Optional<String> name, Optional<Boolean> hasNoAccounts) {
@@ -136,33 +141,23 @@ public class UserService {
 
     public User mapUserRequestToUser(UserRequest userRequest) {
         User user = new User();
-        user.setFirstName(userRequest.first_name());
-        user.setLastName(userRequest.last_name());
-        user.setEmail(userRequest.email());
-        user.setBsn(userRequest.bsn());
-        user.setPhoneNumber(userRequest.phone_number());
+        user.setFirstName(userRequest.getFirst_name());
+        user.setLastName(userRequest.getLast_name());
+        user.setEmail(userRequest.getEmail());
+        user.setBsn(userRequest.getBsn());
+        user.setPhoneNumber(userRequest.getPhone_number());
         // Convert string of format "yyyy-MM-dd" to LocalDate
-        LocalDate dateOfBirth = LocalDate.parse(userRequest.birth_date());
+        if (userRequest.getBirth_date() == null) {
+            throw new IllegalArgumentException("Birth date is required.");
+        }
+        LocalDate dateOfBirth = LocalDate.parse(userRequest.getBirth_date());
         user.setDateOfBirth(dateOfBirth);
-        user.setUsername(userRequest.username());
-        user.setPassword(bCryptPasswordEncoder.encode(userRequest.password()));
+        user.setUsername(userRequest.getUsername());
+        user.setPassword(bCryptPasswordEncoder.encode(userRequest.getPassword()));
         user.setRole(Role.USER);
-        return user;
-    }
-
-    public User mapUserForAdminRequestToUser(UserForAdminRequest userForAdminRequest) {
-        User user = new User();
-        user.setFirstName(userForAdminRequest.first_name());
-        user.setLastName(userForAdminRequest.last_name());
-        user.setEmail(userForAdminRequest.email());
-        user.setBsn(userForAdminRequest.bsn());
-        user.setPhoneNumber(userForAdminRequest.phone_number());
-        // Convert string of format "yyyy-MM-dd" to LocalDate
-        LocalDate dateOfBirth = LocalDate.parse(userForAdminRequest.birth_date());
-        user.setDateOfBirth(dateOfBirth);
-        user.setUsername(userForAdminRequest.username());
-        user.setPassword(bCryptPasswordEncoder.encode(userForAdminRequest.password()));
-        user.setRole(mapStringToRole(userForAdminRequest.role()));
+        if (userRequest instanceof UserForAdminRequest) {
+            user.setRole(mapStringToRole(((UserForAdminRequest) userRequest).getRole()));
+        }
         return user;
     }
 
@@ -221,20 +216,20 @@ public class UserService {
         return limits;
     }
 
-    public User updateUserForAdmin(int id, UserForAdminRequest userForAdminRequest) {
+    public User updateUserForAdmin(int id, UserRequest userForAdminRequest) {
         User user = userRepository.findById(id).orElseThrow(()-> new ObjectNotFoundException(id, "User not found"));
 
-        user.setFirstName(userForAdminRequest.first_name());
-        user.setLastName(userForAdminRequest.last_name());
-        user.setEmail(userForAdminRequest.email());
-        user.setBsn(userForAdminRequest.bsn());
-        user.setPhoneNumber(userForAdminRequest.phone_number());
+        user.setFirstName(userForAdminRequest.getFirst_name());
+        user.setLastName(userForAdminRequest.getLast_name());
+        user.setEmail(userForAdminRequest.getEmail());
+        user.setBsn(userForAdminRequest.getBsn());
+        user.setPhoneNumber(userForAdminRequest.getPhone_number());
         // Convert string of format "yyyy-MM-dd" to LocalDate
-        LocalDate dateOfBirth = LocalDate.parse(userForAdminRequest.birth_date());
+        LocalDate dateOfBirth = LocalDate.parse(userForAdminRequest.getBirth_date());
         user.setDateOfBirth(dateOfBirth);
-        user.setUsername(userForAdminRequest.username());
-        user.setPassword(bCryptPasswordEncoder.encode(userForAdminRequest.password()));
-        user.setRole(mapStringToRole(userForAdminRequest.role()));
+        user.setUsername(userForAdminRequest.getUsername());
+        user.setPassword(bCryptPasswordEncoder.encode(userForAdminRequest.getPassword()));
+        //user.setRole(mapStringToRole(userForAdminRequest.getRo()));
 
         return userRepository.save(user);
     }

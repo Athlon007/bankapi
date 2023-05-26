@@ -1,8 +1,11 @@
 package nl.inholland.bank.models;
 
+import io.micrometer.common.lang.NonNullFields;
+import io.micrometer.common.lang.Nullable;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -10,26 +13,34 @@ import java.util.List;
 
 @Entity
 @Data
-@NoArgsConstructor
+@NoArgsConstructor(force = true)
 @Table(name = "users")
 public class User {
     @Id
     @GeneratedValue
     private int id;
+    @NonNull
     private String firstName;
     private String lastName;
     @Column(unique = true)
+    @NonNull
     private String email;
     private String bsn;
     private String phoneNumber;
+    @NonNull
     private LocalDate dateOfBirth;
     @OneToOne(cascade = CascadeType.ALL)
+    @Nullable
     private Account currentAccount;
     @OneToOne(cascade = CascadeType.ALL)
+    @Nullable
     private Account savingAccount;
     @Column(unique = true)
+    @NonNull
     private String username;
+    @NonNull
     private String password;
+    @NonNull
     private Role role;
     @OneToOne(cascade = CascadeType.ALL)
     private Limits limits;
@@ -56,6 +67,17 @@ public class User {
         this.setRole(role);
     }
 
+    public void setLastName(String name) {
+        if (name == null || name.length() == 0) {
+            // Why we change null to empty string?
+            // Because there are people who don't have a last name (yes, really).
+            // https://en.wikipedia.org/wiki/List_of_legally_mononymous_people
+            name = "";
+        }
+
+        this.lastName = name;
+    }
+
     public void setBsn(String bsn) {
         // Check if the BSN is 8 or 9 digits long
         if (bsn.length() != 8 && bsn.length() != 9) {
@@ -73,7 +95,7 @@ public class User {
     public void setPhoneNumber(String phoneNumber) {
         // Check if the phone number only contains numbers.
         // Phone number may also start with a '+' sign.
-        if (!phoneNumber.matches("\\d+") && !phoneNumber.matches("\\+\\d+")) {
+        if (phoneNumber == null || (!phoneNumber.matches("\\d+") && !phoneNumber.matches("\\+\\d+"))) {
             throw new IllegalArgumentException("Phone number must only contain numbers");
         }
 

@@ -142,4 +142,10 @@ class UserTests {
 
         Assertions.assertEquals("Username cannot be null or empty", exception.getMessage());
     }
+
+    @Test
+    void setttingLastNameToNullShouldReplaceWithEmptyString() {
+        user.setLastName(null);
+        Assertions.assertEquals("", user.getLastName());
+    }
 }

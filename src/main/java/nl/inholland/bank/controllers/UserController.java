@@ -10,6 +10,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import javax.naming.AuthenticationException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -112,54 +113,47 @@ public class UserController {
 
     @PostMapping
     //@PreAuthorize("hasAuthority('ADMIN') or hasAuthority('EMPLOYEE')")
-    public ResponseEntity addUser(@RequestBody UserForAdminRequest userForAdminRequest) {
-        try {
+    public ResponseEntity addUser(@RequestBody UserForAdminRequest request) throws AuthenticationException, IllegalArgumentException {
+        UserRequest userRequest = request;
+        // If request has not role, it is a request from a client
+        if (request.getRole() == null) {
+            userRequest = new UserRequest(
+                    request.getEmail(),
+                    request.getUsername(),
+                    request.getPassword(),
+                    request.getFirst_name(),
+                    request.getLast_name(),
+                    request.getBsn(),
+                    request.getPhone_number(),
+                    request.getBirth_date()
+            );
+        }
 
-            User user = null;
-            if (userService.getBearerUserRole() == null || userService.getBearerUserRole() == Role.EMPLOYEE) {
-                UserRequest userRequest = new UserRequest(
-                        userForAdminRequest.email(),
-                        userForAdminRequest.username(),
-                        userForAdminRequest.password(),
-                        userForAdminRequest.first_name(),
-                        userForAdminRequest.last_name(),
-                        userForAdminRequest.bsn(),
-                        userForAdminRequest.phone_number(),
-                        userForAdminRequest.birth_date()
-                );
-                user = userService.addUser(userRequest);
-            } else {
-                user = userService.addUserForAdmin(userForAdminRequest);
-            }
-            if (userService.getBearerUserRole() == null) {
-                UserForClientResponse userForClientResponse = new UserForClientResponse(
-                        user.getId(),
-                        user.getFirstName(),
-                        user.getLastName(),
-                        //user.getIban()
-                        "IBAN"
-                );
+        User user = userService.addUser(userRequest);
 
-                return ResponseEntity.status(201).body(userForClientResponse);
-            } else {
-                UserResponse userResponse = new UserResponse(
-                        user.getId(),
-                        user.getEmail(),
-                        user.getFirstName(),
-                        user.getLastName(),
-                        user.getBsn(),
-                        user.getPhoneNumber(),
-                        user.getDateOfBirth().toString(),
-                        user.getRole().toString()
-                );
+        if (userService.getBearerUserRole() == null) {
+            UserForClientResponse userForClientResponse = new UserForClientResponse(
+                    user.getId(),
+                    user.getFirstName(),
+                    user.getLastName(),
+                    //user.getIban()
+                    "IBAN"
+            );
 
-                return ResponseEntity.status(201).body(userResponse);
-            }
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(new ExceptionResponse(e.getMessage()));
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-            return ResponseEntity.badRequest().body(new ExceptionResponse("Unable to create user"));
+            return ResponseEntity.status(201).body(userForClientResponse);
+        } else {
+            UserResponse userResponse = new UserResponse(
+                    user.getId(),
+                    user.getEmail(),
+                    user.getFirstName(),
+                    user.getLastName(),
+                    user.getBsn(),
+                    user.getPhoneNumber(),
+                    user.getDateOfBirth().toString(),
+                    user.getRole().toString()
+            );
+
+            return ResponseEntity.status(201).body(userResponse);
         }
     }
 
@@ -167,7 +161,7 @@ public class UserController {
     @PutMapping("/{id}")
     public ResponseEntity updateUser(@PathVariable int id, @RequestBody UserForAdminRequest userForAdminRequest)
     {
-        throw new NotYetImplementedException("Updating users is not yet implemented.");
+        throw new NotYetImplementedException("Deleting users is not yet implemented.");
     }
 
     @DeleteMapping("/{id}")

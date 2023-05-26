@@ -41,7 +41,7 @@ public class ApplicationDataInitializer implements ApplicationRunner {
                 "ADMIN"
         );
 
-        User admin = userService.addUserForAdmin(adminRequest);
+        User admin = userService.addAdmin(adminRequest);
 
         UserForAdminRequest employeeRequest = new UserForAdminRequest(
                 "employee@example.com",
@@ -55,7 +55,7 @@ public class ApplicationDataInitializer implements ApplicationRunner {
                 "EMPLOYEE"
         );
 
-        userService.addUserForAdmin(employeeRequest);
+        userService.addAdmin(employeeRequest);
 
         UserRequest userRequest = new UserRequest(
                 "client@example.com",
