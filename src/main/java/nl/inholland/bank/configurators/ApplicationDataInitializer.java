@@ -16,85 +16,78 @@ import java.util.Optional;
 
 @Component
 public class ApplicationDataInitializer implements ApplicationRunner {
-    private final UserService userService;
-    private final AccountService accountService;
+        private final UserService userService;
+        private final AccountService accountService;
 
-    public ApplicationDataInitializer(UserService userService, AccountService accountService) {
-        this.userService = userService;
-        this.accountService = accountService;
-    }
+        public ApplicationDataInitializer(UserService userService, AccountService accountService) {
+                this.userService = userService;
+                this.accountService = accountService;
+        }
 
-    @Transactional
-    @Override
-    public void run(ApplicationArguments args) throws Exception {
-        // TODO: Add data to the database
+        @Transactional
+        @Override
+        public void run(ApplicationArguments args) throws Exception {
+                // TODO: Add data to the database
 
-        UserForAdminRequest adminRequest = new UserForAdminRequest(
-                "admin@example.com",
-                "admin",
-                "Password1!",
-                "Namey",
-                "McNameface",
-                "123456789",
-                "0612345678",
-                "2000-01-01",
-                "ADMIN"
-        );
+                UserForAdminRequest adminRequest = new UserForAdminRequest(
+                                "admin@example.com",
+                                "admin",
+                                "Password1!",
+                                "Namey",
+                                "McNameface",
+                                "123456789",
+                                "0612345678",
+                                "2000-01-01",
+                                "ADMIN");
 
-        User admin = userService.addAdmin(adminRequest);
+                User admin = userService.addAdmin(adminRequest);
 
-        UserForAdminRequest employeeRequest = new UserForAdminRequest(
-                "employee@example.com",
-                "employee",
-                "Password2!",
-                "Goofy",
-                "Ahh",
-                "123456789",
-                "0612345678",
-                "2000-01-01",
-                "EMPLOYEE"
-        );
+                UserForAdminRequest employeeRequest = new UserForAdminRequest(
+                                "employee@example.com",
+                                "employee",
+                                "Password2!",
+                                "Goofy",
+                                "Ahh",
+                                "123456789",
+                                "0612345678",
+                                "2000-01-01",
+                                "EMPLOYEE");
 
-        userService.addAdmin(employeeRequest);
+                userService.addAdmin(employeeRequest);
 
-        UserRequest userRequest = new UserRequest(
-                "client@example.com",
-                "client",
-                "Password3!",
-                "Yo",
-                "Mama",
-                "123456789",
-                "0612345678",
-                "2000-01-01"
-        );
-        User user = userService.addUser(userRequest);
+                UserRequest userRequest = new UserRequest(
+                                "client@example.com",
+                                "client",
+                                "Password3!",
+                                "Yo",
+                                "Mama",
+                                "123456789",
+                                "0612345678",
+                                "2000-01-01");
+                User user = userService.addUser(userRequest);
 
-        // Set empty optional to null
+                // Set empty optional to null
 
+                System.out.println(userService.getAllUsers(Optional.empty(), Optional.empty(), Optional.empty()));
 
-        System.out.println(userService.getAllUsers(Optional.empty(), Optional.empty(), Optional.empty()));
+                // Account
+                AccountRequest accountRequest = new AccountRequest(
+                                "NL01INHO0000000001",
+                                0,
+                                "EURO",
+                                "CURRENT",
+                                "3");
 
+                Account account = accountService.addAccount(accountRequest, admin);
 
-        // Account
-        AccountRequest accountRequest = new AccountRequest(
-                "NL01INHO0000000001",
-                0,
-                "EURO",
-                "CURRENT",
-                "3"
-        );
+                AccountRequest userAccount = new AccountRequest(
+                                "NL01INHO0000000002",
+                                0,
+                                "EURO",
+                                "CURRENT",
+                                "3");
+                System.out.println(accountService.addAccount(userAccount, user));
 
-        Account account = accountService.addAccount(accountRequest, admin);
-
-        AccountRequest userAccount = new AccountRequest(
-                "NL01INHO0000000002",
-                0,
-                "EURO",
-                "CURRENT",
-                "3"
-        );
-        System.out.println(accountService.addAccount(userAccount, user));
-
-        System.out.println(accountService.getAllAccountsFromUser(admin));
-    }
+                System.out.println(accountService.getAllAccountsFromUser(admin));
+        }
 }
