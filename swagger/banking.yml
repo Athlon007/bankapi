@@ -982,31 +982,38 @@ components:
       properties:
         transaction_limit:
           type: number
-          format: int64
-          maximum: 100000
+          format: double
+          minimum: 0
+          maximium: 1000000
         daily_transaction_limit:
           type: number
-          format: int64
-          maximum: 100000
+          format: double
+          minimum: 0
+          maximium: 1000000
         absolute_limit:
           type: number
-          format: int64
-          maximum: 100000
+          format: double
+          maximum: 0
+          minimum: -1000000
     UserLimitsResponse:
       type: object
       properties:
         transaction_limit:
           type: number
-          format: int64
+          format: double
+          minimum: 0
         daily_transaction_limit:
           type: number
-          format: int64
+          format: double
+          minimum: 0
         absolute_limit:
           type: number
-          format: int64
+          format: double
+          maximum: 0
         remaining_daily_transaction_limit:
           type: number
           format: double
+          minimum: 0
   securitySchemes:
     bearerAuth:
       type: http

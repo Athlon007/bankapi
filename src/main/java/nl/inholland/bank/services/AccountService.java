@@ -6,13 +6,9 @@ import nl.inholland.bank.models.CurrencyType;
 import nl.inholland.bank.models.User;
 import nl.inholland.bank.models.dtos.AccountDTO.AccountRequest;
 import nl.inholland.bank.repositories.AccountRepository;
-import org.hibernate.ObjectNotFoundException;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class AccountService {
@@ -49,31 +45,21 @@ public class AccountService {
         return null;
     }
 
-    public Account addAccount(AccountRequest accountRequest, User user){
-        Account account = mapAccountRequestToAccount(accountRequest, userService.getUserById(3));
+    public Account addAccount(AccountRequest accountRequest){
+        Account account = mapAccountRequestToAccount(accountRequest);
 
         return accountRepository.save(account);
     }
 
     // Get all accounts from a user
-    public List<Account> getAllAccountsFromUser(Optional<Integer> page, Optional<Integer> limit, Optional<String> IBAN, User user){
-        int pageNumber = page.orElse(0);
-        int limitNumber = limit.orElse(10);
+    public List<Account> getAccountsByUserId(User user){
 
-        Pageable pageable = PageRequest.of(pageNumber, limitNumber);
-
-        if(IBAN.isPresent()){
-            return IBAN.map(
-                i -> accountRepository.findAllAccountsByUser(user, pageable).getContent()
-            ).orElseThrow(() -> new ObjectNotFoundException(IBAN, "IBAN"));
-        }
-        else {
-            return accountRepository.findAllAccountsByUser(user, pageable).getContent();
-        }
+            return accountRepository.findAllByUser(user);
     }
 
-    public Account mapAccountRequestToAccount(AccountRequest accountRequest, User user){
+    public Account mapAccountRequestToAccount(AccountRequest accountRequest){
         Account account = new Account();
+        User user = userService.getUserById(Integer.parseInt(accountRequest.userId()));
         account.setUser(user);
         account.setIBAN(accountRequest.IBAN());
         account.setType(mapAccountTypeToString(accountRequest.accountType()));
@@ -97,7 +83,7 @@ public class AccountService {
         switch (accountType){
             case "CURRENT":
                 return AccountType.CURRENT;
-            case "SAVINGS":
+            case "SAVING":
                 return AccountType.SAVING;
             default:
                 return AccountType.CURRENT;

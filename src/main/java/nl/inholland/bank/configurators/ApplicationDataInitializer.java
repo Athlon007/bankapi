@@ -67,7 +67,6 @@ public class ApplicationDataInitializer implements ApplicationRunner {
                 "0612345678",
                 "2000-01-01"
         );
-
         userService.addUser(userRequest);
 
         // Set empty optional to null
@@ -85,8 +84,8 @@ public class ApplicationDataInitializer implements ApplicationRunner {
                 "3"
         );
 
-        Account account = accountService.addAccount(accountRequest, admin);
-
-        System.out.println(accountService.getAllAccountsFromUser(Optional.empty(), Optional.empty(), Optional.empty(), admin));
+        Account account = accountService.addAccount(accountRequest);
+        User user = userService.getUserById(Integer.parseInt(accountRequest.userId()));
+        System.out.println(accountService.getAccountsByUserId(user));
     }
 }
