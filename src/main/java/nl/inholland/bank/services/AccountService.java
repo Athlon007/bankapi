@@ -46,6 +46,17 @@ public class AccountService {
     }
 
     public Account addAccount(AccountRequest accountRequest){
+        if (mapAccountTypeToString(accountRequest.accountType()) == AccountType.CURRENT){
+            if (doesUserHaveCurrentAccount(userService.getUserById(Integer.parseInt(accountRequest.userId())))){
+                throw new IllegalArgumentException("User already has a current account");
+            }
+        }
+        if (mapAccountTypeToString(accountRequest.accountType()) == AccountType.SAVING){
+            if (doesUserHaveSavingAccount(userService.getUserById(Integer.parseInt(accountRequest.userId())))){
+                throw new IllegalArgumentException("User already has a saving account");
+            }
+        }
+
         Account account = mapAccountRequestToAccount(accountRequest);
 
         return accountRepository.save(account);
@@ -55,6 +66,26 @@ public class AccountService {
     public List<Account> getAccountsByUserId(User user){
 
             return accountRepository.findAllByUser(user);
+    }
+
+    public boolean doesUserHaveCurrentAccount(User user){
+        List<Account> accounts = getAccountsByUserId(user);
+        for (Account account : accounts) {
+            if (account.getType() == AccountType.CURRENT){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean doesUserHaveSavingAccount(User user){
+        List<Account> accounts = getAccountsByUserId(user);
+        for (Account account : accounts) {
+            if (account.getType() == AccountType.SAVING){
+                return true;
+            }
+        }
+        return false;
     }
 
     public Account mapAccountRequestToAccount(AccountRequest accountRequest){

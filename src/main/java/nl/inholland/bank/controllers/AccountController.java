@@ -49,8 +49,8 @@ public class AccountController {
                     AccountResponse accountResponse = new AccountResponse(
                             account.getId(),
                             account.getIBAN(),
-                            account.getType().toString(),
                             account.getCurrencyType().toString(),
+                            account.getType().toString(),
                             account.getBalance()
                     );
                     accountResponses.add(accountResponse);
@@ -74,8 +74,8 @@ public class AccountController {
                 AccountResponse accountResponse = new AccountResponse(
                         account.getId(),
                         account.getIBAN(),
-                        account.getType().toString(),
                         account.getCurrencyType().toString(),
+                        account.getType().toString(),
                         account.getBalance()
                 );
 

@@ -1,5 +1,5 @@
 package nl.inholland.bank.models.dtos.AccountDTO;
 
-public record AccountResponse(int id, String IBAN, String account_type, String currency_type, double balance) {
+public record AccountResponse(int id, String IBAN, String currency_type, String account_type, double balance) {
 
 }
