@@ -3,6 +3,7 @@ package nl.inholland.bank.controllers;
 import nl.inholland.bank.models.Account;
 import nl.inholland.bank.models.User;
 import nl.inholland.bank.models.dtos.AccountDTO.AccountRequest;
+import nl.inholland.bank.models.dtos.AccountDTO.AccountResponse;
 import nl.inholland.bank.services.AccountService;
 import nl.inholland.bank.services.UserService;
 import org.springframework.http.ResponseEntity;
@@ -53,6 +54,13 @@ public class AccountController {
     @PostMapping
     public ResponseEntity addAccount(@RequestBody AccountRequest accountRequest) {
         Account account = accountService.addAccount(accountRequest, userService.getUserById(3));
-        return ResponseEntity.ok(account);
+        AccountResponse accountResponse = new AccountResponse(
+                account.getId(),
+                account.getIBAN(),
+                account.getType().toString(),
+                account.getCurrencyType().toString(),
+                account.getBalance()
+        );
+        return ResponseEntity.status(201).body(accountResponse);
     }
 }
