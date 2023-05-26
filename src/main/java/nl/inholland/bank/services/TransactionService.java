@@ -15,13 +15,15 @@ public class TransactionService {
     public TransactionService(TransactionRepository transactionRepository) {
         this.transactionRepository = transactionRepository;
     }
-    public Transaction createTransaction(User user, Account AccountSender, Account AccountReceiver, CurrencyType currencyType, double amount) {
+    public Transaction createTransaction(User user, Account AccountSender, Account AccountReceiver,
+                                         CurrencyType currencyType, double amount, String description) {
         Transaction transaction = new Transaction();
         transaction.setUser(user);
         transaction.setAccountSender(AccountSender);
         transaction.setAccountReceiver(AccountReceiver);
         transaction.setCurrencyType(currencyType);
         transaction.setAmount(amount);
+        transaction.setDescription(description);
 
         return transaction;
     }
@@ -32,7 +34,7 @@ public class TransactionService {
             // Check if the account has enough balance
             if (checkAccountBalance(account, amount)){
                 // Update the account balance
-                Transaction transaction = createTransaction(user, account, null, account.getCurrencyType(), amount);
+                Transaction transaction = createTransaction(user, account, null, account.getCurrencyType(), amount, null);
                 transactionRepository.save(transaction);
 
                 // Update the account balance
@@ -57,7 +59,7 @@ public class TransactionService {
 
         if (checkAccountBalance(account, amount)) {
             updateAccountBalance(account, amount, true);
-            Transaction transaction = createTransaction(account.getUser(), null, account, account.getCurrencyType(), amount);
+            Transaction transaction = createTransaction(account.getUser(), null, account, account.getCurrencyType(), amount, null);
         }
     }
 
@@ -69,19 +71,19 @@ public class TransactionService {
         return false;
     }
 
-    public void transferMoney(User user, Account accountSender, Account accountReceiver, CurrencyType currencyType, double amount) {
-        // TODO: Retrieve user that owns the account
+    public Transaction transferMoney(User user, Account accountSender, Account accountReceiver,
+                                     CurrencyType currencyType, double amount, String description) {
         // If any account is a saving account...
         if (accountSender.getType() == AccountType.SAVING || accountReceiver.getType() == AccountType.SAVING) {
             // Check if both the sender and receiver account belong to the user performing the transaction.
             if (accountSender.getUser() == accountReceiver.getUser()) {
-                createTransaction(user, accountSender, accountReceiver, currencyType, amount);
+                return createTransaction(user, accountSender, accountReceiver, currencyType, amount, description);
             } else {
                 throw new IllegalArgumentException("You can't transfer from/to a saving account that doesn't belong to you.");
             }
         } else { // Proceed with transaction, check if the user (sender) has enough funds
             if ((accountSender.getBalance() - amount) >= user.getLimits().getAbsoluteLimit()) {
-                createTransaction(user, accountSender, accountReceiver, currencyType, amount);
+                return createTransaction(user, accountSender, accountReceiver, currencyType, amount, description);
             } else {
                 throw new IllegalArgumentException("Insufficient funds to proceed with the transaction.");
             }

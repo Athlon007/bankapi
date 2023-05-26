@@ -39,4 +39,7 @@ public class Transaction {
 
     @Column
     private TransactionType transactionType;
+
+    @Column
+    private String description;
 }

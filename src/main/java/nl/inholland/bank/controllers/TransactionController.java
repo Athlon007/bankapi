@@ -1,9 +1,11 @@
 package nl.inholland.bank.controllers;
 
 import nl.inholland.bank.models.Account;
+import nl.inholland.bank.models.CurrencyType;
 import nl.inholland.bank.models.Transaction;
 import nl.inholland.bank.models.User;
 import nl.inholland.bank.models.dtos.ExceptionResponse;
+import nl.inholland.bank.models.dtos.TransactionDTO.TransactionRequest;
 import nl.inholland.bank.models.dtos.TransactionDTO.WithdrawRequest;
 import nl.inholland.bank.models.dtos.TransactionDTO.TransactionResponse;
 import nl.inholland.bank.services.AccountService;
@@ -68,13 +70,33 @@ public class TransactionController {
     }
 
     @PostMapping("/transactions")
-    public ResponseEntity<Object> transferMoney(@RequestParam String sender_iban,
-                                                @RequestParam String receiver_iban,
-                                                @RequestParam double amount,
-                                                @RequestParam String description)
+    public ResponseEntity<Object> transferMoney(@RequestParam int userId, @RequestBody TransactionRequest request)
     {
         try {
-            return ResponseEntity.status(201).body("info");
+            // Get the user
+            User user = userService.getUserById(userId);
+            Account senderAccount = accountService.getAccountByIBAN(request.sender_iban());
+            Account receiverAccount = accountService.getAccountByIBAN(request.receiver_iban());
+
+            if (senderAccount != null && receiverAccount != null)
+            {
+                // Attempt to create a transaction
+                Transaction transaction = transactionService.transferMoney(user, senderAccount, receiverAccount,
+                                                            CurrencyType.EURO, request.amount(), request.description());
+
+                // Create and return response
+                TransactionResponse response = new TransactionResponse(
+                        transaction.getId(),
+                        transaction.getAccountSender().getIBAN(),
+                        transaction.getAccountReceiver().getIBAN(),
+                        transaction.getAmount(),
+                        transaction.getTimestamp(),
+                        transaction.getCurrencyType().toString()
+                );
+
+                return ResponseEntity.status(201).body(response);
+            }
+            return ResponseEntity.status(400).body("Request body is incorrect.");
         } catch (Exception e)
         {
             return ResponseEntity.badRequest().body(
@@ -86,6 +108,7 @@ public class TransactionController {
     public ResponseEntity<Object> getAllTransactions()
     {
         try {
+            // TODO: Check for user role to depend whose transactions to return...
             return ResponseEntity.status(201).body("info");
         } catch (Exception e)
         {

@@ -1,17 +1,10 @@
 package nl.inholland.bank.models;
 
 import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.List;
 
 public class IBANGenerator {
-    public static void main(String[] args) {
-        String countryCode = "NL";
-        String bankCode = "ABNA";
-        String accountNumber = "12345678901234";
-
-        String generatedIBAN = generateIBAN(countryCode, bankCode, accountNumber);
-        System.out.println("Generated IBAN: " + generatedIBAN);
-    }
-
     /**
      * Generates a new IBAN
      * @param countryCode The country code. Example "NL"
@@ -45,5 +38,50 @@ public class IBANGenerator {
         int checkDigit = modValue - remainder;
 
         return countryCode + String.format("%02d", checkDigit) + bankCode + accountNumber;
+    }
+
+    public static boolean isValidIBAN(String iban)
+    {
+        if (iban != null) {
+            // Remove whitespace and convert to uppercase
+            iban = iban.replaceAll("\\s+", "").toUpperCase();
+
+            // Check if the IBAN length is valid
+            if (iban.length() < 2 || iban.length() > 34) {
+                return false;
+            }
+
+            // Extract the country code and check if it is valid
+            String countryCode = iban.substring(0, 2);
+            if (!isValidCountryCode(countryCode)) {
+                return false;
+            }
+
+            // Move the first 4 characters to the end
+            iban = iban.substring(4) + iban.substring(0, 4);
+
+            // Convert letters to digits (A = 10, B = 11, etc.)
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < iban.length(); i++) {
+                char c = iban.charAt(i);
+                if (Character.isLetter(c)) {
+                    sb.append(Character.getNumericValue(c));
+                } else {
+                    sb.append(c);
+                }
+            }
+            iban = sb.toString();
+
+            // Perform modulus-97 operation
+            BigInteger ibanNumber = new BigInteger(iban);
+            return ibanNumber.mod(BigInteger.valueOf(97)).intValue() == 1;
+        }
+        return false;
+    }
+
+    private static boolean isValidCountryCode(String countryCode) {
+        List<String> validCountryCodes = Arrays.asList("GB", "DE", "FR", "NL");
+
+        return validCountryCodes.contains(countryCode);
     }
 }

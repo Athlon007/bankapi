@@ -1,9 +1,6 @@
 package nl.inholland.bank.services;
 
-import nl.inholland.bank.models.Account;
-import nl.inholland.bank.models.AccountType;
-import nl.inholland.bank.models.CurrencyType;
-import nl.inholland.bank.models.User;
+import nl.inholland.bank.models.*;
 import nl.inholland.bank.models.dtos.AccountDTO.AccountRequest;
 import nl.inholland.bank.repositories.AccountRepository;
 import org.springframework.stereotype.Service;
@@ -43,6 +40,17 @@ public class AccountService {
 
     public Account getAccountById(int id){
         return null;
+    }
+
+    public Account getAccountByIBAN(String iban)
+    {
+        // Check if iban is valid
+        if (IBANGenerator.isValidIBAN(iban)) {
+            // Try to find an account
+            return accountRepository.findAccountByIBAN(iban);
+        } else { // Invalid iban
+            return null;
+        }
     }
 
     public Account addAccount(AccountRequest accountRequest){
