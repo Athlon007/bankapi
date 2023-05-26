@@ -128,10 +128,7 @@ paths:
                 bsn: "123456789"
                 phone_number: "0612345678"
                 birth_date: "2000-01-01"
-                current_account:
-                    iban: "NL00INHL1234567890"
-                    balance: 1000
-                    type: "savings"
+                current_account: null
                 saving_account: null
         "400":
           $ref: "#/components/responses/BadRequest"
@@ -174,15 +171,11 @@ paths:
                   bsn: "123456789"
                   phone_number: "0612345678"
                   birth_date: "2000-01-01"
-                  accounts:
-                    [
-                      {
-                        id: 1,
-                        iban: "NL00INHL1234567890",
-                        balance: 1000,
-                        type: "savings",
-                      },
-                    ]
+                  current_account:
+                    iban: "NL00INHL1234567890"
+                    balance: 1000
+                    type: "savings"
+                  saving_account: null
         "401":
           $ref: "#/components/responses/Unauthorized"
         "404":
