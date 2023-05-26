@@ -2,7 +2,6 @@ package nl.inholland.bank.models.dtos.UserDTO;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor

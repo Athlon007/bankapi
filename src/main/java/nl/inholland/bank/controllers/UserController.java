@@ -6,6 +6,7 @@ import nl.inholland.bank.models.dtos.*;
 import nl.inholland.bank.models.dtos.UserDTO.*;
 import nl.inholland.bank.services.UserService;
 import org.hibernate.cfg.NotYetImplementedException;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
@@ -102,6 +103,7 @@ public class UserController {
                     user.getPhoneNumber(),
                     dateOfBirth,
                     user.getRole().toString()
+                    // TODO: Get IBAN from current_account and savings_account
             );
 
             return ResponseEntity.status(200).body(userResponse);
@@ -150,6 +152,7 @@ public class UserController {
                     user.getPhoneNumber(),
                     user.getDateOfBirth().toString(),
                     user.getRole().toString()
+                    // TODO: Get IBAN from current_account and savings_account
             );
 
             return ResponseEntity.status(201).body(userResponse);
@@ -158,9 +161,36 @@ public class UserController {
 
 
     @PutMapping("/{id}")
-    public ResponseEntity updateUser(@PathVariable int id, @RequestBody UserForAdminRequest userForAdminRequest)
-    {
-        throw new NotYetImplementedException("Deleting users is not yet implemented.");
+    public ResponseEntity updateUser(@PathVariable int id, @RequestBody UserForAdminRequest request) throws AuthenticationException {
+        UserRequest userRequest = request;
+        if (request.getRole() == null) {
+            userRequest = new UserRequest(
+                    request.getEmail(),
+                    request.getUsername(),
+                    request.getPassword(),
+                    request.getFirst_name(),
+                    request.getLast_name(),
+                    request.getBsn(),
+                    request.getPhone_number(),
+                    request.getBirth_date()
+            );
+        }
+
+        User user = userService.updateUser(id, userRequest);
+
+        UserResponse userResponse = new UserResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getFirstName(),
+                user.getLastName(),
+                user.getBsn(),
+                user.getPhoneNumber(),
+                user.getDateOfBirth().toString(),
+                user.getRole().toString()
+                // TODO: Get IBAN from current_account and savings_account
+        );
+
+        return ResponseEntity.status(200).body(userResponse);
     }
 
     @DeleteMapping("/{id}")

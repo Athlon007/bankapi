@@ -220,20 +220,23 @@ public class UserService {
         return limits;
     }
 
-    public User updateUserForAdmin(int id, UserRequest userForAdminRequest) {
+    public User updateUser(int id, UserRequest userRequest) throws AuthenticationException {
         User user = userRepository.findById(id).orElseThrow(()-> new ObjectNotFoundException(id, "User not found"));
 
-        user.setFirstName(userForAdminRequest.getFirst_name());
-        user.setLastName(userForAdminRequest.getLast_name());
-        user.setEmail(userForAdminRequest.getEmail());
-        user.setBsn(userForAdminRequest.getBsn());
-        user.setPhoneNumber(userForAdminRequest.getPhone_number());
-        // Convert string of format "yyyy-MM-dd" to LocalDate
-        LocalDate dateOfBirth = LocalDate.parse(userForAdminRequest.getBirth_date());
-        user.setDateOfBirth(dateOfBirth);
-        user.setUsername(userForAdminRequest.getUsername());
-        user.setPassword(bCryptPasswordEncoder.encode(userForAdminRequest.getPassword()));
-        //user.setRole(mapStringToRole(userForAdminRequest.getRo()));
+        String currentUserName = getBearerUsername();
+        Role currentUserRole = getBearerUserRole();
+
+        // Users can only update their own account.
+        // Employees can update all accounts, except for admins.
+        if (
+                currentUserRole == Role.USER && !user.getUsername().equals(currentUserName)
+                || currentUserRole == Role.EMPLOYEE && user.getRole() == Role.ADMIN
+        ) {
+            throw new AuthenticationException("You are not authorized to update this user.");
+        }
+
+        User updatedUser = mapUserRequestToUser(userRequest);
+        updatedUser.setId(id);
 
         return userRepository.save(user);
     }
