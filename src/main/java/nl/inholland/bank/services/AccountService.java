@@ -6,13 +6,9 @@ import nl.inholland.bank.models.CurrencyType;
 import nl.inholland.bank.models.User;
 import nl.inholland.bank.models.dtos.AccountDTO.AccountRequest;
 import nl.inholland.bank.repositories.AccountRepository;
-import org.hibernate.ObjectNotFoundException;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class AccountService {
@@ -56,7 +52,7 @@ public class AccountService {
     }
 
     // Get all accounts from a user
-    public List<Account> getAllAccountsFromUser(User user){
+    public List<Account> getAccountsByUserId(User user){
 
             return accountRepository.findAllByUser(user);
     }

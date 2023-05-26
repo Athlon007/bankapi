@@ -1,7 +1,6 @@
 package nl.inholland.bank.controllers;
 
 import nl.inholland.bank.models.Account;
-import nl.inholland.bank.models.Role;
 import nl.inholland.bank.models.User;
 import nl.inholland.bank.models.dtos.AccountDTO.AccountRequest;
 import nl.inholland.bank.services.AccountService;
@@ -11,7 +10,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @Controller
 @RequestMapping("/accounts")
@@ -37,7 +35,7 @@ public class AccountController {
                 return ResponseEntity.status(401).body("Unauthorized");
             }
 
-            List<Account> accounts = accountService.getAllAccountsFromUser(user);
+            List<Account> accounts = accountService.getAccountsByUserId(user);
 
             if (accounts.isEmpty()) {
                 // Return a custom response when there are no accounts
