@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 
 import javax.naming.InsufficientResourcesException;
 import javax.security.auth.login.AccountNotFoundException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Service
 public class TransactionService {
@@ -15,14 +17,15 @@ public class TransactionService {
     public TransactionService(TransactionRepository transactionRepository) {
         this.transactionRepository = transactionRepository;
     }
-    public Transaction createTransaction(User user, Account AccountSender, Account AccountReceiver,
+    public Transaction createTransaction(User user, Account accountSender, Account accountReceiver,
                                          CurrencyType currencyType, double amount, String description) {
         Transaction transaction = new Transaction();
         transaction.setUser(user);
-        transaction.setAccountSender(AccountSender);
-        transaction.setAccountReceiver(AccountReceiver);
+        transaction.setAccountSender(accountSender);
+        transaction.setAccountReceiver(accountReceiver);
         transaction.setCurrencyType(currencyType);
         transaction.setAmount(amount);
+        transaction.setTimestamp(LocalDate.now());
         transaction.setDescription(description);
 
         return transaction;
