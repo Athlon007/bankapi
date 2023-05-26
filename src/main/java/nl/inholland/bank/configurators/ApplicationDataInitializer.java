@@ -72,7 +72,7 @@ public class ApplicationDataInitializer implements ApplicationRunner {
         // Set empty optional to null
 
 
-        System.out.println(userService.getAllUsers(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()));
+        System.out.println(userService.getAllUsers(Optional.empty(), Optional.empty(), Optional.empty()));
 
 
         // Account

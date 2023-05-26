@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import nl.inholland.bank.models.exceptions.OperationNotAllowedException;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -162,5 +163,40 @@ public class User {
             throw new IllegalArgumentException("Username cannot be null or empty");
         }
         this.username = username;
+    }
+
+    public void setCurrentAccount(Account currentAccount) {
+        if (this.currentAccount != null) {
+            if (currentAccount == null) {
+                throw new OperationNotAllowedException("Cannot unbind current account");
+            }
+            throw new OperationNotAllowedException("User already has a current account");
+        }
+
+        if (currentAccount.getType() != AccountType.CURRENT) {
+            throw new IllegalArgumentException("Account type must be CURRENT");
+        }
+
+        this.currentAccount = currentAccount;
+    }
+
+    public void setSavingAccount(Account savingAccount) {
+        // User wants to remove saving account.
+        // Check if the saving account has a balance of 0.
+        if (savingAccount == null && this.savingAccount.getBalance() > 0) {
+            throw new OperationNotAllowedException("Cannot remove saving account with balance");
+        }
+        else if (savingAccount != null) {
+            if (savingAccount.getType() != AccountType.SAVING) {
+                throw new IllegalArgumentException("Account type must be SAVING");
+            }
+
+            // We cannot set saving account, if user does not have a current account.
+            if (this.currentAccount == null) {
+                throw new OperationNotAllowedException("Cannot set saving account without current account");
+            }
+        }
+
+        this.savingAccount = savingAccount;
     }
 }

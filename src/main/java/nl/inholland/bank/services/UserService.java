@@ -83,7 +83,7 @@ public class UserService {
         return userRepository.findUserByUsername(user.getUsername()).orElseThrow(() -> new ObjectNotFoundException(user.getId(), "User"));
     }
 
-    public List<User> getAllUsers(Optional<Integer> page, Optional<Integer> limit, Optional<String> name, Optional<Boolean> hasNoAccounts) {
+    public List<User> getAllUsers(Optional<Integer> page, Optional<Integer> limit, Optional<String> name) {
         // If user has role ADMIN, return all users.
         // Otherwise, return only users that have accounts.
 
@@ -106,11 +106,26 @@ public class UserService {
                     );
         }
 
-        // FIXME: This should return all users that HAVE accounts, even if they are an employee.
         return name.map(
                 s -> userRepository.findAllByCurrentAccountIsNotNullAndActiveIsTrueAndFirstNameContainingIgnoreCaseOrCurrentAccountIsNotNullAndActiveIsTrueAndLastNameContainingIgnoreCase(name.get(), name.get(), pageable).getContent())
                 .orElseGet(() -> userRepository.findAllByCurrentAccountIsNotNullAndActiveIsTrue(pageable).getContent()
                 );
+    }
+
+    public List<User> getAllUsersWithNoAccounts(Optional<Integer> page, Optional<Integer> limit, Optional<String> name) {
+        // Users cannot see other users without accounts anyway.
+        // Might as well return empty array.
+        if (getBearerUserRole() == Role.USER) {
+            return List.of();
+        }
+
+        Pageable pageable = PageRequest.of(page.orElse(0), limit.orElse(defaultGetAllUsersLimit));
+
+        // We're only checking if current account is null,
+        // because user cannot have saving account without current account anyway.
+        return name.map(
+                s -> userRepository.findAllByCurrentAccountIsNullAndFirstNameContainingIgnoreCaseOrCurrentAccountIsNullAndLastNameContainingIgnoreCase(name.get(), name.get(), pageable))
+                .orElseGet(() -> userRepository.findAllByCurrentAccountIsNull(pageable)).getContent();
     }
 
     public User getUserById(int id) {

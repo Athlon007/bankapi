@@ -11,14 +11,16 @@ import java.util.Optional;
 
 @Repository
 public interface UserRepository extends CrudRepository<User, Integer> {
+    // --- ADMIN & EMPLOYEE ---
     Page<User> findAll(Pageable pageable);
-
     Page<User> findAllByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(String firstName, String lastName, Pageable pageable);
-    Page<User> findAllByRole(Role role, Pageable pageable);
+    Page<User> findAllByCurrentAccountIsNull(Pageable pageable);
+    Page<User> findAllByCurrentAccountIsNullAndFirstNameContainingIgnoreCaseOrCurrentAccountIsNullAndLastNameContainingIgnoreCase(String firstName, String lastName, Pageable pageable);
 
-
+    // --- USER ---
     Page<User> findAllByCurrentAccountIsNotNullAndActiveIsTrue(Pageable pageable);
     Page<User> findAllByCurrentAccountIsNotNullAndActiveIsTrueAndFirstNameContainingIgnoreCaseOrCurrentAccountIsNotNullAndActiveIsTrueAndLastNameContainingIgnoreCase(String firstName, String lastName, Pageable pageable);
+
 
     Optional<User> findUserByUsername(String username);
 

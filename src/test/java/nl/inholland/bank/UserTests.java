@@ -1,7 +1,10 @@
 package nl.inholland.bank;
 
+import nl.inholland.bank.models.Account;
+import nl.inholland.bank.models.AccountType;
 import nl.inholland.bank.models.Role;
 import nl.inholland.bank.models.User;
+import nl.inholland.bank.models.exceptions.OperationNotAllowedException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,16 +19,23 @@ class UserTests {
 
     @BeforeEach
     void setUp() {
-    user = new User(
-            "John",
-            "Doe",
-            "mail@test.com",
-            "12345678",
-            "0612345678",
-            LocalDate.of(1990, 1, 1),
-            "username",
-            "Password1!",
-            Role.USER);
+        user = new User(
+                "John",
+                "Doe",
+                "mail@test.com",
+                "12345678",
+                "0612345678",
+                LocalDate.of(1990, 1, 1),
+                "username",
+                "Password1!",
+                Role.USER);
+
+        Account currentAccount = new Account();
+        currentAccount.setBalance(1000);
+        currentAccount.setIBAN("NL01INHO0000000001");
+        currentAccount.setType(AccountType.CURRENT);
+        currentAccount.setActive(true);
+        user.setCurrentAccount(currentAccount);
     }
 
     @Test
@@ -147,5 +157,110 @@ class UserTests {
     void setttingLastNameToNullShouldReplaceWithEmptyString() {
         user.setLastName(null);
         Assertions.assertEquals("", user.getLastName());
+    }
+
+    @Test
+    void attemptingToOverwriteCurrentAccountShouldThrowOperationNotAllowedException() {
+        Exception exception = Assertions.assertThrows(OperationNotAllowedException.class, () -> {
+            Account account = new Account();
+            account.setBalance(1000);
+            account.setIBAN("NL01INHO0000000001");
+            account.setType(AccountType.CURRENT);
+            account.setActive(true);
+            user.setCurrentAccount(account);
+        });
+
+        Assertions.assertEquals("User already has a current account", exception.getMessage());
+    }
+
+    @Test
+    void userCannotUnbindCurrentAccount() {
+        Exception exception = Assertions.assertThrows(OperationNotAllowedException.class, () -> {
+            user.setCurrentAccount(null);
+        });
+
+        Assertions.assertEquals("Cannot unbind current account", exception.getMessage());
+    }
+
+    @Test
+    void attemptingToSetSavingsAccountInCurrentsAccountPlaceShouldThrowIllegalArgumentException() {
+        // We need a new User object for this one...
+        user = new User();
+        user.setId(1);
+        user.setFirstName("John");
+        user.setLastName("Doe");
+        user.setEmail("totallyrealemail@notascam.com");
+
+        Exception exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            Account account = new Account();
+            account.setBalance(1000);
+            account.setIBAN("NL01INHO0000000001");
+            account.setType(AccountType.SAVING);
+            account.setActive(true);
+            user.setCurrentAccount(account);
+        });
+
+        Assertions.assertEquals("Account type must be CURRENT", exception.getMessage());
+    }
+
+    @Test
+    void attemptingToSetCurrentAccountInPlaceOfSavingAccountShouldThrowIllegalArgumentException() {
+        Exception exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            Account account = new Account();
+            account.setBalance(1000);
+            account.setIBAN("NL01INHO0000000001");
+            account.setType(AccountType.CURRENT);
+            account.setActive(true);
+            user.setSavingAccount(account);
+        });
+
+        Assertions.assertEquals("Account type must be SAVING", exception.getMessage());
+
+        // Test positive case
+        Account account = new Account();
+        account.setBalance(1000);
+        account.setIBAN("NL01INHO0000000001");
+        account.setType(AccountType.SAVING);
+        account.setActive(true);
+        user.setSavingAccount(account);
+
+        Assertions.assertEquals(account, user.getSavingAccount());
+    }
+
+    @Test
+    void userCannotRemoveSavingAccountIfItHasABalance() {
+        Exception exception = Assertions.assertThrows(OperationNotAllowedException.class, () -> {
+            Account account = new Account();
+            account.setBalance(1000);
+            account.setIBAN("NL01INHO0000000001");
+            account.setType(AccountType.SAVING);
+            account.setActive(true);
+            user.setSavingAccount(account);
+
+
+            user.setSavingAccount(null);
+        });
+
+        Assertions.assertEquals("Cannot remove saving account with balance", exception.getMessage());
+    }
+
+    @Test
+    void userCannotSetSavingAccountIfHeDoesNotHaveCurrentAccount() {
+        user = new User();
+        user.setId(1);
+        user.setFirstName("John");
+        user.setLastName("Doe");
+        user.setEmail("totallyrealemail@notascam.com");
+
+        Exception exception = Assertions.assertThrows(OperationNotAllowedException.class, () -> {
+            Account account = new Account();
+            account.setBalance(1000);
+            account.setIBAN("NL01INHO0000000001");
+            account.setType(AccountType.SAVING);
+            account.setActive(true);
+            user.setSavingAccount(account);
+        });
+
+        Assertions.assertEquals("Cannot set saving account without current account", exception.getMessage());
     }
 }
