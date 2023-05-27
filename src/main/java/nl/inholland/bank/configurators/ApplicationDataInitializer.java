@@ -6,7 +6,7 @@ import nl.inholland.bank.models.CurrencyType;
 import nl.inholland.bank.models.Transaction;
 import nl.inholland.bank.models.User;
 import nl.inholland.bank.models.dtos.AccountDTO.AccountRequest;
-import nl.inholland.bank.models.dtos.TransactionDTO.WithdrawRequest;
+import nl.inholland.bank.models.dtos.TransactionDTO.WithdrawDepositRequest;
 import nl.inholland.bank.models.dtos.UserDTO.UserForAdminRequest;
 import nl.inholland.bank.models.dtos.UserDTO.UserRequest;
 import nl.inholland.bank.services.AccountService;
@@ -97,20 +97,30 @@ public class ApplicationDataInitializer implements ApplicationRunner {
 //                userService.assignAccountToUser(user, accountUser);
 
         //Transaction
-        WithdrawRequest withdrawRequest = new WithdrawRequest(
+        WithdrawDepositRequest withdrawDepositRequest = new WithdrawDepositRequest(
                 "NL01INHO0000000001",
                 300,
                 CurrencyType.EURO,
                 3);
 
-        Account accountSender = accountService.getAccountByIban(withdrawRequest.IBAN());
-        accountSender.setBalance(1000);
-        System.out.println("Account balance before withdraw: ");
-        System.out.println(accountSender.getBalance());
-        Transaction transaction = transactionService.withdrawMoney(withdrawRequest);
+//        Account accountSender = accountService.getAccountByIban(withdrawDepositRequest.IBAN());
+//        accountSender.setBalance(1000);
+//        System.out.println("Account balance before withdraw: ");
+//        System.out.println(accountSender.getBalance());
+//        Transaction transaction = transactionService.withdrawMoney(withdrawDepositRequest);
+//        System.out.println("Transaction info: ");
+//        System.out.println(transaction);
+//        System.out.println("Account balance after withdraw: ");
+//        System.out.println(accountSender.getBalance());
+
+        Account accountReceiver = accountService.getAccountByIban("NL01INHO0000000001");
+        System.out.println("Account balance before deposit: ");
+        System.out.println(accountReceiver.getBalance());
+        Transaction transaction = transactionService.depositMoney(withdrawDepositRequest);
         System.out.println("Transaction info: ");
         System.out.println(transaction);
-        System.out.println("Account balance after withdraw: ");
-        System.out.println(accountSender.getBalance());
+        System.out.println("Account balance after deposit: ");
+        System.out.println(accountReceiver.getBalance());
+
     }
 }

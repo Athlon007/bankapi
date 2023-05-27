@@ -1,8 +1,7 @@
 package nl.inholland.bank.services;
 
 import nl.inholland.bank.models.*;
-import nl.inholland.bank.models.dtos.TransactionDTO.WithdrawRequest;
-import nl.inholland.bank.repositories.AccountRepository;
+import nl.inholland.bank.models.dtos.TransactionDTO.WithdrawDepositRequest;
 import nl.inholland.bank.repositories.TransactionRepository;
 import org.springframework.stereotype.Service;
 
@@ -33,18 +32,18 @@ public class TransactionService {
         return transaction;
     }
 
-    public Transaction withdrawMoney(WithdrawRequest withdrawRequest) throws AccountNotFoundException, InsufficientResourcesException {
-        Account accountSender = accountService.getAccountByIban(withdrawRequest.IBAN());
+
+    public Transaction withdrawMoney(WithdrawDepositRequest withdrawDepositRequest) throws AccountNotFoundException, InsufficientResourcesException {
         try {
+            Account accountSender = accountService.getAccountByIban(withdrawDepositRequest.IBAN());
             if (checkAccountExist(accountSender) && accountSender.isActive()) {
-                if (checkAccountBalance(accountSender, withdrawRequest.amount())) {
-                    updateAccountBalance(accountSender, withdrawRequest.amount(), false);
+                if (checkAccountBalance(accountSender, withdrawDepositRequest.amount())) {
+                    updateAccountBalance(accountSender, withdrawDepositRequest.amount(), false);
                 }
 
-                Transaction transaction = mapWithdrawRequestToTransaction(withdrawRequest);
+                Transaction transaction = mapWithdrawRequestToTransaction(withdrawDepositRequest);
                 return transactionRepository.save(transaction);
-            }
-            else {
+            } else {
                 throw new AccountNotFoundException("Account not found or inactive");
             }
         } catch (Exception e) {
@@ -52,16 +51,21 @@ public class TransactionService {
         }
     }
 
-//    public void depositMoney(Account account, double amount) {
-//        if (checkAccountExist(account)) {
-//            return;
-//        }
-//
-//        if (checkAccountBalance(account, amount)) {
-//            updateAccountBalance(account, amount, true);
-//            Transaction transaction = createTransaction(account.getUser(), null, account, account.getCurrencyType(), amount);
-//        }
-//    }
+    public Transaction depositMoney(WithdrawDepositRequest depositRequest) throws AccountNotFoundException {
+        try {
+            Account accountReceiver = accountService.getAccountByIban(depositRequest.IBAN());
+            if (checkAccountExist(accountReceiver) && accountReceiver.isActive()) {
+                updateAccountBalance(accountReceiver, depositRequest.amount(), true);
+
+                Transaction transaction = mapDepositRequestToTransaction(depositRequest);
+                return transactionRepository.save(transaction);
+            } else {
+                throw new AccountNotFoundException("Account not found or inactive");
+            }
+        } catch (Exception e) {
+            throw new AccountNotFoundException("Account not found");
+        }
+    }
 
     public boolean checkAccountExist(Account account) {
         if (account != null) {
@@ -98,16 +102,26 @@ public class TransactionService {
         // TODO: accountService.updateAccount(account);
     }
 
-    public Transaction mapWithdrawRequestToTransaction(WithdrawRequest withdrawRequest) {
+    public Transaction mapWithdrawRequestToTransaction(WithdrawDepositRequest withdrawDepositRequest) {
         Transaction transaction = new Transaction();
-        transaction.setAccountSender(accountService.getAccountByIban(withdrawRequest.IBAN()));
-        transaction.setAmount(withdrawRequest.amount());
+        transaction.setAccountSender(accountService.getAccountByIban(withdrawDepositRequest.IBAN()));
+        transaction.setAmount(withdrawDepositRequest.amount());
         transaction.setCurrencyType(CurrencyType.EURO);
-        User user = userService.getUserById(withdrawRequest.userId());
+        User user = userService.getUserById(withdrawDepositRequest.userId());
         transaction.setUser(user);
         transaction.setTransactionType(TransactionType.WITHDRAWAL);
         return transaction;
     }
 
+    private Transaction mapDepositRequestToTransaction(WithdrawDepositRequest depositRequest) {
+        Transaction transaction = new Transaction();
+        transaction.setAccountReceiver(accountService.getAccountByIban(depositRequest.IBAN()));
+        transaction.setAmount(depositRequest.amount());
+        transaction.setCurrencyType(CurrencyType.EURO);
+        User user = userService.getUserById(depositRequest.userId());
+        transaction.setUser(user);
+        transaction.setTransactionType(TransactionType.DEPOSIT);
 
+        return transaction;
+    }
 }

@@ -1,11 +1,8 @@
 package nl.inholland.bank.controllers;
 
-import nl.inholland.bank.models.Account;
-import nl.inholland.bank.models.Role;
 import nl.inholland.bank.models.Transaction;
-import nl.inholland.bank.models.User;
 import nl.inholland.bank.models.dtos.ExceptionResponse;
-import nl.inholland.bank.models.dtos.TransactionDTO.WithdrawRequest;
+import nl.inholland.bank.models.dtos.TransactionDTO.WithdrawDepositRequest;
 import nl.inholland.bank.models.dtos.TransactionDTO.TransactionResponse;
 import nl.inholland.bank.services.AccountService;
 import nl.inholland.bank.services.TransactionService;
@@ -15,7 +12,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.naming.InsufficientResourcesException;
 import javax.security.auth.login.AccountNotFoundException;
@@ -37,13 +33,13 @@ public class TransactionController {
 
     @PostMapping("/withdraw")
     public ResponseEntity<Object> withdrawMoney(
-            @RequestBody WithdrawRequest withdrawRequest) {
+            @RequestBody WithdrawDepositRequest withdrawDepositRequest) {
         if (userService.getBearerUserRole() == null) {
             return ResponseEntity.status(401).body(new ExceptionResponse("Unauthorized"));
         }
         try {
             // Call the withdrawal method in the transaction service
-            Transaction transaction = transactionService.withdrawMoney(withdrawRequest);
+            Transaction transaction = transactionService.withdrawMoney(withdrawDepositRequest);
 
             // Prepare the response
             TransactionResponse response = new TransactionResponse(
