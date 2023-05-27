@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import javax.naming.InsufficientResourcesException;
 import javax.security.auth.login.AccountNotFoundException;
+import java.util.Objects;
 import java.util.Optional;
 
 @Controller
@@ -65,33 +66,36 @@ public class TransactionController {
     public ResponseEntity<Object> transferMoney(@RequestParam int userId, @RequestBody TransactionRequest request)
     {
         try {
-            // Get the user
-            User user = userService.getUserById(userId);
-            Account senderAccount = accountService.getAccountByIBAN(request.sender_iban());
-            Account receiverAccount = accountService.getAccountByIBAN(request.receiver_iban());
+            if (!Objects.equals(request.sender_iban(), request.receiver_iban())) {
+                // Get the user
+                User user = userService.getUserById(userId);
+                Account senderAccount = accountService.getAccountByIBAN(request.sender_iban());
+                Account receiverAccount = accountService.getAccountByIBAN(request.receiver_iban());
 
-            if (senderAccount != null && receiverAccount != null)
-            {
-                // Attempt to create a transaction
-                Transaction transaction = transactionService.transferMoney(user, senderAccount, receiverAccount,
-                                                            CurrencyType.EURO, request.amount(), request.description());
+                if (senderAccount != null && receiverAccount != null)
+                {
+                    // Attempt to create a transaction
+                    Transaction transaction = transactionService.transferMoney(user, senderAccount, receiverAccount,
+                            CurrencyType.EURO, request.amount(), request.description());
 
-                // Create and return response
-                TransactionResponse response = new TransactionResponse(
-                        transaction.getId(),
-                        transaction.getAccountSender().getIBAN(),
-                        transaction.getAccountReceiver().getIBAN(),
-                        transaction.getAmount(),
-                        transaction.getTimestamp(),
-                        transaction.getCurrencyType().toString()
-                );
+                    // Create and return response
+                    TransactionResponse response = new TransactionResponse(
+                            transaction.getId(),
+                            transaction.getAccountSender().getIBAN(),
+                            transaction.getAccountReceiver().getIBAN(),
+                            transaction.getAmount(),
+                            transaction.getTimestamp(),
+                            transaction.getCurrencyType().toString()
+                    );
 
-                return ResponseEntity.status(201).body(response);
-            } else if (senderAccount == null) {
-                return ResponseEntity.status(400).body("Sender IBAN could not be found.");
-            } else {
-                return ResponseEntity.status(400).body("Receiver IBAN could not be found.");
+                    return ResponseEntity.status(201).body(response);
+                } else if (senderAccount == null) {
+                    return ResponseEntity.status(400).body("Sender IBAN could not be found.");
+                } else {
+                    return ResponseEntity.status(400).body("Receiver IBAN could not be found.");
+                }
             }
+            return ResponseEntity.status(400).body("Sender and receiver IBAN are identical.");
         } catch (Exception e)
         {
             return ResponseEntity.badRequest().body(
