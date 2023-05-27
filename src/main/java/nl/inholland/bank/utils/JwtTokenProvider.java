@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import nl.inholland.bank.models.Role;
+import nl.inholland.bank.services.RefreshTokenBlacklistService;
 import nl.inholland.bank.services.UserDetailsService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -17,16 +18,19 @@ import java.util.Date;
 public class JwtTokenProvider {
     @Value("${bankapi.token.expiration}")
     private long validityInMilliseconds;
+    @Value("${bankapi.token.refresh.expiration}")
+    private long validityRefreshInMilliseconds;
 
     private UserDetailsService userDetailsService;
     private JwtKeyProvider jwtKeyProvider;
+    private RefreshTokenBlacklistService refreshTokenBlacklistService;
 
     private Authentication authentication;
 
-
-    public JwtTokenProvider(UserDetailsService userDetailsService, JwtKeyProvider jwtKeyProvider) {
+    public JwtTokenProvider(UserDetailsService userDetailsService, JwtKeyProvider jwtKeyProvider, RefreshTokenBlacklistService refreshTokenBlacklistService) {
         this.userDetailsService = userDetailsService;
         this.jwtKeyProvider = jwtKeyProvider;
+        this.refreshTokenBlacklistService = refreshTokenBlacklistService;
     }
 
     public String createToken(String username, Role role) {
@@ -46,7 +50,7 @@ public class JwtTokenProvider {
     public String createRefreshToken(String username) {
         Claims claims = Jwts.claims().setSubject(username);
         Date issuedAt = new Date();
-        Date expiresAt = new Date(issuedAt.getTime() + validityInMilliseconds);
+        Date expiresAt = new Date(issuedAt.getTime() + validityRefreshInMilliseconds);
         claims.put("auth", "refresh");
 
         return Jwts.builder()
@@ -74,10 +78,18 @@ public class JwtTokenProvider {
 
     public String refreshTokenUsername(String refreshToken) {
         try {
+            // Check if token is blacklisted.
+            if (refreshTokenBlacklistService.isBlacklisted(refreshToken)) {
+                throw new RuntimeException("Refresh token has already been used.");
+            }
             Jws<Claims> claims = Jwts.parserBuilder()
                     .setSigningKey(jwtKeyProvider.getPrivateKey())
                     .build()
                     .parseClaimsJws(refreshToken);
+
+            // Expire old refresh token.
+            refreshTokenBlacklistService.blacklist(refreshToken);
+
             // Return only if token is still valid.
             if (claims.getBody().getExpiration().after(new Date())) {
                 return claims.getBody().getSubject();

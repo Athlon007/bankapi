@@ -1,8 +1,12 @@
 package nl.inholland.bank.models;
 
+import io.micrometer.common.lang.NonNullFields;
+import io.micrometer.common.lang.Nullable;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import nl.inholland.bank.models.exceptions.OperationNotAllowedException;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -10,29 +14,39 @@ import java.util.List;
 
 @Entity
 @Data
-@NoArgsConstructor
+@NoArgsConstructor(force = true)
 @Table(name = "users")
 public class User {
     @Id
     @GeneratedValue
     private int id;
+    @NonNull
     private String firstName;
     private String lastName;
     @Column(unique = true)
+    @NonNull
     private String email;
     private String bsn;
     private String phoneNumber;
+    @NonNull
     private LocalDate dateOfBirth;
     @OneToOne(cascade = CascadeType.ALL)
+    @Nullable
     private Account currentAccount;
     @OneToOne(cascade = CascadeType.ALL)
+    @Nullable
     private Account savingAccount;
     @Column(unique = true)
+    @NonNull
     private String username;
+    @NonNull
     private String password;
+    @NonNull
     private Role role;
     @OneToOne(cascade = CascadeType.ALL)
     private Limits limits;
+    @NonNull
+    private boolean active = true; // User is active by default
 
     public User(
             String firstName,
@@ -56,6 +70,17 @@ public class User {
         this.setRole(role);
     }
 
+    public void setLastName(String name) {
+        if (name == null || name.length() == 0) {
+            // Why we change null to empty string?
+            // Because there are people who don't have a last name (yes, really).
+            // https://en.wikipedia.org/wiki/List_of_legally_mononymous_people
+            name = "";
+        }
+
+        this.lastName = name;
+    }
+
     public void setBsn(String bsn) {
         // Check if the BSN is 8 or 9 digits long
         if (bsn.length() != 8 && bsn.length() != 9) {
@@ -67,13 +92,30 @@ public class User {
             throw new IllegalArgumentException("BSN must only contain numbers");
         }
 
+        // Valid BSN must be divisible by 11, according ot 'elfproef'
+        // https://financieel.infonu.nl/diversen/180745-elfproef-voor-rekeningnummer-of-burgerservicenummer-bsn.html
+        int length = bsn.length();
+        int sum = 0;
+        for (int i = 0; i < length; i++) {
+            int digit = Character.getNumericValue(bsn.charAt(i));
+            int multiplyBy = length - i;
+            if (multiplyBy == 1) {
+                multiplyBy *= -1;
+            }
+            sum += digit * multiplyBy;
+        }
+
+        if (sum % 11 != 0) {
+            throw new IllegalArgumentException("BSN is not valid");
+        }
+
         this.bsn = bsn;
     }
 
     public void setPhoneNumber(String phoneNumber) {
         // Check if the phone number only contains numbers.
         // Phone number may also start with a '+' sign.
-        if (!phoneNumber.matches("\\d+") && !phoneNumber.matches("\\+\\d+")) {
+        if (phoneNumber == null || (!phoneNumber.matches("\\d+") && !phoneNumber.matches("\\+\\d+"))) {
             throw new IllegalArgumentException("Phone number must only contain numbers");
         }
 
@@ -138,5 +180,49 @@ public class User {
             throw new IllegalArgumentException("Username cannot be null or empty");
         }
         this.username = username;
+    }
+
+    public void setCurrentAccount(Account currentAccount) {
+        if (this.currentAccount != null) {
+            if (currentAccount == null) {
+                throw new OperationNotAllowedException("Cannot unbind current account");
+            }
+            throw new OperationNotAllowedException("User already has a current account");
+        }
+
+        if (currentAccount.getType() != AccountType.CURRENT) {
+            throw new IllegalArgumentException("Account type must be CURRENT");
+        }
+
+        this.currentAccount = currentAccount;
+    }
+
+    public void setSavingAccount(Account savingAccount) {
+        // User wants to remove saving account.
+        // Check if the saving account has a balance of 0.
+        if (savingAccount == null && this.savingAccount.getBalance() > 0) {
+            throw new OperationNotAllowedException("Cannot remove saving account with balance");
+        }
+        else if (savingAccount != null) {
+            if (savingAccount.getType() != AccountType.SAVING) {
+                throw new IllegalArgumentException("Account type must be SAVING");
+            }
+
+            // We cannot set saving account, if user does not have a current account.
+            if (this.currentAccount == null) {
+                throw new OperationNotAllowedException("Cannot set saving account without current account");
+            }
+        }
+
+        this.savingAccount = savingAccount;
+    }
+
+    public void setLimits(Limits limits) {
+        if (limits == null) {
+            throw new IllegalArgumentException("Limits cannot be null");
+        }
+
+        limits.setUser(this);
+        this.limits = limits;
     }
 }

@@ -35,3 +35,7 @@ build/
 .DS_Store
 
 .mvn/
+
+# Log Files
+/log/
+error-*.log

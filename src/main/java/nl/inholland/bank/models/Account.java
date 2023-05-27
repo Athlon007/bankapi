@@ -1,12 +1,10 @@
 package nl.inholland.bank.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Entity
 @Data
@@ -15,8 +13,9 @@ public class Account {
     @Id
     @GeneratedValue
     private int id;
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL)
     @JsonIgnore
+    @ToString.Exclude
     private User user;
     private double balance;
     private CurrencyType currencyType;
