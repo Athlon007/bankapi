@@ -114,4 +114,7 @@ public class AccountService {
         }
     }
 
+    public Account getAccountByIban(String iban) {
+        return accountRepository.findByIBAN(iban).orElseThrow(()-> new IllegalArgumentException("Account not found"));
+    }
 }

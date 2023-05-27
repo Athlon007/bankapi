@@ -1,6 +1,7 @@
 package nl.inholland.bank.controllers;
 
 import nl.inholland.bank.models.Account;
+import nl.inholland.bank.models.Role;
 import nl.inholland.bank.models.Transaction;
 import nl.inholland.bank.models.User;
 import nl.inholland.bank.models.dtos.ExceptionResponse;
@@ -27,7 +28,6 @@ public class TransactionController {
     private final AccountService accountService;
 
 
-
     public TransactionController(TransactionService transactionService, UserService userService,
                                  AccountService accountService) {
         this.transactionService = transactionService;
@@ -36,37 +36,32 @@ public class TransactionController {
     }
 
     @PostMapping("/withdraw")
-    public ResponseEntity<Object> withdrawMoney(@RequestParam int user_id,
-                                                @RequestParam int account_id,
-                                                             @RequestBody WithdrawRequest request) {
+    public ResponseEntity<Object> withdrawMoney(
+            @RequestBody WithdrawRequest withdrawRequest) {
+        if (userService.getBearerUserRole() == null) {
+            return ResponseEntity.status(401).body(new ExceptionResponse("Unauthorized"));
+        }
         try {
-            // Retrieve the user and account based on the IDs
-            User user = userService.getUserById(user_id);
-            Account account = accountService.getAccountById(account_id);
-
             // Call the withdrawal method in the transaction service
-            Transaction transaction = transactionService.withdrawMoney(user, account, request.amount());
+            Transaction transaction = transactionService.withdrawMoney(withdrawRequest);
 
             // Prepare the response
-            assert transaction.getAccountSender() != null;
-            assert transaction.getAccountReceiver() != null;
             TransactionResponse response = new TransactionResponse(
                     transaction.getId(),
                     transaction.getAccountSender().getIBAN(),
-                    transaction.getAccountReceiver().getIBAN(),
+                    null,
                     transaction.getAmount(),
                     transaction.getTimestamp(),
-                    transaction.getCurrencyType().toString()
+                    "Withdrawal successful"
             );
 
             // Return the response
-            return ResponseEntity.ok(response);
+            return ResponseEntity.status(201).body(response);
         } catch (InsufficientResourcesException e) {
-            ResponseEntity.status(400).body(new ExceptionResponse("Account does not have enough balance"));
+            ResponseEntity.status(422).body(new ExceptionResponse("Account does not have enough balance"));
         } catch (AccountNotFoundException e) {
-            ResponseEntity.status(400).body(new ExceptionResponse("Account does not exist"));
+            ResponseEntity.status(404).body(new ExceptionResponse("Account does not exist"));
         }
-
         return ResponseEntity.status(500).body(new ExceptionResponse("Something went wrong"));
     }
 

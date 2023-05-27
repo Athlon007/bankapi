@@ -12,4 +12,6 @@ import java.util.Optional;
 public interface AccountRepository extends CrudRepository<Account, Integer> {
    // get all the accounts according to a user id
     List<Account> findAllByUser(User user);
+
+    Optional<Account> findByIBAN(String iban);
 }

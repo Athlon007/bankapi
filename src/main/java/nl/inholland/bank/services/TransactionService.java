@@ -2,6 +2,7 @@ package nl.inholland.bank.services;
 
 import nl.inholland.bank.models.*;
 import nl.inholland.bank.models.dtos.TransactionDTO.WithdrawRequest;
+import nl.inholland.bank.repositories.AccountRepository;
 import nl.inholland.bank.repositories.TransactionRepository;
 import org.springframework.stereotype.Service;
 
@@ -11,10 +12,15 @@ import javax.security.auth.login.AccountNotFoundException;
 @Service
 public class TransactionService {
     private final TransactionRepository transactionRepository;
+    private final UserService userService;
+    private final AccountService accountService;
 
-    public TransactionService(TransactionRepository transactionRepository) {
+    public TransactionService(TransactionRepository transactionRepository, UserService userService, AccountService accountService) {
         this.transactionRepository = transactionRepository;
+        this.userService = userService;
+        this.accountService = accountService;
     }
+
     public Transaction createTransaction(User user, Account AccountSender, Account AccountReceiver, CurrencyType currencyType, double amount) {
         Transaction transaction = new Transaction();
         transaction.setUser(user);
@@ -26,28 +32,20 @@ public class TransactionService {
         return transaction;
     }
 
-    public Transaction withdrawMoney(User user, Account account, double amount) throws AccountNotFoundException, InsufficientResourcesException {
-        // Check if the account exists
-        if (checkAccountExist(account)){
-            // Check if the account has enough balance
-            if (checkAccountBalance(account, amount)){
-                // Update the account balance
-                Transaction transaction = createTransaction(user, account, null, account.getCurrencyType(), amount);
-                transactionRepository.save(transaction);
+    public Transaction withdrawMoney(WithdrawRequest withdrawRequest) throws AccountNotFoundException, InsufficientResourcesException {
+        User user = userService.getUserById(withdrawRequest.userId());
+        Account accountSender = accountService.getAccountByIban(withdrawRequest.IBAN());
 
-                // Update the account balance
-                updateAccountBalance(account, amount, false);
-                //TODO: Update the account repository with the new balance
+        if (accountSender == null) {
+            throw new AccountNotFoundException("Account not found");
+        }
+        if (accountSender.getBalance() < withdrawRequest.amount()) {
+            throw new InsufficientResourcesException("Insufficient funds");
+        }
 
-                return transaction;
-            }
-            else {
-                throw new InsufficientResourcesException("Account does not have enough balance");
-            }
-        }
-        else {
-            throw new AccountNotFoundException("Account does not exist");
-        }
+        Transaction transaction = mapWithdrawRequestToTransaction(withdrawRequest);
+
+        return transactionRepository.save(transaction);
     }
 
     public void depositMoney(Account account, double amount) {
@@ -69,7 +67,7 @@ public class TransactionService {
         return false;
     }
 
-    public void transferMoney(User user, Account accountSender, Account accountReceiver, double amount, CurrencyType currencyType){
+    public void transferMoney(User user, Account accountSender, Account accountReceiver, double amount, CurrencyType currencyType) {
         // Check what account types are
         if (accountSender.getType() == AccountType.SAVING || accountReceiver.getType() == AccountType.SAVING) {
             if (accountSender.getUser() == accountReceiver.getUser()) {
@@ -96,8 +94,11 @@ public class TransactionService {
 
     public Transaction mapWithdrawRequestToTransaction(WithdrawRequest withdrawRequest) {
         Transaction transaction = new Transaction();
+        transaction.setAccountSender(accountService.getAccountByIban(withdrawRequest.IBAN()));
         transaction.setAmount(withdrawRequest.amount());
         transaction.setCurrencyType(CurrencyType.EURO);
+        User user = userService.getUserById(withdrawRequest.userId());
+        transaction.setUser(user);
         return transaction;
     }
 }
