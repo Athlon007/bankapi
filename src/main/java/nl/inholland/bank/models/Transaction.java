@@ -40,7 +40,7 @@ public class Transaction {
     @Column
     private TransactionType transactionType;
 
-    public Transaction(User user, Account AccountSender, Account AccountReceiver, double amount, CurrencyType currencyType, TransactionType transactionType) {
+    public Transaction(User user, @Nullable Account AccountSender, @Nullable Account AccountReceiver, double amount, CurrencyType currencyType, TransactionType transactionType) {
         this.timestamp = LocalDate.now();
         this.user = user;
         this.AccountSender = AccountSender;
