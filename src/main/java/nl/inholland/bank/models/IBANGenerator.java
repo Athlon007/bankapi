@@ -3,23 +3,17 @@ package nl.inholland.bank.models;
 import org.apache.commons.validator.routines.IBANValidator;
 import org.iban4j.*;
 
+
 public class IBANGenerator {
     /**
-     * Generates a random IBAN.
-     * @param countryCode Nullable. The country code to use.
-     * @param bankCode Nullable. The bankcode to use. Can only be used in combination with countryCode.
+     * Generates a random IBAN with the standard (NLxxINHO0xxxxxxxxx).
      * @return Returns a randomly generated IBAN.
      */
-    public Iban generateIban(CountryCode countryCode, String bankCode)
+    public static Iban generateIban()
     {
-        if (countryCode != null && bankCode != null)
-        {
-            return new Iban.Builder().countryCode(countryCode).bankCode(bankCode).buildRandom();
-        } else if (countryCode != null) {
-            return Iban.random(countryCode);
-        } else {
-            return Iban.random();
-        }
+        CountryCode countryCode = CountryCode.NL;
+        String bankCode = "INHO";
+        return new Iban.Builder().countryCode(countryCode).bankCode(bankCode).buildRandom();
     }
 
     /**
@@ -27,7 +21,7 @@ public class IBANGenerator {
      * @param iban The IBAN to check.
      * @return Returns a true or false statement.
      */
-    public boolean isValidIBAN(String iban)
+    public static boolean isValidIBAN(String iban)
     {
         if (iban != null) {
            IBANValidator ibanValidator = new IBANValidator();
