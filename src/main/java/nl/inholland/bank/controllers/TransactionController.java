@@ -43,6 +43,7 @@ public class TransactionController {
             return ResponseEntity.status(401).body(new ExceptionResponse("Unauthorized"));
         }
         try {
+            // Call the withdrawal method in the transaction service
             Transaction transaction = transactionService.withdrawMoney(withdrawDepositRequest);
 
             // Prepare the response
@@ -51,13 +52,13 @@ public class TransactionController {
             // Return the response
             return ResponseEntity.status(201).body(response);
         } catch (InsufficientResourcesException e) {
-            return ResponseEntity.status(500).body(new ExceptionResponse("Account does not have enough balance"));
+            return ResponseEntity.status(500).body(new ExceptionResponse(e.getMessage()));
         } catch (AccountNotFoundException e) {
-            return ResponseEntity.status(404).body(new ExceptionResponse("Account does not exist"));
+            return ResponseEntity.status(404).body(new ExceptionResponse(e.getMessage()));
         } catch (UnauthorizedAccessException e) {
-            return ResponseEntity.status(403).body(new ExceptionResponse("You are not authorized to perform this action"));
+            return ResponseEntity.status(403).body(new ExceptionResponse(e.getMessage()));
         } catch (UserNotTheOwnerOfAccountException e) {
-            return ResponseEntity.status(403).body(new ExceptionResponse("You are not the owner of this account or you are not an employee"));
+            return ResponseEntity.status(403).body(new ExceptionResponse(e.getMessage()));
         }
     }
 
@@ -78,10 +79,11 @@ public class TransactionController {
             // Return the response
             return ResponseEntity.status(201).body(response);
         } catch (AccountNotFoundException e) {
-            return ResponseEntity.status(404).body(new ExceptionResponse("Account does not exist"));
-        }
-        catch (UnauthorizedAccessException e) {
-            return ResponseEntity.status(403).body(new ExceptionResponse("You are not authorized to perform this action"));
+            return ResponseEntity.status(404).body(new ExceptionResponse(e.getMessage()));
+        } catch (UnauthorizedAccessException e) {
+            return ResponseEntity.status(403).body(new ExceptionResponse(e.getMessage()));
+        } catch (UserNotTheOwnerOfAccountException e) {
+            return ResponseEntity.status(403).body(new ExceptionResponse(e.getMessage()));
         }
     }
 

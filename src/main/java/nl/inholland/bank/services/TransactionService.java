@@ -47,9 +47,10 @@ public class TransactionService {
 
         // This checks if the user is the owner of the account from the request body
         if (!isTransactionNotAuthorizedForUserAccount(user, accountSender)) {
-            throw new UserNotTheOwnerOfAccountException("User is not the owner of the account");
+            throw new UserNotTheOwnerOfAccountException("You are not the owner of this account or you are not an employee");
         }
 
+        // This checks if the username of the logged-in user is the same as the username of the account owner, or if the logged in user is an employee
         if (Objects.equals(userService.getBearerUsername(), performerUserName) || Objects.equals(userService.getBearerUsername(), accountSender.getUser().getUsername())) {
             if (checkAccountExist(accountSender) && accountSender.isActive() && accountSender.getType() != AccountType.SAVING) {
                 if (checkAccountBalance(accountSender, withdrawDepositRequest.amount())) {
@@ -63,28 +64,33 @@ public class TransactionService {
             } else {
                 throw new AccountNotFoundException("Account not found or inactive");
             }
-        }else {
+        } else {
             throw new UnauthorizedAccessException("You are not authorized to perform this action");
         }
     }
 
-    public Transaction depositMoney(WithdrawDepositRequest depositRequest) throws AccountNotFoundException, UnauthorizedAccessException {
+    public Transaction depositMoney(WithdrawDepositRequest depositRequest) throws AccountNotFoundException, UnauthorizedAccessException, UserNotTheOwnerOfAccountException {
         Account accountReceiver = accountService.getAccountByIban(depositRequest.IBAN());
         User user = userService.getUserById(depositRequest.userId());
+        String performerUserName = userService.getBearerUsername();
 
         if (!isTransactionNotAuthorizedForUserAccount(user, accountReceiver)) {
-            throw new UnauthorizedAccessException("User is not the owner of the account");
+            throw new UserNotTheOwnerOfAccountException("You are not the owner of this account or you are not an employee");
         }
 
-        if (checkAccountExist(accountReceiver) && accountReceiver.isActive()) {
-            updateAccountBalance(accountReceiver, depositRequest.amount(), true);
+        // This checks if the username of the logged-in user is the same as the username of the account owner, or if the logged in user is an employee
+        if (Objects.equals(userService.getBearerUsername(), performerUserName) || Objects.equals(userService.getBearerUsername(), accountReceiver.getUser().getUsername())) {
+            if (checkAccountExist(accountReceiver) && accountReceiver.isActive()) {
+                updateAccountBalance(accountReceiver, depositRequest.amount(), true);
 
-            Transaction transaction = mapDepositRequestToTransaction(depositRequest);
-            return transactionRepository.save(transaction);
+                Transaction transaction = mapDepositRequestToTransaction(depositRequest);
+                return transactionRepository.save(transaction);
+            } else {
+                throw new AccountNotFoundException("Account not found or inactive");
+            }
         } else {
-            throw new AccountNotFoundException("Account not found or inactive");
+            throw new UnauthorizedAccessException("You are not authorized to perform this action");
         }
-
     }
 
     public boolean checkAccountExist(Account account) {
