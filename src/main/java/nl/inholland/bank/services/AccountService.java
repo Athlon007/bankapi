@@ -33,10 +33,6 @@ public class AccountService {
         return account;
     }
 
-    public void DeactivateAccount(Account account){
-        account.setActive(false);
-    }
-
     public boolean isActive(Account account){
         return account.isActive();
     }
