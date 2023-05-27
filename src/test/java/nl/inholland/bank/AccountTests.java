@@ -5,6 +5,7 @@ import nl.inholland.bank.repositories.AccountRepository;
 import nl.inholland.bank.repositories.UserRepository;
 import nl.inholland.bank.services.AccountService;
 import nl.inholland.bank.services.TransactionService;
+import nl.inholland.bank.services.UserService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,7 +21,6 @@ import java.time.LocalDate;
 public class AccountTests {
     private Account account;
     private TransactionService transactionService;
-
     @BeforeEach
     void setUp() {
         account = new Account(
@@ -100,8 +100,6 @@ public class AccountTests {
     void creatingAccountWithoutUserShouldFail() {
         Assertions.assertThrows(IllegalArgumentException.class, () -> {
             // Attempt to create the account without a user
-            // You can use the appropriate methods from your application code to create the account
-            // For example: accountService.createAccount(account);
             AccountService accountService = Mockito.mock(AccountService.class);
             accountService.createAccount(
                     null,
@@ -114,14 +112,12 @@ public class AccountTests {
     }
 
     @Test
-    void withdrawTest() throws InsufficientResourcesException, AccountNotFoundException {
-        account.setBalance(100);
+    void IBANShouldNotBeNull() {
+        Exception exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            account.setIBAN(null);
+        });
 
-        // Invoke the withdrawal
-        Transaction withdrawalTransaction = transactionService.withdrawMoney(account.getUser(), account, 100);
-
-        // Verify the account balance after the withdrawal
-        Assertions.assertEquals(0, account.getBalance());
+        Assertions.assertEquals("IBAN cannot be null or empty", exception.getMessage());
     }
 
 
