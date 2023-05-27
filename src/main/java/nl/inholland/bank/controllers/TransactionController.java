@@ -1,17 +1,14 @@
 package nl.inholland.bank.controllers;
 
-import nl.inholland.bank.models.Role;
 import nl.inholland.bank.models.Transaction;
 import nl.inholland.bank.models.TransactionType;
 import nl.inholland.bank.models.dtos.ExceptionResponse;
-import nl.inholland.bank.models.dtos.TransactionDTO.WithdrawDepositRequest;
 import nl.inholland.bank.models.dtos.TransactionDTO.TransactionResponse;
+import nl.inholland.bank.models.dtos.TransactionDTO.WithdrawDepositRequest;
 import nl.inholland.bank.models.exceptions.UnauthorizedAccessException;
 import nl.inholland.bank.models.exceptions.UserNotTheOwnerOfAccountException;
-import nl.inholland.bank.services.AccountService;
 import nl.inholland.bank.services.TransactionService;
 import nl.inholland.bank.services.UserService;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,14 +23,11 @@ import javax.security.auth.login.AccountNotFoundException;
 public class TransactionController {
     private final TransactionService transactionService;
     private final UserService userService;
-    private final AccountService accountService;
 
 
-    public TransactionController(TransactionService transactionService, UserService userService,
-                                 AccountService accountService) {
+    public TransactionController(TransactionService transactionService, UserService userService) {
         this.transactionService = transactionService;
         this.userService = userService;
-        this.accountService = accountService;
     }
 
     @PostMapping("/withdraw")
@@ -84,6 +78,8 @@ public class TransactionController {
             return ResponseEntity.status(403).body(new ExceptionResponse(e.getMessage()));
         } catch (UserNotTheOwnerOfAccountException e) {
             return ResponseEntity.status(403).body(new ExceptionResponse(e.getMessage()));
+        } catch (InsufficientResourcesException e) {
+            return ResponseEntity.status(500).body(new ExceptionResponse(e.getMessage()));
         }
     }
 

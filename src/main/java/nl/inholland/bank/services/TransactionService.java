@@ -17,7 +17,9 @@ public class TransactionService {
     private final UserService userService;
     private final AccountService accountService;
 
-    public TransactionService(TransactionRepository transactionRepository, UserService userService, AccountService accountService) {
+
+    public TransactionService(TransactionRepository transactionRepository, UserService userService,
+                              AccountService accountService) {
         this.transactionRepository = transactionRepository;
         this.userService = userService;
         this.accountService = accountService;
@@ -53,6 +55,7 @@ public class TransactionService {
         // This checks if the username of the logged-in user is the same as the username of the account owner, or if the logged in user is an employee
         if (Objects.equals(userService.getBearerUsername(), performerUserName) || Objects.equals(userService.getBearerUsername(), accountSender.getUser().getUsername())) {
             if (checkAccountExist(accountSender) && accountSender.isActive() && accountSender.getType() != AccountType.SAVING) {
+                checkUserDailyLimitAndTransactionLimit(user, withdrawDepositRequest.amount());
                 if (checkAccountBalance(accountSender, withdrawDepositRequest.amount())) {
                     updateAccountBalance(accountSender, withdrawDepositRequest.amount(), false);
                 } else {
@@ -69,7 +72,7 @@ public class TransactionService {
         }
     }
 
-    public Transaction depositMoney(WithdrawDepositRequest depositRequest) throws AccountNotFoundException, UnauthorizedAccessException, UserNotTheOwnerOfAccountException {
+    public Transaction depositMoney(WithdrawDepositRequest depositRequest) throws AccountNotFoundException, UnauthorizedAccessException, UserNotTheOwnerOfAccountException, InsufficientResourcesException {
         Account accountReceiver = accountService.getAccountByIban(depositRequest.IBAN());
         User user = userService.getUserById(depositRequest.userId());
         String performerUserName = userService.getBearerUsername();
@@ -80,9 +83,10 @@ public class TransactionService {
 
         // This checks if the username of the logged-in user is the same as the username of the account owner, or if the logged in user is an employee
         if (Objects.equals(userService.getBearerUsername(), performerUserName) || Objects.equals(userService.getBearerUsername(), accountReceiver.getUser().getUsername())) {
+            checkUserDailyLimitAndTransactionLimit(user, depositRequest.amount());
+
             if (checkAccountExist(accountReceiver) && accountReceiver.isActive()) {
                 updateAccountBalance(accountReceiver, depositRequest.amount(), true);
-
                 Transaction transaction = mapDepositRequestToTransaction(depositRequest);
                 return transactionRepository.save(transaction);
             } else {
@@ -90,6 +94,15 @@ public class TransactionService {
             }
         } else {
             throw new UnauthorizedAccessException("You are not authorized to perform this action");
+        }
+    }
+
+    public void checkUserDailyLimitAndTransactionLimit(User user, double amount) throws InsufficientResourcesException {
+        if (user.getLimits().getDailyTransactionLimit() < amount) {
+            throw new InsufficientResourcesException("You have exceeded your daily limit");
+        }
+        if (user.getLimits().getTransactionLimit() < amount) {
+            throw new InsufficientResourcesException("You have exceeded your transaction limit");
         }
     }
 
@@ -118,14 +131,14 @@ public class TransactionService {
     }
 
     public void updateAccountBalance(Account account, double amount, boolean isDeposit) {
-        // If deposit, add amount to balance, else subtract amount from balance
+        // If deposited, add amount to balance, else subtract amount from balance
         if (isDeposit) {
             account.setBalance(account.getBalance() + amount);
         } else {
             account.setBalance(account.getBalance() - amount);
         }
 
-        // TODO: accountService.updateAccount(account);
+        accountService.updateAccount(account);
     }
 
     public Transaction mapWithdrawRequestToTransaction(WithdrawDepositRequest withdrawDepositRequest) {
