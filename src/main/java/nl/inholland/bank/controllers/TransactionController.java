@@ -1,13 +1,16 @@
 package nl.inholland.bank.controllers;
 
+import nl.inholland.bank.models.Role;
 import nl.inholland.bank.models.Transaction;
 import nl.inholland.bank.models.TransactionType;
 import nl.inholland.bank.models.dtos.ExceptionResponse;
 import nl.inholland.bank.models.dtos.TransactionDTO.WithdrawDepositRequest;
 import nl.inholland.bank.models.dtos.TransactionDTO.TransactionResponse;
+import nl.inholland.bank.models.exceptions.UnauthorizedAccessException;
 import nl.inholland.bank.services.AccountService;
 import nl.inholland.bank.services.TransactionService;
 import nl.inholland.bank.services.UserService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -39,7 +42,6 @@ public class TransactionController {
             return ResponseEntity.status(401).body(new ExceptionResponse("Unauthorized"));
         }
         try {
-            // Call the withdrawal method in the transaction service
             Transaction transaction = transactionService.withdrawMoney(withdrawDepositRequest);
 
             // Prepare the response
@@ -48,12 +50,14 @@ public class TransactionController {
             // Return the response
             return ResponseEntity.status(201).body(response);
         } catch (InsufficientResourcesException e) {
-            ResponseEntity.status(422).body(new ExceptionResponse("Account does not have enough balance"));
+            return ResponseEntity.status(500).body(new ExceptionResponse("Account does not have enough balance"));
         } catch (AccountNotFoundException e) {
-            ResponseEntity.status(404).body(new ExceptionResponse("Account does not exist"));
+            return ResponseEntity.status(404).body(new ExceptionResponse("Account does not exist"));
+        } catch (UnauthorizedAccessException e) {
+            return ResponseEntity.status(403).body(new ExceptionResponse("You are not authorized to perform this action"));
         }
-        return ResponseEntity.status(500).body(new ExceptionResponse("Something went wrong"));
     }
+
 
     @PostMapping("/deposit")
     public ResponseEntity<Object> depositMoney(
@@ -71,9 +75,11 @@ public class TransactionController {
             // Return the response
             return ResponseEntity.status(201).body(response);
         } catch (AccountNotFoundException e) {
-            ResponseEntity.status(404).body(new ExceptionResponse("Account does not exist"));
+            return ResponseEntity.status(404).body(new ExceptionResponse("Account does not exist"));
         }
-        return ResponseEntity.status(500).body(new ExceptionResponse("Something went wrong"));
+        catch (UnauthorizedAccessException e) {
+            return ResponseEntity.status(403).body(new ExceptionResponse("You are not authorized to perform this action"));
+        }
     }
 
     public TransactionResponse buildTransactionResponse(Transaction transaction, TransactionType transactionType) {

@@ -2,6 +2,7 @@ package nl.inholland.bank.services;
 
 import nl.inholland.bank.models.*;
 import nl.inholland.bank.models.dtos.TransactionDTO.WithdrawDepositRequest;
+import nl.inholland.bank.models.exceptions.UnauthorizedAccessException;
 import nl.inholland.bank.repositories.TransactionRepository;
 import org.springframework.stereotype.Service;
 
@@ -32,39 +33,49 @@ public class TransactionService {
         return transaction;
     }
 
+    public boolean checkIfUserIsOwner(User user, Account account) {
+        return user == account.getUser();
+    }
 
-    public Transaction withdrawMoney(WithdrawDepositRequest withdrawDepositRequest) throws AccountNotFoundException, InsufficientResourcesException {
-        try {
-            Account accountSender = accountService.getAccountByIban(withdrawDepositRequest.IBAN());
-            if (checkAccountExist(accountSender) && accountSender.isActive() && accountSender.getType() != AccountType.SAVING) {
-                if (checkAccountBalance(accountSender, withdrawDepositRequest.amount())) {
-                    updateAccountBalance(accountSender, withdrawDepositRequest.amount(), false);
-                }
 
-                Transaction transaction = mapWithdrawRequestToTransaction(withdrawDepositRequest);
-                return transactionRepository.save(transaction);
+    public Transaction withdrawMoney(WithdrawDepositRequest withdrawDepositRequest) throws AccountNotFoundException, InsufficientResourcesException, UnauthorizedAccessException {
+        Account accountSender = accountService.getAccountByIban(withdrawDepositRequest.IBAN());
+        User user = userService.getUserById(withdrawDepositRequest.userId());
+
+        if (!checkIfUserIsOwner(user, accountSender)) {
+            throw new UnauthorizedAccessException("User is not the owner of the account");
+        }
+        if (checkAccountExist(accountSender) && accountSender.isActive() && accountSender.getType() != AccountType.SAVING) {
+            if (checkAccountBalance(accountSender, withdrawDepositRequest.amount())) {
+                updateAccountBalance(accountSender, withdrawDepositRequest.amount(), false);
             } else {
-                throw new AccountNotFoundException("Account not found or inactive");
+                throw new InsufficientResourcesException("Account does not have enough balance");
             }
-        } catch (Exception e) {
-            throw new AccountNotFoundException("Account not found");
+
+            Transaction transaction = mapWithdrawRequestToTransaction(withdrawDepositRequest);
+            return transactionRepository.save(transaction);
+        } else {
+            throw new AccountNotFoundException("Account not found or inactive");
         }
     }
 
-    public Transaction depositMoney(WithdrawDepositRequest depositRequest) throws AccountNotFoundException {
-        try {
-            Account accountReceiver = accountService.getAccountByIban(depositRequest.IBAN());
-            if (checkAccountExist(accountReceiver) && accountReceiver.isActive()) {
-                updateAccountBalance(accountReceiver, depositRequest.amount(), true);
+    public Transaction depositMoney(WithdrawDepositRequest depositRequest) throws AccountNotFoundException, UnauthorizedAccessException {
+        Account accountReceiver = accountService.getAccountByIban(depositRequest.IBAN());
+        User user = userService.getUserById(depositRequest.userId());
 
-                Transaction transaction = mapDepositRequestToTransaction(depositRequest);
-                return transactionRepository.save(transaction);
-            } else {
-                throw new AccountNotFoundException("Account not found or inactive");
-            }
-        } catch (Exception e) {
-            throw new AccountNotFoundException("Account not found");
+        if (!checkIfUserIsOwner(user, accountReceiver)) {
+            throw new UnauthorizedAccessException("User is not the owner of the account");
         }
+
+        if (checkAccountExist(accountReceiver) && accountReceiver.isActive()) {
+            updateAccountBalance(accountReceiver, depositRequest.amount(), true);
+
+            Transaction transaction = mapDepositRequestToTransaction(depositRequest);
+            return transactionRepository.save(transaction);
+        } else {
+            throw new AccountNotFoundException("Account not found or inactive");
+        }
+
     }
 
     public boolean checkAccountExist(Account account) {
