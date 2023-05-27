@@ -40,6 +40,9 @@ public class Transaction {
     @Column
     private TransactionType transactionType;
 
+    @Column
+    private String description;
+    
     public Transaction(User user, @Nullable Account AccountSender, @Nullable Account AccountReceiver, double amount, CurrencyType currencyType, TransactionType transactionType) {
         this.timestamp = LocalDate.now();
         this.user = user;

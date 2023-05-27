@@ -14,5 +14,4 @@ public interface AccountRepository extends CrudRepository<Account, Integer> {
     List<Account> findAllByUser(User user);
 
     Optional<Account> findByIBAN(String iban);
-
 }
