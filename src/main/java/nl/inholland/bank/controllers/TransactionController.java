@@ -7,6 +7,7 @@ import nl.inholland.bank.models.dtos.ExceptionResponse;
 import nl.inholland.bank.models.dtos.TransactionDTO.WithdrawDepositRequest;
 import nl.inholland.bank.models.dtos.TransactionDTO.TransactionResponse;
 import nl.inholland.bank.models.exceptions.UnauthorizedAccessException;
+import nl.inholland.bank.models.exceptions.UserNotTheOwnerOfAccountException;
 import nl.inholland.bank.services.AccountService;
 import nl.inholland.bank.services.TransactionService;
 import nl.inholland.bank.services.UserService;
@@ -55,6 +56,8 @@ public class TransactionController {
             return ResponseEntity.status(404).body(new ExceptionResponse("Account does not exist"));
         } catch (UnauthorizedAccessException e) {
             return ResponseEntity.status(403).body(new ExceptionResponse("You are not authorized to perform this action"));
+        } catch (UserNotTheOwnerOfAccountException e) {
+            return ResponseEntity.status(403).body(new ExceptionResponse("You are not the owner of this account or you are not an employee"));
         }
     }
 
