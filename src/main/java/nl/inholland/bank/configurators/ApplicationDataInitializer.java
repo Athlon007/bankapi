@@ -73,7 +73,6 @@ public class ApplicationDataInitializer implements ApplicationRunner {
                 // Account
                 AccountRequest accountRequest = new AccountRequest(
                                 "NL01INHO0000000001",
-                                0,
                                 "EURO",
                                 "CURRENT",
                                 "3");
@@ -84,7 +83,6 @@ public class ApplicationDataInitializer implements ApplicationRunner {
 
                 AccountRequest userAccount = new AccountRequest(
                                 "NL01INHO0000000002",
-                                0,
                                 "EURO",
                                 "CURRENT",
                                 "3");
