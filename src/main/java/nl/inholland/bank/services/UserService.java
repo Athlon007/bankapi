@@ -5,7 +5,6 @@ import nl.inholland.bank.models.dtos.AuthDTO.LoginRequest;
 import nl.inholland.bank.models.dtos.AuthDTO.RefreshTokenRequest;
 import nl.inholland.bank.models.dtos.AuthDTO.jwt;
 import nl.inholland.bank.models.dtos.UserDTO.UserForAdminRequest;
-import nl.inholland.bank.models.dtos.UserDTO.UserLimitsRequest;
 import nl.inholland.bank.models.dtos.UserDTO.UserRequest;
 import nl.inholland.bank.models.exceptions.OperationNotAllowedException;
 import nl.inholland.bank.repositories.AccountRepository;
@@ -99,7 +98,6 @@ public class UserService {
         // Declare pageable, so we can limit the results.
         Pageable pageable = PageRequest.of(pageValue, limitValue);
 
-        // TODO: hasNoAccounts
         // TODO: Calculate remaining limits for today.
 
         if (userRole == Role.ADMIN || userRole == Role.EMPLOYEE) {
@@ -184,8 +182,8 @@ public class UserService {
         user.setUsername(userRequest.getUsername());
         user.setPassword(bCryptPasswordEncoder.encode(userRequest.getPassword()));
         user.setRole(Role.USER);
-        if (userRequest instanceof UserForAdminRequest) {
-            user.setRole(mapStringToRole(((UserForAdminRequest) userRequest).getRole()));
+        if (userRequest instanceof UserForAdminRequest userForAdminRequest) {
+            user.setRole(mapStringToRole((userForAdminRequest.getRole())));
         }
         return user;
     }
@@ -230,11 +228,7 @@ public class UserService {
         // - Must contain at least one lowercase character
         // - Must contain at least one uppercase character
         // - Must contain at least one special character
-        if (!password.matches("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*()_+-={}:;'\",./<>?]).{8,}$")) {
-            return false;
-        }
-
-        return true;
+        return password.matches("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*()_+-={}:;'\",./<>?]).{8,}$");
     }
 
 
@@ -273,11 +267,11 @@ public class UserService {
             throw new IllegalArgumentException("Password is not valid.");
         }
         user.setPassword(bCryptPasswordEncoder.encode(userRequest.getPassword()));
-        if (userRequest instanceof UserForAdminRequest) {
+        if (userRequest instanceof UserForAdminRequest userForAdminRequest) {
             if (getBearerUserRole() != Role.ADMIN) {
                 throw new AuthenticationException("You are not authorized to change the role of a user.");
             }
-            user.setRole(mapStringToRole(((UserForAdminRequest) userRequest).getRole()));
+            user.setRole(mapStringToRole((userForAdminRequest.getRole())));
         }
         user.setActive(true); // Reactivate user if it was deactivated.
 
@@ -328,8 +322,9 @@ public class UserService {
             user.setCurrentAccount(account);
         } else if (account.getType() == AccountType.SAVING) {
             user.setSavingAccount(account);
+        } else {
+            throw new IllegalArgumentException("Invalid account type.");
         }
-
         userRepository.save(user);
     }
 }

@@ -8,8 +8,6 @@ import nl.inholland.bank.models.dtos.AccountDTO.AccountResponse;
 import nl.inholland.bank.models.dtos.UserDTO.*;
 import nl.inholland.bank.services.UserLimitsService;
 import nl.inholland.bank.services.UserService;
-import org.hibernate.cfg.NotYetImplementedException;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
@@ -24,8 +22,8 @@ import java.util.Optional;
 @Controller
 @RequestMapping("/users")
 public class UserController {
-    private UserService userService;
-    private UserLimitsService userLimitsService;
+    private final UserService userService;
+    private final UserLimitsService userLimitsService;
 
     public UserController(UserService userService, UserLimitsService userLimitsService) {
         this.userService = userService;
@@ -41,7 +39,7 @@ public class UserController {
     ) {
         try {
             // If hasNoAccount is true, use the correct method
-            List<User> users = hasNoAccounts.isPresent() && hasNoAccounts.get() ?
+            List<User> users = hasNoAccounts.isPresent() && Boolean.TRUE.equals(hasNoAccounts.get()) ?
                     userService.getAllUsersWithNoAccounts(page, limit, name) :
                     userService.getAllUsers(page, limit, name);
 
