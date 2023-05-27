@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 
 import javax.naming.InsufficientResourcesException;
 import javax.security.auth.login.AccountNotFoundException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Service
@@ -25,13 +27,15 @@ public class TransactionService {
         this.accountService = accountService;
     }
 
-    public Transaction createTransaction(User user, Account AccountSender, Account AccountReceiver, CurrencyType currencyType, double amount, TransactionType transactionType) {
+    public Transaction createTransaction(User user, Account accountSender, Account accountReceiver, CurrencyType currencyType, double amount, String description, TransactionType transactionType) {
         Transaction transaction = new Transaction();
         transaction.setUser(user);
-        transaction.setAccountSender(AccountSender);
-        transaction.setAccountReceiver(AccountReceiver);
+        transaction.setAccountSender(accountSender);
+        transaction.setAccountReceiver(accountReceiver);
         transaction.setCurrencyType(currencyType);
         transaction.setAmount(amount);
+        transaction.setTimestamp(LocalDate.now());
+        transaction.setDescription(description);
         transaction.setTransactionType(transactionType);
 
         return transaction;
@@ -40,7 +44,6 @@ public class TransactionService {
     public boolean isTransactionNotAuthorizedForUserAccount(User user, Account account) {
         return user == account.getUser();
     }
-
 
     public Transaction withdrawMoney(WithdrawDepositRequest withdrawDepositRequest) throws AccountNotFoundException, InsufficientResourcesException, UnauthorizedAccessException, UserNotTheOwnerOfAccountException {
         Account accountSender = accountService.getAccountByIban(withdrawDepositRequest.IBAN());
@@ -113,16 +116,22 @@ public class TransactionService {
         return false;
     }
 
-    public void transferMoney(User user, Account accountSender, Account accountReceiver, double amount, CurrencyType
-            currencyType) {
-        // Check what account types are
+    public Transaction transferMoney(User user, Account accountSender, Account accountReceiver,
+                                     CurrencyType currencyType, double amount, String description) {
+        // If any account is a saving account...
         if (accountSender.getType() == AccountType.SAVING || accountReceiver.getType() == AccountType.SAVING) {
+            // Check if both the sender and receiver account belong to the user performing the transaction.
             if (accountSender.getUser() == accountReceiver.getUser()) {
-                System.out.println("You can transfer money to your own savings account");
-                return;
+                return createTransaction(user, accountSender, accountReceiver, currencyType, amount, description, TransactionType.TRANSACTION);
+            } else {
+                throw new IllegalArgumentException("You can't transfer from/to a saving account that doesn't belong to you.");
             }
-            System.out.println("You can't transfer money from between these accounts");
-            return;
+        } else { // Proceed with transaction, check if the user (sender) has enough funds
+            if ((accountSender.getBalance() - amount) >= user.getLimits().getAbsoluteLimit()) {
+                return createTransaction(user, accountSender, accountReceiver, currencyType, amount, description, TransactionType.TRANSACTION);
+            } else {
+                throw new IllegalArgumentException("Insufficient funds to proceed with the transaction.");
+            }
         }
     }
 

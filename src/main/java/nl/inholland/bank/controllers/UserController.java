@@ -193,6 +193,7 @@ public class UserController {
                 user.getBsn(),
                 user.getPhoneNumber(),
                 dateOfBirth,
+                user.getTotalBalance(),
                 user.getRole().toString(),
                 currentAccountResponse,
                 savingAccountResponse,

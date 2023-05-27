@@ -1,15 +1,14 @@
 package nl.inholland.bank.services;
 
-import nl.inholland.bank.models.Account;
-import nl.inholland.bank.models.AccountType;
-import nl.inholland.bank.models.CurrencyType;
-import nl.inholland.bank.models.User;
+import nl.inholland.bank.models.*;
 import nl.inholland.bank.models.dtos.AccountDTO.AccountRequest;
 import nl.inholland.bank.repositories.AccountRepository;
 import org.hibernate.ObjectNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 
 @Service
 public class AccountService {
@@ -40,6 +39,16 @@ public class AccountService {
 
     public Account getAccountById(int id) {
         return accountRepository.findById(id).orElseThrow(()-> new ObjectNotFoundException(id, "Account not found"));
+    }
+
+    public Account getAccountByIBAN(String iban)
+    {
+        if (IBANGenerator.isValidIBAN(iban)) {
+            return accountRepository.findByIBAN(iban)
+                    .orElseThrow(() -> new NoSuchElementException("Account not found"));
+        } else {
+            return null;
+        }
     }
 
     public Account addAccount(AccountRequest accountRequest){
