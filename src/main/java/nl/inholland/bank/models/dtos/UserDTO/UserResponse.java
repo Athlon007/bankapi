@@ -10,6 +10,7 @@ public record UserResponse(
         String bsn,
         String phone_number,
         String birth_date,
+        Double total_balance,
         String role,
         AccountResponse current_account,
         AccountResponse saving_account,
