@@ -73,22 +73,20 @@ public class ApplicationDataInitializer implements ApplicationRunner {
                 // Account
                 AccountRequest accountRequest = new AccountRequest(
                                 "NL01INHO0000000001",
-                                0,
                                 "EURO",
                                 "CURRENT",
-                                "3");
+                                3);
 
                 Account account = accountService.addAccount(accountRequest);
                 userService.assignAccountToUser(admin, account);
 
 
-                AccountRequest userAccount = new AccountRequest(
-                                "NL01INHO0000000002",
-                                0,
-                                "EURO",
-                                "CURRENT",
-                                "3");
-                Account accountUser = accountService.addAccount(userAccount);
-                userService.assignAccountToUser(user, accountUser);
+//                AccountRequest userAccount = new AccountRequest(
+//                                "NL01INHO0000000002",
+//                                "EURO",
+//                                "SAVING",
+//                                3);
+//                Account accountUser = accountService.addAccount(userAccount);
+//                userService.assignAccountToUser(user, accountUser);
         }
 }
