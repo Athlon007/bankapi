@@ -36,7 +36,7 @@ public class TransactionService {
     public Transaction withdrawMoney(WithdrawDepositRequest withdrawDepositRequest) throws AccountNotFoundException, InsufficientResourcesException {
         try {
             Account accountSender = accountService.getAccountByIban(withdrawDepositRequest.IBAN());
-            if (checkAccountExist(accountSender) && accountSender.isActive()) {
+            if (checkAccountExist(accountSender) && accountSender.isActive() && accountSender.getType() != AccountType.SAVING) {
                 if (checkAccountBalance(accountSender, withdrawDepositRequest.amount())) {
                     updateAccountBalance(accountSender, withdrawDepositRequest.amount(), false);
                 }

@@ -113,14 +113,14 @@ public class ApplicationDataInitializer implements ApplicationRunner {
 //        System.out.println("Account balance after withdraw: ");
 //        System.out.println(accountSender.getBalance());
 
-        Account accountReceiver = accountService.getAccountByIban("NL01INHO0000000001");
-        System.out.println("Account balance before deposit: ");
-        System.out.println(accountReceiver.getBalance());
-        Transaction transaction = transactionService.depositMoney(withdrawDepositRequest);
-        System.out.println("Transaction info: ");
-        System.out.println(transaction);
-        System.out.println("Account balance after deposit: ");
-        System.out.println(accountReceiver.getBalance());
+//        Account accountReceiver = accountService.getAccountByIban("NL01INHO0000000001");
+//        System.out.println("Account balance before deposit: ");
+//        System.out.println(accountReceiver.getBalance());
+//        Transaction transaction = transactionService.depositMoney(withdrawDepositRequest);
+//        System.out.println("Transaction info: ");
+//        System.out.println(transaction);
+//        System.out.println("Account balance after deposit: ");
+//        System.out.println(accountReceiver.getBalance());
 
     }
 }

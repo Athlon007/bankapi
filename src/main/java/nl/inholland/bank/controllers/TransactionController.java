@@ -1,6 +1,7 @@
 package nl.inholland.bank.controllers;
 
 import nl.inholland.bank.models.Transaction;
+import nl.inholland.bank.models.TransactionType;
 import nl.inholland.bank.models.dtos.ExceptionResponse;
 import nl.inholland.bank.models.dtos.TransactionDTO.WithdrawDepositRequest;
 import nl.inholland.bank.models.dtos.TransactionDTO.TransactionResponse;
@@ -42,14 +43,7 @@ public class TransactionController {
             Transaction transaction = transactionService.withdrawMoney(withdrawDepositRequest);
 
             // Prepare the response
-            TransactionResponse response = new TransactionResponse(
-                    transaction.getId(),
-                    transaction.getAccountSender().getIBAN(),
-                    null,
-                    transaction.getAmount(),
-                    transaction.getTimestamp(),
-                    "Withdrawal successful"
-            );
+            TransactionResponse response = buildTransactionResponse(transaction, TransactionType.WITHDRAWAL);
 
             // Return the response
             return ResponseEntity.status(201).body(response);
@@ -61,5 +55,50 @@ public class TransactionController {
         return ResponseEntity.status(500).body(new ExceptionResponse("Something went wrong"));
     }
 
+    @PostMapping("/deposit")
+    public ResponseEntity<Object> depositMoney(
+            @RequestBody WithdrawDepositRequest withdrawDepositRequest) {
+        if (userService.getBearerUserRole() == null) {
+            return ResponseEntity.status(401).body(new ExceptionResponse("Unauthorized"));
+        }
+        try {
+            // Call the deposit method in the transaction service
+            Transaction transaction = transactionService.depositMoney(withdrawDepositRequest);
 
+            // Prepare the response
+            TransactionResponse response = buildTransactionResponse(transaction, TransactionType.DEPOSIT);
+
+            // Return the response
+            return ResponseEntity.status(201).body(response);
+        } catch (AccountNotFoundException e) {
+            ResponseEntity.status(404).body(new ExceptionResponse("Account does not exist"));
+        }
+        return ResponseEntity.status(500).body(new ExceptionResponse("Something went wrong"));
+    }
+
+    public TransactionResponse buildTransactionResponse(Transaction transaction, TransactionType transactionType) {
+
+        TransactionResponse response = null;
+        if (transactionType == TransactionType.WITHDRAWAL) {
+            response = new TransactionResponse(
+                    transaction.getId(),
+                    transaction.getAccountSender().getIBAN(),
+                    null,
+                    transaction.getAmount(),
+                    transaction.getTimestamp(),
+                    "Withdrawal successful"
+            );
+        }
+        if (transactionType == TransactionType.DEPOSIT) {
+            response = new TransactionResponse(
+                    transaction.getId(),
+                    null,
+                    transaction.getAccountReceiver().getIBAN(),
+                    transaction.getAmount(),
+                    transaction.getTimestamp(),
+                    "Deposit successful"
+            );
+        }
+        return response;
+    }
 }
