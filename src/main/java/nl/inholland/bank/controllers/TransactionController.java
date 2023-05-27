@@ -69,7 +69,7 @@ public class TransactionController {
         return ResponseEntity.status(500).body(new ExceptionResponse("Something went wrong"));
     }
 
-    @PostMapping("/transactions")
+    @PostMapping
     public ResponseEntity<Object> transferMoney(@RequestParam int userId, @RequestBody TransactionRequest request)
     {
         try {
@@ -95,8 +95,11 @@ public class TransactionController {
                 );
 
                 return ResponseEntity.status(201).body(response);
+            } else if (senderAccount == null) {
+                return ResponseEntity.status(400).body("Sender IBAN could not be found.");
+            } else {
+                return ResponseEntity.status(400).body("Receiver IBAN could not be found.");
             }
-            return ResponseEntity.status(400).body("Request body is incorrect.");
         } catch (Exception e)
         {
             return ResponseEntity.badRequest().body(
@@ -104,7 +107,7 @@ public class TransactionController {
         }
     }
 
-    @GetMapping("/transactions")
+    @GetMapping
     public ResponseEntity<Object> getAllTransactions()
     {
         try {

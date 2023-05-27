@@ -96,7 +96,22 @@
 			<version>${jjwt.version}</version>
 			<scope>runtime</scope>
 		</dependency>
-    </dependencies>
+
+		<!-- IBAN Generator -->
+		<!-- https://github.com/arturmkrtchyan/iban4j -->
+		<dependency>
+			<groupId>org.iban4j</groupId>
+			<artifactId>iban4j</artifactId>
+			<version>3.2.4-RELEASE</version>
+		</dependency>
+
+		<!-- IBAN Validator -->
+		<dependency>
+			<groupId>commons-validator</groupId>
+			<artifactId>commons-validator</artifactId>
+			<version>1.7</version>
+		</dependency>
+	</dependencies>
 
 	<build>
 		<plugins>
