@@ -61,7 +61,9 @@ public class AccountService {
 
         Account account = mapAccountRequestToAccount(accountRequest);
 
-        return accountRepository.save(account);
+        Account responseAccount = accountRepository.save(account);
+        userService.assignAccountToUser(user, responseAccount);
+        return responseAccount;
     }
 
     // Get all accounts that belong to a user (max. 1 current account and max. 1 saving account)
