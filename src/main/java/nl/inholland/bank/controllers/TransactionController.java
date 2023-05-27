@@ -1,16 +1,13 @@
 package nl.inholland.bank.controllers;
 
-import nl.inholland.bank.models.Account;
-import nl.inholland.bank.models.CurrencyType;
-import nl.inholland.bank.models.Transaction;
-import nl.inholland.bank.models.TransactionType;
+import nl.inholland.bank.models.*;
 import nl.inholland.bank.models.dtos.ExceptionResponse;
 import nl.inholland.bank.models.dtos.TransactionDTO.TransactionRequest;
-import nl.inholland.bank.models.dtos.TransactionDTO.WithdrawRequest;
 import nl.inholland.bank.models.dtos.TransactionDTO.TransactionResponse;
 import nl.inholland.bank.models.dtos.TransactionDTO.WithdrawDepositRequest;
 import nl.inholland.bank.models.exceptions.UnauthorizedAccessException;
 import nl.inholland.bank.models.exceptions.UserNotTheOwnerOfAccountException;
+import nl.inholland.bank.services.AccountService;
 import nl.inholland.bank.services.TransactionService;
 import nl.inholland.bank.services.UserService;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import javax.naming.InsufficientResourcesException;
 import javax.security.auth.login.AccountNotFoundException;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/transactions")
@@ -29,10 +27,12 @@ public class TransactionController {
     private final TransactionService transactionService;
     private final UserService userService;
 
+    private final AccountService accountService;
 
-    public TransactionController(TransactionService transactionService, UserService userService) {
+    public TransactionController(TransactionService transactionService, UserService userService, AccountService accountService) {
         this.transactionService = transactionService;
         this.userService = userService;
+        this.accountService = accountService;
     }
 
     @PostMapping("/withdraw")
@@ -95,7 +95,7 @@ public class TransactionController {
         } catch (Exception e)
         {
             return ResponseEntity.badRequest().body(
-                    new ExceptionResponse("An error occurred...."));
+                    new ExceptionResponse(e.getMessage()));
         }
     }
 

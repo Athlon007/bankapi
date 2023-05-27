@@ -27,7 +27,7 @@ public class TransactionService {
         this.accountService = accountService;
     }
 
-    public Transaction createTransaction(User user, Account AccountSender, Account AccountReceiver, CurrencyType currencyType, double amount, String description, TransactionType transactionType) {
+    public Transaction createTransaction(User user, Account accountSender, Account accountReceiver, CurrencyType currencyType, double amount, String description, TransactionType transactionType) {
         Transaction transaction = new Transaction();
         transaction.setUser(user);
         transaction.setAccountSender(accountSender);
@@ -122,13 +122,13 @@ public class TransactionService {
         if (accountSender.getType() == AccountType.SAVING || accountReceiver.getType() == AccountType.SAVING) {
             // Check if both the sender and receiver account belong to the user performing the transaction.
             if (accountSender.getUser() == accountReceiver.getUser()) {
-                return createTransaction(user, accountSender, accountReceiver, currencyType, amount, description);
+                return createTransaction(user, accountSender, accountReceiver, currencyType, amount, description, TransactionType.TRANSACTION);
             } else {
                 throw new IllegalArgumentException("You can't transfer from/to a saving account that doesn't belong to you.");
             }
         } else { // Proceed with transaction, check if the user (sender) has enough funds
             if ((accountSender.getBalance() - amount) >= user.getLimits().getAbsoluteLimit()) {
-                return createTransaction(user, accountSender, accountReceiver, currencyType, amount, description);
+                return createTransaction(user, accountSender, accountReceiver, currencyType, amount, description, TransactionType.TRANSACTION);
             } else {
                 throw new IllegalArgumentException("Insufficient funds to proceed with the transaction.");
             }
