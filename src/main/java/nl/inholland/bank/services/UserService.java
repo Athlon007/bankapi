@@ -279,7 +279,7 @@ public class UserService {
             }
             user.setRole(mapStringToRole(((UserForAdminRequest) userRequest).getRole()));
         }
-        user.setActive(true);
+        user.setActive(true); // Reactivate user if it was deactivated.
 
         return userRepository.save(user);
     }
