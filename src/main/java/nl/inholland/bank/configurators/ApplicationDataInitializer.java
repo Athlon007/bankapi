@@ -99,7 +99,7 @@ public class ApplicationDataInitializer implements ApplicationRunner {
         //Transaction
         WithdrawRequest withdrawRequest = new WithdrawRequest(
                 "NL01INHO0000000001",
-                100,
+                300,
                 CurrencyType.EURO,
                 3);
 
@@ -110,7 +110,6 @@ public class ApplicationDataInitializer implements ApplicationRunner {
         Transaction transaction = transactionService.withdrawMoney(withdrawRequest);
         System.out.println("Transaction info: ");
         System.out.println(transaction);
-        accountSender.setBalance(account.getBalance() - withdrawRequest.amount());
         System.out.println("Account balance after withdraw: ");
         System.out.println(accountSender.getBalance());
     }

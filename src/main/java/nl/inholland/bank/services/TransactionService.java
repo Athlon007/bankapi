@@ -33,19 +33,22 @@ public class TransactionService {
     }
 
     public Transaction withdrawMoney(WithdrawRequest withdrawRequest) throws AccountNotFoundException, InsufficientResourcesException {
-        User user = userService.getUserById(withdrawRequest.userId());
         Account accountSender = accountService.getAccountByIban(withdrawRequest.IBAN());
+        try {
+            if (checkAccountExist(accountSender) && accountSender.isActive()) {
+                if (checkAccountBalance(accountSender, withdrawRequest.amount())) {
+                    updateAccountBalance(accountSender, withdrawRequest.amount(), false);
+                }
 
-        if (accountSender == null) {
+                Transaction transaction = mapWithdrawRequestToTransaction(withdrawRequest);
+                return transactionRepository.save(transaction);
+            }
+            else {
+                throw new AccountNotFoundException("Account not found or inactive");
+            }
+        } catch (Exception e) {
             throw new AccountNotFoundException("Account not found");
         }
-        if (accountSender.getBalance() < withdrawRequest.amount()) {
-            throw new InsufficientResourcesException("Insufficient funds");
-        }
-
-        Transaction transaction = mapWithdrawRequestToTransaction(withdrawRequest);
-
-        return transactionRepository.save(transaction);
     }
 
     public void depositMoney(Account account, double amount) {
@@ -61,13 +64,13 @@ public class TransactionService {
 
     public boolean checkAccountExist(Account account) {
         if (account != null) {
-            System.out.println("Account does exist");
             return true;
         }
         return false;
     }
 
-    public void transferMoney(User user, Account accountSender, Account accountReceiver, double amount, CurrencyType currencyType) {
+    public void transferMoney(User user, Account accountSender, Account accountReceiver, double amount, CurrencyType
+            currencyType) {
         // Check what account types are
         if (accountSender.getType() == AccountType.SAVING || accountReceiver.getType() == AccountType.SAVING) {
             if (accountSender.getUser() == accountReceiver.getUser()) {
@@ -90,6 +93,8 @@ public class TransactionService {
         } else {
             account.setBalance(account.getBalance() - amount);
         }
+
+        // TODO: accountService.updateAccount(account);
     }
 
     public Transaction mapWithdrawRequestToTransaction(WithdrawRequest withdrawRequest) {
@@ -99,6 +104,7 @@ public class TransactionService {
         transaction.setCurrencyType(CurrencyType.EURO);
         User user = userService.getUserById(withdrawRequest.userId());
         transaction.setUser(user);
+        transaction.setTransactionType(TransactionType.WITHDRAWAL);
         return transaction;
     }
 }
