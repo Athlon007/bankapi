@@ -79,7 +79,7 @@ public class ApplicationDataInitializer implements ApplicationRunner {
 
         // Account
         AccountRequest accountRequest = new AccountRequest(
-                "NL01INHO0000000001",
+                "NL71INHO6310134205",
                 "EURO",
                 "CURRENT",
                 3);
@@ -87,6 +87,14 @@ public class ApplicationDataInitializer implements ApplicationRunner {
         Account account = accountService.addAccount(accountRequest);
         userService.assignAccountToUser(admin, account);
 
+        // Test for transfering money
+        // Account for employee
+        AccountRequest accountRequest2 = new AccountRequest(
+                "NL60INHO9935031775",
+                "EURO",
+                "CURRENT",
+                2);
+        Account account2 = accountService.addAccount(accountRequest2);
 
 //                AccountRequest userAccount = new AccountRequest(
 //                                "NL01INHO0000000002",

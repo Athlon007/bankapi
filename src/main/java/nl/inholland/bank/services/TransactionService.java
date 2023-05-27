@@ -118,6 +118,7 @@ public class TransactionService {
 
     public Transaction transferMoney(User user, Account accountSender, Account accountReceiver,
                                      CurrencyType currencyType, double amount, String description) {
+        // TODO: Add a check to see if the sender account belongs to the user
         // If any account is a saving account...
         if (accountSender.getType() == AccountType.SAVING || accountReceiver.getType() == AccountType.SAVING) {
             // Check if both the sender and receiver account belong to the user performing the transaction.
