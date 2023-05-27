@@ -10,7 +10,7 @@ public class IBANGenerator {
      * @param bankCode Nullable. The bankcode to use. Can only be used in combination with countryCode.
      * @return Returns a randomly generated IBAN.
      */
-    public static Iban generateIban(CountryCode countryCode, String bankCode)
+    public Iban generateIban(CountryCode countryCode, String bankCode)
     {
         if (countryCode != null && bankCode != null)
         {
@@ -27,7 +27,7 @@ public class IBANGenerator {
      * @param iban The IBAN to check.
      * @return Returns a true or false statement.
      */
-    public static boolean isValidIBAN(String iban)
+    public boolean isValidIBAN(String iban)
     {
         if (iban != null) {
            IBANValidator ibanValidator = new IBANValidator();
