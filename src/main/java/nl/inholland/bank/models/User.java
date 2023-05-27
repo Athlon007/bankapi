@@ -92,6 +92,23 @@ public class User {
             throw new IllegalArgumentException("BSN must only contain numbers");
         }
 
+        // Valid BSN must be divisible by 11, according ot 'elfproef'
+        // https://financieel.infonu.nl/diversen/180745-elfproef-voor-rekeningnummer-of-burgerservicenummer-bsn.html
+        int length = bsn.length();
+        int sum = 0;
+        for (int i = 0; i < length; i++) {
+            int digit = Character.getNumericValue(bsn.charAt(i));
+            int multiplyBy = length - i;
+            if (multiplyBy == 1) {
+                multiplyBy *= -1;
+            }
+            sum += digit * multiplyBy;
+        }
+
+        if (sum % 11 != 0) {
+            throw new IllegalArgumentException("BSN is not valid");
+        }
+
         this.bsn = bsn;
     }
 

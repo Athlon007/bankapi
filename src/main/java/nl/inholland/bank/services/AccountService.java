@@ -30,10 +30,6 @@ public class AccountService {
         return account;
     }
 
-    public void DeactivateAccount(Account account){
-        account.setActive(false);
-    }
-
     public boolean isActive(Account account){
         return account.isActive();
     }
@@ -54,6 +50,22 @@ public class AccountService {
     }
 
     public Account addAccount(AccountRequest accountRequest){
+        User user = userService.getUserById(Integer.parseInt(accountRequest.userId()));
+        AccountType accountType = mapAccountTypeToString(accountRequest.accountType());
+
+        if(accountType == AccountType.CURRENT){
+            if (doesUserHaveAccountType(user, AccountType.CURRENT)){
+                throw new IllegalArgumentException("User already has a current account");
+            }
+        } else if (accountType == AccountType.SAVING) {
+            if(!doesUserHaveAccountType(user, AccountType.CURRENT)){
+                throw new IllegalArgumentException("User does not have a current account");
+            }
+            if(doesUserHaveAccountType(user, AccountType.SAVING)){
+                throw new IllegalArgumentException("User already has a saving account");
+            }
+        }
+
         Account account = mapAccountRequestToAccount(accountRequest);
 
         return accountRepository.save(account);
@@ -65,6 +77,17 @@ public class AccountService {
             return accountRepository.findAllByUser(user);
     }
 
+
+    public boolean doesUserHaveAccountType(User user, AccountType accountType){
+        List<Account> accounts = getAccountsByUserId(user);
+        for (Account account : accounts) {
+            if (account.getType() == accountType){
+                return true;
+            }
+        }
+        return false;
+    }
+
     public Account mapAccountRequestToAccount(AccountRequest accountRequest){
         Account account = new Account();
         User user = userService.getUserById(Integer.parseInt(accountRequest.userId()));
@@ -72,7 +95,7 @@ public class AccountService {
         account.setIBAN(accountRequest.IBAN());
         account.setType(mapAccountTypeToString(accountRequest.accountType()));
         account.setCurrencyType(mapCurrencyTypeToString(accountRequest.currencyType()));
-        account.setBalance(accountRequest.balance());
+        account.setBalance(0);
         account.setActive(true);
 
         return account;
