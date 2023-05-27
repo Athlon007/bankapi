@@ -12,5 +12,6 @@ public record UserResponse(
         String birth_date,
         String role,
         AccountResponse current_account,
-        AccountResponse saving_account
+        AccountResponse saving_account,
+        boolean active
 ) { }

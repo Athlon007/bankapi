@@ -7,6 +7,7 @@ import nl.inholland.bank.models.dtos.UserDTO.UserLimitsRequest;
 import nl.inholland.bank.repositories.UserLimitsRepository;
 import nl.inholland.bank.repositories.UserRepository;
 import nl.inholland.bank.utils.JwtTokenProvider;
+import org.hibernate.ObjectNotFoundException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -14,9 +15,9 @@ import javax.naming.AuthenticationException;
 
 @Service
 public class UserLimitsService {
-    private UserLimitsRepository userLimitsRepository;
-    private JwtTokenProvider jwtTokenProvider;
-    private UserRepository userRepository;
+    private final UserLimitsRepository userLimitsRepository;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final UserRepository userRepository;
 
     @Value("${bankapi.user.defaults.dailyTransactionLimit}")
     private int defaultDailyTransactionLimit;
@@ -60,7 +61,7 @@ public class UserLimitsService {
             throw new AuthenticationException("You are not allowed to update limits");
         }
 
-        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        userRepository.findById(userId).orElseThrow(() -> new ObjectNotFoundException(userId, "User"));
         Limits limits = userLimitsRepository.findFirstByUserId(userId);
         limits.setTransactionLimit(userLimitsRequest.transaction_limit());
         limits.setDailyTransactionLimit(userLimitsRequest.daily_transaction_limit());
@@ -68,15 +69,6 @@ public class UserLimitsService {
 
         userLimitsRepository.save(limits);
         return userLimitsRepository.findFirstByUserId(userId);
-    }
-
-    private Limits mapUserLimitsRequestToLimits(UserLimitsRequest userLimitsRequest) {
-        Limits limits = new Limits();
-        limits.setTransactionLimit(userLimitsRequest.transaction_limit());
-        limits.setDailyTransactionLimit(userLimitsRequest.daily_transaction_limit());
-        limits.setAbsoluteLimit(userLimitsRequest.absolute_limit());
-        limits.setRemainingDailyTransactionLimit(calculateRemainingDailyLimit(limits));
-        return limits;
     }
 
     private Double calculateRemainingDailyLimit(Limits limits) {

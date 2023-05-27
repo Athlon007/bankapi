@@ -3,6 +3,7 @@ package nl.inholland.bank.services;
 import nl.inholland.bank.models.*;
 import nl.inholland.bank.models.dtos.AccountDTO.AccountRequest;
 import nl.inholland.bank.repositories.AccountRepository;
+import org.hibernate.ObjectNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -34,8 +35,8 @@ public class AccountService {
         return account.isActive();
     }
 
-    public Account getAccountById(int id){
-        return null;
+    public Account getAccountById(int id) {
+        return accountRepository.findById(id).orElseThrow(()-> new ObjectNotFoundException(id, "Account not found"));
     }
 
     public Account getAccountByIBAN(String iban)
@@ -50,7 +51,7 @@ public class AccountService {
     }
 
     public Account addAccount(AccountRequest accountRequest){
-        User user = userService.getUserById(Integer.parseInt(accountRequest.userId()));
+        User user = userService.getUserById(accountRequest.userId());
         AccountType accountType = mapAccountTypeToString(accountRequest.accountType());
 
         if(accountType == AccountType.CURRENT){
@@ -68,16 +69,17 @@ public class AccountService {
 
         Account account = mapAccountRequestToAccount(accountRequest);
 
-        return accountRepository.save(account);
+        Account responseAccount = accountRepository.save(account);
+        userService.assignAccountToUser(user, responseAccount);
+        return responseAccount;
     }
 
-    // Get all accounts from a user
+    // Get all accounts that belong to a user (max. 1 current account and max. 1 saving account)
     public List<Account> getAccountsByUserId(User user){
-
             return accountRepository.findAllByUser(user);
     }
 
-
+    // Check if the user has a certain account type, returns true if the user has the account type
     public boolean doesUserHaveAccountType(User user, AccountType accountType){
         List<Account> accounts = getAccountsByUserId(user);
         for (Account account : accounts) {
@@ -90,7 +92,7 @@ public class AccountService {
 
     public Account mapAccountRequestToAccount(AccountRequest accountRequest){
         Account account = new Account();
-        User user = userService.getUserById(Integer.parseInt(accountRequest.userId()));
+        User user = userService.getUserById(accountRequest.userId());
         account.setUser(user);
         account.setIBAN(accountRequest.IBAN());
         account.setType(mapAccountTypeToString(accountRequest.accountType()));
@@ -121,4 +123,11 @@ public class AccountService {
         }
     }
 
+    public Account getAccountByIban(String iban) {
+        return accountRepository.findByIBAN(iban).orElseThrow(()-> new IllegalArgumentException("Account not found"));
+    }
+
+    public void updateAccount(Account account) {
+        accountRepository.save(account);
+    }
 }
