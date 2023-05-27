@@ -32,7 +32,7 @@ paths:
         Returns an array of all users. Every entry has only basic information about the user.<br>
         If user is an employee, it will return all users with IDs (see UserResponse).<br>
         If user is a client, it will return UserForClientResponse.
-      operationId: getAcounts
+      operationId: getAccounts
       security:
         - bearerAuth: []
       parameters:
@@ -127,6 +127,7 @@ paths:
                 bsn: "123456789"
                 phone_number: "0612345678"
                 birth_date: "2000-01-01"
+                total_balance: 0.0
                 role: "client"
                 current_account: null
                 saving_account: null
@@ -171,6 +172,7 @@ paths:
                   bsn: "123456789"
                   phone_number: "0612345678"
                   birth_date: "2000-01-01"
+                  total_balance: 1000.0
                   role: "client"
                   current_account:
                     id: 1
@@ -239,6 +241,7 @@ paths:
                   bsn: "123456789"
                   phone_number: "0612345678"
                   birth_date: "2000-01-01"
+                  total_balance: 1000.0
                   role: "client"
                   current_account:
                     id: 1
@@ -796,6 +799,9 @@ components:
           type: string
           format: date
           pattern: "[0-9]{4}-[0-9]{2}-[0-9]{2}"
+        total_balance:
+          type: number
+          format: double
         role:
           type: string
           format: string

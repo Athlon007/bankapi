@@ -225,4 +225,16 @@ public class User {
         limits.setUser(this);
         this.limits = limits;
     }
+
+    public double getTotalBalance() {
+        double sum = 0;
+        if (currentAccount != null) {
+            sum += currentAccount.getBalance();
+        }
+        if (savingAccount != null) {
+            sum += savingAccount.getBalance();
+        }
+
+        return sum;
+    }
 }
