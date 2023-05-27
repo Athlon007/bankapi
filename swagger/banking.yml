@@ -130,6 +130,7 @@ paths:
                 role: "client"
                 current_account: null
                 saving_account: null
+                active: true
         "400":
           $ref: "#/components/responses/BadRequest"
   /users/{id}:
@@ -178,6 +179,7 @@ paths:
                     currency_type: "EURO"
                     balance: 1000.0
                   saving_account: null
+                  active: true
         "401":
           $ref: "#/components/responses/Unauthorized"
         "404":
@@ -245,6 +247,7 @@ paths:
                     currency_type: "EURO"
                     balance: 1000.0
                   saving_account: null
+                  active: true
         "401":
           $ref: "#/components/responses/Unauthorized"
         "404":
@@ -801,6 +804,8 @@ components:
           $ref: "#/components/schemas/AccountForClientResponse"
         savings_account:
           $ref: "#/components/schemas/AccountForClientResponse"
+        active:
+          type: boolean
       description: ok
     UserForClientResponse:
       type: object
