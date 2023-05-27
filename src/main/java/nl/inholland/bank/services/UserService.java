@@ -8,6 +8,7 @@ import nl.inholland.bank.models.dtos.UserDTO.UserForAdminRequest;
 import nl.inholland.bank.models.dtos.UserDTO.UserLimitsRequest;
 import nl.inholland.bank.models.dtos.UserDTO.UserRequest;
 import nl.inholland.bank.models.exceptions.OperationNotAllowedException;
+import nl.inholland.bank.repositories.AccountRepository;
 import nl.inholland.bank.repositories.UserRepository;
 import nl.inholland.bank.utils.JwtTokenProvider;
 import javax.naming.AuthenticationException;
@@ -16,6 +17,7 @@ import org.hibernate.ObjectNotFoundException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +29,7 @@ import java.util.Optional;
 public class UserService {
     protected final UserRepository userRepository;
     private final UserLimitsService userLimitsService;
+    private final AccountRepository accountRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
 
@@ -35,11 +38,12 @@ public class UserService {
 
 
 
-    public UserService(UserRepository userRepository, BCryptPasswordEncoder bCryptPasswordEncoder, JwtTokenProvider jwtTokenProvider, UserLimitsService userLimitsService) {
+    public UserService(UserRepository userRepository, BCryptPasswordEncoder bCryptPasswordEncoder, JwtTokenProvider jwtTokenProvider, UserLimitsService userLimitsService, AccountRepository accountRepository) {
         this.userRepository = userRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
         this.jwtTokenProvider = jwtTokenProvider;
         this.userLimitsService = userLimitsService;
+        this.accountRepository = accountRepository;
     }
 
     public User addUser(UserRequest userRequest) throws AuthenticationException {
@@ -131,12 +135,12 @@ public class UserService {
         return userRepository.findById(id).orElseThrow(()-> new ObjectNotFoundException(id, "User not found"));
     }
 
-    public String login(LoginRequest loginRequest) throws AuthenticationException {
+    public String login(LoginRequest loginRequest) throws AuthenticationException, DisabledException {
         User user = userRepository.findUserByUsername(loginRequest.username())
                 .orElseThrow(() -> new AuthenticationException("Username not found"));
 
         if (!user.isActive())
-            throw new AuthenticationException("User has been deactivated. Please contact customer support.");
+            throw new DisabledException("User has been deactivated. Please contact customer support.");
 
         if (!bCryptPasswordEncoder.matches(loginRequest.password(), user.getPassword()))
             throw new AuthenticationException("Password incorrect");
@@ -156,6 +160,10 @@ public class UserService {
         String username = jwtTokenProvider.refreshTokenUsername(refreshTokenRequest.refresh_token());
         User user = userRepository.findUserByUsername(username)
                 .orElseThrow(() -> new AuthenticationException("Username not found"));
+
+        if (!user.isActive()) {
+            throw new DisabledException("User has been deactivated. Please contact customer support.");
+        }
 
         return new jwt(jwtTokenProvider.createToken(username, user.getRole()), jwtTokenProvider.createRefreshToken(username));
     }
@@ -250,10 +258,30 @@ public class UserService {
             throw new AuthenticationException("You are not authorized to update this user.");
         }
 
-        User updatedUser = mapUserRequestToUser(userRequest);
-        updatedUser.setId(id);
+        user.setFirstName(userRequest.getFirst_name());
+        user.setLastName(userRequest.getLast_name());
+        user.setEmail(userRequest.getEmail());
+        user.setBsn(userRequest.getBsn());
+        user.setPhoneNumber(userRequest.getPhone_number());
+        // Convert string of format "yyyy-MM-dd" to LocalDate
+        if (userRequest.getBirth_date() == null) {
+            throw new IllegalArgumentException("Birth date is required.");
+        }
+        user.setDateOfBirth(LocalDate.parse(userRequest.getBirth_date()));
+        user.setUsername(userRequest.getUsername());
+        if (!isPasswordValid(userRequest.getPassword())) {
+            throw new IllegalArgumentException("Password is not valid.");
+        }
+        user.setPassword(bCryptPasswordEncoder.encode(userRequest.getPassword()));
+        if (userRequest instanceof UserForAdminRequest) {
+            if (getBearerUserRole() != Role.ADMIN) {
+                throw new AuthenticationException("You are not authorized to change the role of a user.");
+            }
+            user.setRole(mapStringToRole(((UserForAdminRequest) userRequest).getRole()));
+        }
+        user.setActive(true);
 
-        return userRepository.save(updatedUser);
+        return userRepository.save(user);
     }
 
     public void deleteUser(int id) throws AuthenticationException, OperationNotAllowedException {
@@ -262,6 +290,19 @@ public class UserService {
         // Check if user has savings or checking accounts.
         // Users with any of these accounts cannot be deleted, but they can be deactivated.
         if (user.getCurrentAccount() != null || user.getSavingAccount() != null) {
+            // Take those accounts, and deactivate them too.
+            if (user.getCurrentAccount() != null) {
+                Account currentAccount = user.getCurrentAccount();
+                currentAccount.setActive(false);
+                accountRepository.save(currentAccount);
+            }
+
+            if (user.getSavingAccount() != null) {
+                Account savingAccount = user.getSavingAccount();
+                savingAccount.setActive(false);
+                accountRepository.save(savingAccount);
+            }
+
             user.setActive(false);
             userRepository.save(user);
             return;

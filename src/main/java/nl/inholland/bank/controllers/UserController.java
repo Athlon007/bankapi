@@ -197,7 +197,8 @@ public class UserController {
                 dateOfBirth,
                 user.getRole().toString(),
                 currentAccountResponse,
-                savingAccountResponse
+                savingAccountResponse,
+                user.isActive()
         );
     }
 
