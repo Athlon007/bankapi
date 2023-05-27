@@ -4,6 +4,7 @@ import nl.inholland.bank.models.*;
 import nl.inholland.bank.repositories.AccountRepository;
 import nl.inholland.bank.repositories.UserRepository;
 import nl.inholland.bank.services.AccountService;
+import nl.inholland.bank.services.TransactionService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,11 +12,14 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import javax.naming.InsufficientResourcesException;
+import javax.security.auth.login.AccountNotFoundException;
 import java.time.LocalDate;
 
 @SpringBootTest
 public class AccountTests {
     private Account account;
+    private TransactionService transactionService;
 
     @BeforeEach
     void setUp() {
@@ -34,6 +38,8 @@ public class AccountTests {
                 CurrencyType.EURO,
                 "NL01INHO0000000001",
                 AccountType.CURRENT);
+        transactionService = Mockito.mock(TransactionService.class);
+
     }
 
     @Test
@@ -108,13 +114,15 @@ public class AccountTests {
     }
 
     @Test
-    void deactivatedAccountCannotBeUsedInTransactions(){
+    void withdrawTest() throws InsufficientResourcesException, AccountNotFoundException {
         account.setBalance(100);
 
-        account.setActive(false);
+        // Invoke the withdrawal
+        Transaction withdrawalTransaction = transactionService.withdrawMoney(account.getUser(), account, 100);
 
-        Assertions.assertFalse(account.isActive());
-
-
+        // Verify the account balance after the withdrawal
+        Assertions.assertEquals(0, account.getBalance());
     }
+
+
 }

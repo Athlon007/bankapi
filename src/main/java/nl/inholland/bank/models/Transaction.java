@@ -57,4 +57,52 @@ public class Transaction {
 
         this.amount = amount;
     }
+
+    public void setCurrencyType(CurrencyType currencyType) {
+        if (currencyType == null) {
+            throw new IllegalArgumentException("Currency type cannot be null");
+        }
+
+        this.currencyType = currencyType;
+    }
+
+    public void setTransactionType(TransactionType transactionType) {
+        if (transactionType == null) {
+            throw new IllegalArgumentException("Transaction type cannot be null");
+        }
+
+        this.transactionType = transactionType;
+    }
+
+    public void setAccountSender(Account AccountSender) {
+        if (AccountSender == null) {
+            throw new IllegalArgumentException("Account sender cannot be null");
+        }
+
+        this.AccountSender = AccountSender;
+    }
+
+    public void setAccountReceiver(Account AccountReceiver) {
+        if (AccountReceiver == null) {
+            throw new IllegalArgumentException("Account receiver cannot be null");
+        }
+
+        this.AccountReceiver = AccountReceiver;
+    }
+
+    public void setUser(User user) {
+        if (user == null) {
+            throw new IllegalArgumentException("User cannot be null");
+        }
+
+        this.user = user;
+    }
+
+    public void setTimestamp(LocalDate timestamp) {
+        if (timestamp == null) {
+            throw new IllegalArgumentException("Timestamp cannot be null");
+        }
+
+        this.timestamp = timestamp;
+    }
 }
