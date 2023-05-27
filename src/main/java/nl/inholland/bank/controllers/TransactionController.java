@@ -7,6 +7,7 @@ import nl.inholland.bank.models.dtos.TransactionDTO.TransactionResponse;
 import nl.inholland.bank.models.dtos.TransactionDTO.WithdrawDepositRequest;
 import nl.inholland.bank.models.exceptions.UnauthorizedAccessException;
 import nl.inholland.bank.models.exceptions.UserNotTheOwnerOfAccountException;
+import nl.inholland.bank.services.AccountService;
 import nl.inholland.bank.services.TransactionService;
 import nl.inholland.bank.services.UserService;
 import org.springframework.http.ResponseEntity;
@@ -24,10 +25,14 @@ public class TransactionController {
     private final TransactionService transactionService;
     private final UserService userService;
 
+    private final AccountService accountService;
 
-    public TransactionController(TransactionService transactionService, UserService userService) {
+
+    public TransactionController(TransactionService transactionService, UserService userService,
+                                 AccountService accountService) {
         this.transactionService = transactionService;
         this.userService = userService;
+        this.accountService = accountService;
     }
 
     @PostMapping("/withdraw")

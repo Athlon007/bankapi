@@ -102,7 +102,9 @@ public class Transaction {
         if (timestamp == null) {
             throw new IllegalArgumentException("Timestamp cannot be null");
         }
-
+        if (timestamp.isAfter(LocalDate.now())) {
+            throw new IllegalArgumentException("Timestamp cannot be in the future");
+        }
         this.timestamp = timestamp;
     }
 }
