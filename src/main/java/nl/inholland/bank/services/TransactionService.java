@@ -21,13 +21,14 @@ public class TransactionService {
         this.accountService = accountService;
     }
 
-    public Transaction createTransaction(User user, Account AccountSender, Account AccountReceiver, CurrencyType currencyType, double amount) {
+    public Transaction createTransaction(User user, Account AccountSender, Account AccountReceiver, CurrencyType currencyType, double amount, TransactionType transactionType) {
         Transaction transaction = new Transaction();
         transaction.setUser(user);
         transaction.setAccountSender(AccountSender);
         transaction.setAccountReceiver(AccountReceiver);
         transaction.setCurrencyType(currencyType);
         transaction.setAmount(amount);
+        transaction.setTransactionType(transactionType);
 
         return transaction;
     }
@@ -51,16 +52,16 @@ public class TransactionService {
         }
     }
 
-    public void depositMoney(Account account, double amount) {
-        if (checkAccountExist(account)) {
-            return;
-        }
-
-        if (checkAccountBalance(account, amount)) {
-            updateAccountBalance(account, amount, true);
-            Transaction transaction = createTransaction(account.getUser(), null, account, account.getCurrencyType(), amount);
-        }
-    }
+//    public void depositMoney(Account account, double amount) {
+//        if (checkAccountExist(account)) {
+//            return;
+//        }
+//
+//        if (checkAccountBalance(account, amount)) {
+//            updateAccountBalance(account, amount, true);
+//            Transaction transaction = createTransaction(account.getUser(), null, account, account.getCurrencyType(), amount);
+//        }
+//    }
 
     public boolean checkAccountExist(Account account) {
         if (account != null) {
@@ -107,4 +108,6 @@ public class TransactionService {
         transaction.setTransactionType(TransactionType.WITHDRAWAL);
         return transaction;
     }
+
+
 }
