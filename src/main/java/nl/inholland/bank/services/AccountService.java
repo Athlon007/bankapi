@@ -66,7 +66,6 @@ public class AccountService {
 
     // Get all accounts that belong to a user (max. 1 current account and max. 1 saving account)
     public List<Account> getAccountsByUserId(User user){
-
             return accountRepository.findAllByUser(user);
     }
 
