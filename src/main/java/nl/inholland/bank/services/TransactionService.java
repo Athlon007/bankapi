@@ -119,38 +119,68 @@ public class TransactionService {
         return false;
     }
 
+    /**
+     * Processes the transaction and checks for requirements.
+     * @param request The request given of the attempted transaction information.
+     * @return Returns the newly made transaction.
+     * @throws AccountNotFoundException If no account has been found.
+     * @throws InsufficientResourcesException If not enough money is present on the sender account.
+     * @throws UnauthorizedAccessException If the user is not authorized to perform the transaction.
+     * @throws UserNotTheOwnerOfAccountException If the user is not the owner of the transaction.
+     */
     public Transaction processTransaction(TransactionRequest request) throws AccountNotFoundException, InsufficientResourcesException, UnauthorizedAccessException, UserNotTheOwnerOfAccountException
     {
         User user = new User();
         // Check if accounts exists and get the corresponding accounts of the given IBANs
-        Account senderAccount = accountService.getAccountByIBAN(request.sender_iban());
-        Account receiverAccount = accountService.getAccountByIBAN(request.receiver_iban());
+        Account accountSender = accountService.getAccountByIBAN(request.sender_iban());
+        Account accountReceiver = accountService.getAccountByIBAN(request.receiver_iban());
         double amount = request.amount();
 
         // Check all requirements
-        if (isTransactionAuthorizedForUserAccount(user, senderAccount)) {
-            throw new UserNotTheOwnerOfAccountException("The sender account does not belong to you.");
-        } else if (!senderAccount.isActive()) {
+        if (!isUserAuthorizedForTransaction(user, accountSender)) {
+            throw new UserNotTheOwnerOfAccountException("You are not authorized to perform this transaction.");
+        } else if (!accountSender.isActive()) {
             throw new IllegalArgumentException("The sender account is currently inactive and can't transfer money.");
-        } else if (!receiverAccount.isActive()) {
+        } else if (!accountReceiver.isActive()) {
             throw new IllegalArgumentException("The receiver account is currently inactive and can't receive money.");
-        } else if (Objects.equals(senderAccount.getIBAN(), receiverAccount.getIBAN())) {
+        } else if (Objects.equals(accountSender.getIBAN(), accountReceiver.getIBAN())) {
             throw new IllegalArgumentException("You can't send money to the same account.");
-        } else if (senderAccount.getType() == AccountType.SAVING || receiverAccount.getType() == AccountType.SAVING) {
-            if (senderAccount.getUser() != user || receiverAccount.getUser() != user) {
+        } else if (accountSender.getType() == AccountType.SAVING || accountReceiver.getType() == AccountType.SAVING) {
+            if (accountSender.getUser() != user || accountReceiver.getUser() != user) {
                 throw new UserNotTheOwnerOfAccountException("For a transaction from/to a saving account, " +
                                                                 "both accounts need to belong to you.");
             }
-        } else if (amount <= 0) {
-            throw new IllegalArgumentException("Amount can not be 0 or less than 0.");
-        } else if (!checkAccountBalance(senderAccount, amount)) {
+        } else if (!checkAccountBalance(accountSender, amount)) {
             throw new InsufficientResourcesException("Insufficient funds to create the transaction.");
         }
 
         // If all requirements have been met, create transaction
-        return transferMoney(user, senderAccount, receiverAccount, CurrencyType.EURO, amount, request.description());
+        return transferMoney(user, accountSender, accountReceiver, CurrencyType.EURO, amount, request.description());
     }
 
+    /**
+     * Checks if the user performing the action is the owner of the account OR if the user is an employee.
+     * @param user The user to check their privileges.
+     * @param account The account to compare the owner to.
+     * @return Returns a boolean if the user is authorized.
+     */
+    private boolean isUserAuthorizedForTransaction(User user, Account account)
+    {
+        if (userService.getBearerUserRole() == Role.USER) {
+            return Objects.equals(account.getUser(), user);
+        } else return userService.getBearerUserRole() == Role.EMPLOYEE;
+    }
+
+    /**
+     * Creates a new transaction and updates the balances of the sender and receiver.
+     * @param user The user performing the transaction.
+     * @param accountSender The account where the money originates from.
+     * @param accountReceiver The account where the money will be deposited.
+     * @param currencyType The type of currency used.
+     * @param amount The amount of money transferred.
+     * @param description The description of the transaction.
+     * @return Returns a new transaction.
+     */
     public Transaction transferMoney(User user, Account accountSender, Account accountReceiver,
                                      CurrencyType currencyType, double amount, String description) {
         // Create the transaction

@@ -10,6 +10,7 @@ import nl.inholland.bank.models.exceptions.UserNotTheOwnerOfAccountException;
 import nl.inholland.bank.services.AccountService;
 import nl.inholland.bank.services.TransactionService;
 import nl.inholland.bank.services.UserService;
+import org.springframework.cglib.core.Local;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +20,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import javax.naming.InsufficientResourcesException;
 import javax.security.auth.login.AccountNotFoundException;
-import java.util.Objects;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Controller
@@ -28,12 +30,9 @@ public class TransactionController {
     private final TransactionService transactionService;
     private final UserService userService;
 
-    private final AccountService accountService;
-
-    public TransactionController(TransactionService transactionService, UserService userService, AccountService accountService) {
+    public TransactionController(TransactionService transactionService, UserService userService) {
         this.transactionService = transactionService;
         this.userService = userService;
-        this.accountService = accountService;
     }
 
     @PostMapping("/withdraw")
@@ -83,10 +82,26 @@ public class TransactionController {
     }
 
     @GetMapping
-    public ResponseEntity<Object> getTransactions()
+    public ResponseEntity<Object> getTransactions(
+            @RequestParam Optional<Integer> page,
+            @RequestParam Optional<Integer> limit,
+            @RequestParam Optional<Double> minAmount,
+            @RequestParam Optional<Double> maxAmount,
+            @RequestParam Optional<LocalDateTime> startDate,
+            @RequestParam Optional<LocalDateTime> endDate,
+            @RequestParam Optional<String> ibanSender,
+            @RequestParam Optional<String> ibanReceiver
+            )
     {
         try {
-            // TODO: Check for user role to depend whose transactions to return...
+            if (userService.getBearerUserRole() == Role.USER) {
+                // Only return transactions of which the user is a sender or receiver.
+
+            } else if (userService.getBearerUserRole() == Role.EMPLOYEE) {
+                // Retrieve transactions (Is not limited to their own transactions).
+
+            }
+            //List<Transaction> transactions = transactionService.getTransactions
             return ResponseEntity.status(201).body("info");
         } catch (Exception e)
         {
@@ -150,7 +165,7 @@ public class TransactionController {
                     transaction.getAccountReceiver().getIBAN(),
                     transaction.getAmount(),
                     transaction.getTimestamp(),
-                    "Deposit successful"
+                    "Successfully transferred: " + transaction.getAmount() + transaction.getCurrencyType()
             );
         }
         return response;
