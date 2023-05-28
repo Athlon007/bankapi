@@ -261,16 +261,22 @@ public class TransactionService {
 
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
 
-        // Retrieves all (If request has no values given)
-        if (request.minAmount().isEmpty() && request.maxAmount().isEmpty() &&
-                request.startDate().isEmpty() && request.endDate().isEmpty() &&
-                request.ibanSender().isEmpty() && request.ibanReceiver().isEmpty()) {
-           return transactionRepository.findAll(pageable).getContent();
+        // Retrieve transactions by type of values present
+        if (request.ibanSender().isPresent() && request.ibanReceiver().isPresent()) {
+            // Retrieve transaction
+            return transactionRepository.findAllByAmountBetweenAndTimestampBetweenAndAccountSender_IBANAndAccountReceiver_IBAN(
+                    min, max, start, end, sender, receiver, pageable).getContent();
+        } else if (request.ibanSender().isPresent()) {
+            // Retrieve withdrawal
+            return transactionRepository.findAllByAmountBetweenAndTimestampBetweenAndAccountSender_IBAN(
+                    min, max, start, end, sender, pageable).getContent();
+        } else if (request.ibanReceiver().isPresent()) {
+            // Retrieve deposit
+            return transactionRepository.findAllByAmountBetweenAndTimestampBetweenAndAccountReceiver_IBAN(
+                    min, max, start, end, receiver, pageable).getContent();
+        } else {
+            // Retrieve all transactions
+            return transactionRepository.findAll(pageable).getContent();
         }
-
-        //return transactionRepository.findAllByAmountBetweenAndTimestampBetween(min, max, start, end, pageable).getContent();
-
-        return transactionRepository.findAllByAmountBetweenAndTimestampBetweenAndAccountSender_IBANAndAccountReceiver_IBAN(
-                min, max, start, end, sender, receiver, pageable).getContent();
     }
 }
