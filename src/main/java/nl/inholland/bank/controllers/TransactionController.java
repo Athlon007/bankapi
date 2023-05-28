@@ -87,10 +87,20 @@ public class TransactionController {
     public ResponseEntity<Object> getTransactions(
             @RequestParam Optional<Integer> page,
             @RequestParam Optional<Integer> limit,
-            @RequestBody TransactionSearchRequest request
+            @RequestParam Optional<Double> minAmount,
+            @RequestParam Optional<Double> maxAmount,
+            @RequestParam Optional<LocalDateTime> startDate,
+            @RequestParam Optional<LocalDateTime> endDate,
+            @RequestParam Optional<String> ibanSender,
+            @RequestParam Optional<String> ibanReceiver
             )
     {
         try {
+            // Group values
+            TransactionSearchRequest request = new TransactionSearchRequest(
+                    minAmount, maxAmount, startDate, endDate, ibanSender, ibanReceiver
+            );
+
             System.out.println("Starting retrieval");
             System.out.println(page);
             System.out.println(limit);

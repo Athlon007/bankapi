@@ -278,5 +278,6 @@ public class TransactionService {
             // Retrieve all transactions
             return transactionRepository.findAll(pageable).getContent();
         }
+        // TODO: Add another check if no ibans were given but min/max/start/end was given!!
     }
 }
