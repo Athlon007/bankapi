@@ -71,21 +71,20 @@ public class ApplicationDataInitializer implements ApplicationRunner {
                 "111222333",
                 "0612345678",
                 "2000-01-01");
-        User user = userService.addUser(userRequest);
-
-        // Set empty optional to null
-
+        userService.addUser(userRequest);
         System.out.println(userService.getAllUsers(Optional.empty(), Optional.empty(), Optional.empty()));
 
-        // Account
+        // ----------------
+        // --- ACCOUNTS ---
+        // ----------------
+
         AccountRequest accountRequest = new AccountRequest(
                 "NL71INHO6310134205",
                 "EURO",
                 "CURRENT",
-                3);
+                1);
 
-        Account account = accountService.addAccount(accountRequest);
-        userService.assignAccountToUser(admin, account);
+        accountService.addAccount(accountRequest);
 
         // Test for transfering money
         // Account for employee
@@ -93,16 +92,8 @@ public class ApplicationDataInitializer implements ApplicationRunner {
                 "NL60INHO9935031775",
                 "EURO",
                 "CURRENT",
-                2);
-        Account account2 = accountService.addAccount(accountRequest2);
-
-//                AccountRequest userAccount = new AccountRequest(
-//                                "NL01INHO0000000002",
-//                                "EURO",
-//                                "SAVING",
-//                                3);
-//                Account accountUser = accountService.addAccount(userAccount);
-//                userService.assignAccountToUser(user, accountUser);
+                3);
+        accountService.addAccount(accountRequest2);
 
         //Transaction
         WithdrawDepositRequest withdrawDepositRequest = new WithdrawDepositRequest(
@@ -110,25 +101,6 @@ public class ApplicationDataInitializer implements ApplicationRunner {
                 300,
                 CurrencyType.EURO,
                 3);
-
-//        Account accountSender = accountService.getAccountByIban(withdrawDepositRequest.IBAN());
-//        accountSender.setBalance(1000);
-//        System.out.println("Account balance before withdraw: ");
-//        System.out.println(accountSender.getBalance());
-//        Transaction transaction = transactionService.withdrawMoney(withdrawDepositRequest);
-//        System.out.println("Transaction info: ");
-//        System.out.println(transaction);
-//        System.out.println("Account balance after withdraw: ");
-//        System.out.println(accountSender.getBalance());
-
-//        Account accountReceiver = accountService.getAccountByIban("NL01INHO0000000001");
-//        System.out.println("Account balance before deposit: ");
-//        System.out.println(accountReceiver.getBalance());
-//        Transaction transaction = transactionService.depositMoney(withdrawDepositRequest);
-//        System.out.println("Transaction info: ");
-//        System.out.println(transaction);
-//        System.out.println("Account balance after deposit: ");
-//        System.out.println(accountReceiver.getBalance());
 
     }
 }

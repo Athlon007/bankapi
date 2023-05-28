@@ -1,9 +1,8 @@
 package nl.inholland.bank.services;
 
-import nl.inholland.bank.models.Limits;
-import nl.inholland.bank.models.Role;
-import nl.inholland.bank.models.User;
+import nl.inholland.bank.models.*;
 import nl.inholland.bank.models.dtos.UserDTO.UserLimitsRequest;
+import nl.inholland.bank.repositories.TransactionRepository;
 import nl.inholland.bank.repositories.UserLimitsRepository;
 import nl.inholland.bank.repositories.UserRepository;
 import nl.inholland.bank.utils.JwtTokenProvider;
@@ -12,12 +11,16 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.naming.AuthenticationException;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.List;
 
 @Service
 public class UserLimitsService {
     private final UserLimitsRepository userLimitsRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final UserRepository userRepository;
+    private final TransactionRepository transactionRepository;
 
     @Value("${bankapi.user.defaults.dailyTransactionLimit}")
     private int defaultDailyTransactionLimit;
@@ -26,10 +29,11 @@ public class UserLimitsService {
     @Value("${bankapi.user.defaults.absoluteLimit}")
     private int defaultAbsoluteLimit;
 
-    public UserLimitsService(UserLimitsRepository userLimitsRepository, JwtTokenProvider jwtTokenProvider, UserRepository userRepository) {
+    public UserLimitsService(UserLimitsRepository userLimitsRepository, JwtTokenProvider jwtTokenProvider, UserRepository userRepository, TransactionRepository transactionRepository) {
         this.userLimitsRepository = userLimitsRepository;
         this.jwtTokenProvider = jwtTokenProvider;
         this.userRepository = userRepository;
+        this.transactionRepository = transactionRepository;
     }
 
     public Limits getUserLimits(int userId) throws AuthenticationException {
@@ -42,8 +46,16 @@ public class UserLimitsService {
 
         Limits limits = userLimitsRepository.findFirstByUserId(userId);
 
+        List<Transaction> todaysTransactions = transactionRepository.findAllByTimestampIsBetweenAndUserIdIs(
+                LocalDate.now().atStartOfDay(),
+                LocalDate.now().atTime(LocalTime.MAX),
+                userId
+        );
+
+        double remainingDailyLimit = calculateRemainingDailyLimit(limits, todaysTransactions);
+
         // Calculate the remaining daily limit
-        limits.setRemainingDailyTransactionLimit(calculateRemainingDailyLimit(limits));
+        limits.setRemainingDailyTransactionLimit(remainingDailyLimit);
 
         return limits;
     }
@@ -71,9 +83,15 @@ public class UserLimitsService {
         return userLimitsRepository.findFirstByUserId(userId);
     }
 
-    private Double calculateRemainingDailyLimit(Limits limits) {
-        // TODO: Transactions are not yet implemented. This is a placeholder
-        return limits.getDailyTransactionLimit();
+    private Double calculateRemainingDailyLimit(Limits limits, List<Transaction> todaysTransactions) {
+        // Calculate total value of transactions today.
+        // Also ignore transactions from/to SAVINGS accounts.
+        double todaysTotal = todaysTransactions.stream()
+                .filter(transaction -> !transaction.getAccountSender().getType().equals(AccountType.SAVING) && !transaction.getAccountReceiver().getType().equals(AccountType.SAVING))
+                .mapToDouble(Transaction::getAmount)
+                .sum();
+
+        return limits.getDailyTransactionLimit() - todaysTotal;
     }
 
     public Limits getDefaultLimits() {

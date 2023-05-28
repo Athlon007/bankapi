@@ -19,6 +19,7 @@ public class Account {
     private User user;
     private double balance;
     private CurrencyType currencyType;
+    @Column(unique = true)
     private String IBAN;
     private AccountType type;
     private boolean isActive;

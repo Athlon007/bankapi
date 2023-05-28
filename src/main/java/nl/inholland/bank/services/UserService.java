@@ -318,6 +318,11 @@ public class UserService {
     }
 
     public void assignAccountToUser(User user, Account account) {
+        // Make sure that this account is not assigned to another user already.
+        if (account.getUser() != null && account.getUser() != user) {
+            throw new OperationNotAllowedException("This account is already assigned to another user.");
+        }
+
         if (account.getType() == AccountType.CURRENT) {
             user.setCurrentAccount(account);
         } else if (account.getType() == AccountType.SAVING) {
