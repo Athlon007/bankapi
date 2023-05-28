@@ -4,6 +4,7 @@ import nl.inholland.bank.models.*;
 import nl.inholland.bank.models.dtos.ExceptionResponse;
 import nl.inholland.bank.models.dtos.TransactionDTO.TransactionRequest;
 import nl.inholland.bank.models.dtos.TransactionDTO.TransactionResponse;
+import nl.inholland.bank.models.dtos.TransactionDTO.TransactionSearchRequest;
 import nl.inholland.bank.models.dtos.TransactionDTO.WithdrawDepositRequest;
 import nl.inholland.bank.models.exceptions.UnauthorizedAccessException;
 import nl.inholland.bank.models.exceptions.UserNotTheOwnerOfAccountException;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import javax.naming.InsufficientResourcesException;
 import javax.security.auth.login.AccountNotFoundException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -46,7 +48,7 @@ public class TransactionController {
             Transaction transaction = transactionService.withdrawMoney(withdrawDepositRequest);
 
             // Prepare the response
-            TransactionResponse response = buildTransactionResponse(transaction, TransactionType.WITHDRAWAL);
+            TransactionResponse response = buildTransactionResponse(transaction);
 
             // Return the response
             return ResponseEntity.status(201).body(response);
@@ -62,14 +64,14 @@ public class TransactionController {
     }
 
     @PostMapping
-    public ResponseEntity<Object> transferMoney(@RequestParam int userId, @RequestBody TransactionRequest request)
+    public ResponseEntity<Object> transferMoney(@RequestBody TransactionRequest request)
     {
         try {
             // Process transaction
             Transaction transaction = transactionService.processTransaction(request);
 
             // Build the response
-            TransactionResponse response = buildTransactionResponse(transaction, TransactionType.TRANSACTION);
+            TransactionResponse response = buildTransactionResponse(transaction);
 
             // Return the response
             return ResponseEntity.status(201).body(response);
@@ -85,28 +87,37 @@ public class TransactionController {
     public ResponseEntity<Object> getTransactions(
             @RequestParam Optional<Integer> page,
             @RequestParam Optional<Integer> limit,
-            @RequestParam Optional<Double> minAmount,
-            @RequestParam Optional<Double> maxAmount,
-            @RequestParam Optional<LocalDateTime> startDate,
-            @RequestParam Optional<LocalDateTime> endDate,
-            @RequestParam Optional<String> ibanSender,
-            @RequestParam Optional<String> ibanReceiver
+            @RequestBody TransactionSearchRequest request
             )
     {
         try {
-            if (userService.getBearerUserRole() == Role.USER) {
+            System.out.println("Starting retrieval");
+            System.out.println(page);
+            System.out.println(limit);
+            System.out.println(request.ibanSender());
+            System.out.println(request.ibanReceiver());
+            List<Transaction> transactions = transactionService.getTransactions(page, limit, request);
+            System.out.println("Finished retrieval");
+            System.out.println(transactions.size());
+            //if (userService.getBearerUserRole() == Role.USER) {
                 // Only return transactions of which the user is a sender or receiver.
 
-            } else if (userService.getBearerUserRole() == Role.EMPLOYEE) {
+            //} else if (userService.getBearerUserRole() == Role.EMPLOYEE) {
                 // Retrieve transactions (Is not limited to their own transactions).
 
+            //}
+
+            // Convert transactions to transactionResponses
+            List<TransactionResponse> transactionResponses = new ArrayList<>();
+            for (Transaction transaction : transactions) {
+                transactionResponses.add(buildTransactionResponse(transaction));
             }
-            //List<Transaction> transactions = transactionService.getTransactions
-            return ResponseEntity.status(201).body("info");
+
+            return ResponseEntity.status(200).body(transactionResponses);
         } catch (Exception e)
         {
             return ResponseEntity.badRequest().body(
-                    new ExceptionResponse("An error occurred trying to retrieve the transactions."));
+                    new ExceptionResponse("Unable to retrieve transactions." + e.getMessage()));
         }
     }
     @PostMapping("/deposit")
@@ -120,7 +131,7 @@ public class TransactionController {
             Transaction transaction = transactionService.depositMoney(withdrawDepositRequest);
 
             // Prepare the response
-            TransactionResponse response = buildTransactionResponse(transaction, TransactionType.DEPOSIT);
+            TransactionResponse response = buildTransactionResponse(transaction);
 
             // Return the response
             return ResponseEntity.status(201).body(response);
@@ -135,10 +146,9 @@ public class TransactionController {
         }
     }
 
-    public TransactionResponse buildTransactionResponse(Transaction transaction, TransactionType transactionType) {
-
+    public TransactionResponse buildTransactionResponse(Transaction transaction) {
         TransactionResponse response = null;
-        if (transactionType == TransactionType.WITHDRAWAL) {
+        if (transaction.getTransactionType() == TransactionType.WITHDRAWAL) {
             response = new TransactionResponse(
                     transaction.getId(),
                     transaction.getAccountSender().getIBAN(),
@@ -148,7 +158,7 @@ public class TransactionController {
                     "Withdrawal successful"
             );
         }
-        if (transactionType == TransactionType.DEPOSIT) {
+        if (transaction.getTransactionType() == TransactionType.DEPOSIT) {
             response = new TransactionResponse(
                     transaction.getId(),
                     null,
@@ -158,7 +168,7 @@ public class TransactionController {
                     "Deposit successful"
             );
         }
-        if (transactionType == TransactionType.TRANSACTION) {
+        if (transaction.getTransactionType() == TransactionType.TRANSACTION) {
             response = new TransactionResponse(
                     transaction.getId(),
                     transaction.getAccountSender().getIBAN(),

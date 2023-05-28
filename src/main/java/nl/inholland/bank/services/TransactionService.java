@@ -3,10 +3,14 @@ package nl.inholland.bank.services;
 import nl.inholland.bank.models.*;
 import nl.inholland.bank.models.dtos.TransactionDTO.TransactionRequest;
 import nl.inholland.bank.models.dtos.TransactionDTO.TransactionResponse;
+import nl.inholland.bank.models.dtos.TransactionDTO.TransactionSearchRequest;
 import nl.inholland.bank.models.dtos.TransactionDTO.WithdrawDepositRequest;
 import nl.inholland.bank.models.exceptions.UnauthorizedAccessException;
 import nl.inholland.bank.models.exceptions.UserNotTheOwnerOfAccountException;
 import nl.inholland.bank.repositories.TransactionRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -14,7 +18,11 @@ import javax.naming.InsufficientResourcesException;
 import javax.security.auth.login.AccountNotFoundException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @Service
 public class TransactionService {
@@ -130,7 +138,11 @@ public class TransactionService {
      */
     public Transaction processTransaction(TransactionRequest request) throws AccountNotFoundException, InsufficientResourcesException, UnauthorizedAccessException, UserNotTheOwnerOfAccountException
     {
-        User user = new User();
+        // Get user
+        //User user = new User();
+        //STATIC FOR NOW
+        User user = userService.getUserById(3);
+
         // Check if accounts exists and get the corresponding accounts of the given IBANs
         Account accountSender = accountService.getAccountByIBAN(request.sender_iban());
         Account accountReceiver = accountService.getAccountByIBAN(request.receiver_iban());
@@ -191,6 +203,9 @@ public class TransactionService {
         updateAccountBalance(accountSender, amount, false);
         updateAccountBalance(accountReceiver, amount, true);
 
+        // Save the transaction
+        transactionRepository.save(transaction);
+
         // Return the transaction
         return transaction;
     }
@@ -231,5 +246,31 @@ public class TransactionService {
         transaction.setTransactionType(TransactionType.DEPOSIT);
 
         return transaction;
+    }
+
+    public List<Transaction> getTransactions(Optional<Integer> page, Optional<Integer> limit,
+                                             TransactionSearchRequest request) {
+        int pageNumber = page.orElse(0);
+        int pageSize = limit.orElse(10);
+        double min = request.minAmount().orElse(0.0);
+        double max = request.maxAmount().orElse(Double.MAX_VALUE);
+        LocalDateTime start = request.startDate().orElse(LocalDateTime.MIN);
+        LocalDateTime end = request.endDate().orElse(LocalDateTime.now());
+        String sender = request.ibanSender().orElse("");
+        String receiver = request.ibanReceiver().orElse("");
+
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+
+        // Retrieves all (If request has no values given)
+        if (request.minAmount().isEmpty() && request.maxAmount().isEmpty() &&
+                request.startDate().isEmpty() && request.endDate().isEmpty() &&
+                request.ibanSender().isEmpty() && request.ibanReceiver().isEmpty()) {
+           return transactionRepository.findAll(pageable).getContent();
+        }
+
+        //return transactionRepository.findAllByAmountBetweenAndTimestampBetween(min, max, start, end, pageable).getContent();
+
+        return transactionRepository.findAllByAmountBetweenAndTimestampBetweenAndAccountSender_IBANAndAccountReceiver_IBAN(
+                min, max, start, end, sender, receiver, pageable).getContent();
     }
 }
