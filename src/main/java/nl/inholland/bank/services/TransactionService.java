@@ -34,7 +34,7 @@ public class TransactionService {
         transaction.setAccountReceiver(accountReceiver);
         transaction.setCurrencyType(currencyType);
         transaction.setAmount(amount);
-        transaction.setTimestamp(LocalDate.now());
+        transaction.setTimestamp(LocalDateTime.now());
         transaction.setDescription(description);
         transaction.setTransactionType(transactionType);
 

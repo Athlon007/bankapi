@@ -46,4 +46,11 @@ public class Limits {
         }
         this.absoluteLimit = absoluteLimit;
     }
+
+    public void setRemainingDailyTransactionLimit(double remainingDailyTransactionLimit) {
+        if (remainingDailyTransactionLimit < 0) {
+            remainingDailyTransactionLimit = 0; // Can't be lower than 0.
+        }
+        this.remainingDailyTransactionLimit = remainingDailyTransactionLimit;
+    }
 }

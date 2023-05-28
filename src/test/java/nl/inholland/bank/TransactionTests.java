@@ -20,6 +20,7 @@ import javax.naming.AuthenticationException;
 import javax.naming.InsufficientResourcesException;
 import javax.security.auth.login.AccountNotFoundException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @SpringBootTest
 public class TransactionTests {
@@ -45,7 +46,7 @@ public class TransactionTests {
         transaction.setAmount(50);
         transaction.setTransactionType(TransactionType.DEPOSIT);
         transaction.setCurrencyType(CurrencyType.EURO);
-        transaction.setTimestamp(LocalDate.now());
+        transaction.setTimestamp(LocalDateTime.now());
         transaction.setAccountReceiver(account);
         transaction.setAccountSender(account);
         transaction.setUser(account.getUser());
@@ -83,7 +84,7 @@ public class TransactionTests {
     @Test
     void timestampCannotBeInTheFuture() {
         Exception exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            transaction.setTimestamp(LocalDate.now().plusDays(1));
+            transaction.setTimestamp(LocalDateTime.now().plusDays(1));
         });
 
         Assertions.assertEquals("Timestamp cannot be in the future", exception.getMessage());

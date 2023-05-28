@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Data
@@ -17,7 +18,7 @@ public class Transaction {
     private int id;
 
     @Column
-    private LocalDate timestamp;
+    private LocalDateTime timestamp;
 
     @OneToOne
     @PrimaryKeyJoinColumn
@@ -44,7 +45,7 @@ public class Transaction {
     private String description;
     
     public Transaction(User user, @Nullable Account AccountSender, @Nullable Account AccountReceiver, double amount, CurrencyType currencyType, TransactionType transactionType) {
-        this.timestamp = LocalDate.now();
+        this.timestamp = LocalDateTime.now();
         this.user = user;
         this.AccountSender = AccountSender;
         this.AccountReceiver = AccountReceiver;
@@ -101,11 +102,11 @@ public class Transaction {
         this.user = user;
     }
 
-    public void setTimestamp(LocalDate timestamp) {
+    public void setTimestamp(LocalDateTime timestamp) {
         if (timestamp == null) {
             throw new IllegalArgumentException("Timestamp cannot be null");
         }
-        if (timestamp.isAfter(LocalDate.now())) {
+        if (timestamp.isAfter(LocalDateTime.now())) {
             throw new IllegalArgumentException("Timestamp cannot be in the future");
         }
         this.timestamp = timestamp;
