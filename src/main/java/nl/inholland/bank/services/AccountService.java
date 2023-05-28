@@ -6,9 +6,8 @@ import nl.inholland.bank.repositories.AccountRepository;
 import org.hibernate.ObjectNotFoundException;
 import org.springframework.stereotype.Service;
 
+import javax.security.auth.login.AccountNotFoundException;
 import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
 
 @Service
 public class AccountService {
@@ -41,11 +40,10 @@ public class AccountService {
         return accountRepository.findById(id).orElseThrow(()-> new ObjectNotFoundException(id, "Account not found"));
     }
 
-    public Account getAccountByIBAN(String iban)
-    {
+    public Account getAccountByIBAN(String iban) throws AccountNotFoundException {
         if (IBANGenerator.isValidIBAN(iban)) {
             return accountRepository.findByIBAN(iban)
-                    .orElseThrow(() -> new NoSuchElementException("Account not found"));
+                    .orElseThrow(() -> new AccountNotFoundException("Account not found."));
         } else {
             return null;
         }

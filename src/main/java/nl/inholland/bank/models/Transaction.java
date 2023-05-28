@@ -5,7 +5,6 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -26,11 +25,11 @@ public class Transaction {
 
     @OneToOne
     @Nullable
-    private Account AccountSender;
+    private Account accountSender;
 
     @OneToOne
     @Nullable
-    private Account AccountReceiver;
+    private Account accountReceiver;
 
     @Column
     private double amount;
@@ -44,11 +43,11 @@ public class Transaction {
     @Column
     private String description;
     
-    public Transaction(User user, @Nullable Account AccountSender, @Nullable Account AccountReceiver, double amount, CurrencyType currencyType, TransactionType transactionType) {
+    public Transaction(User user, @Nullable Account accountSender, @Nullable Account accountReceiver, double amount, CurrencyType currencyType, TransactionType transactionType) {
         this.timestamp = LocalDateTime.now();
         this.user = user;
-        this.AccountSender = AccountSender;
-        this.AccountReceiver = AccountReceiver;
+        this.accountSender = accountSender;
+        this.accountReceiver = accountReceiver;
         this.amount = amount;
         this.currencyType = currencyType;
         this.transactionType = transactionType;
@@ -78,20 +77,20 @@ public class Transaction {
         this.transactionType = transactionType;
     }
 
-    public void setAccountSender(Account AccountSender) {
-        if (AccountSender == null) {
+    public void setAccountSender(Account accountSender) {
+        if (accountSender == null) {
             throw new IllegalArgumentException("Account sender cannot be null");
         }
 
-        this.AccountSender = AccountSender;
+        this.accountSender = accountSender;
     }
 
-    public void setAccountReceiver(Account AccountReceiver) {
-        if (AccountReceiver == null) {
+    public void setAccountReceiver(Account accountReceiver) {
+        if (accountReceiver == null) {
             throw new IllegalArgumentException("Account receiver cannot be null");
         }
 
-        this.AccountReceiver = AccountReceiver;
+        this.accountReceiver = accountReceiver;
     }
 
     public void setUser(User user) {
