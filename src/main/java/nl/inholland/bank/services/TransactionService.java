@@ -1,10 +1,13 @@
 package nl.inholland.bank.services;
 
 import nl.inholland.bank.models.*;
+import nl.inholland.bank.models.dtos.TransactionDTO.TransactionRequest;
+import nl.inholland.bank.models.dtos.TransactionDTO.TransactionResponse;
 import nl.inholland.bank.models.dtos.TransactionDTO.WithdrawDepositRequest;
 import nl.inholland.bank.models.exceptions.UnauthorizedAccessException;
 import nl.inholland.bank.models.exceptions.UserNotTheOwnerOfAccountException;
 import nl.inholland.bank.repositories.TransactionRepository;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import javax.naming.InsufficientResourcesException;
@@ -41,7 +44,7 @@ public class TransactionService {
         return transaction;
     }
 
-    public boolean isTransactionNotAuthorizedForUserAccount(User user, Account account) {
+    public boolean isTransactionAuthorizedForUserAccount(User user, Account account) {
         return user == account.getUser();
     }
 
@@ -51,7 +54,7 @@ public class TransactionService {
         String performerUserName = userService.getBearerUsername();
 
         // This checks if the user is the owner of the account from the request body
-        if (!isTransactionNotAuthorizedForUserAccount(user, accountSender)) {
+        if (!isTransactionAuthorizedForUserAccount(user, accountSender)) {
             throw new UserNotTheOwnerOfAccountException("You are not the owner of this account or you are not an employee");
         }
 
@@ -80,7 +83,7 @@ public class TransactionService {
         User user = userService.getUserById(depositRequest.userId());
         String performerUserName = userService.getBearerUsername();
 
-        if (!isTransactionNotAuthorizedForUserAccount(user, accountReceiver)) {
+        if (!isTransactionAuthorizedForUserAccount(user, accountReceiver)) {
             throw new UserNotTheOwnerOfAccountException("You are not the owner of this account or you are not an employee");
         }
 
@@ -116,24 +119,50 @@ public class TransactionService {
         return false;
     }
 
+    public Transaction processTransaction(TransactionRequest request) throws AccountNotFoundException, InsufficientResourcesException, UnauthorizedAccessException, UserNotTheOwnerOfAccountException
+    {
+        User user = new User();
+        // Check if accounts exists and get the corresponding accounts of the given IBANs
+        Account senderAccount = accountService.getAccountByIBAN(request.sender_iban());
+        Account receiverAccount = accountService.getAccountByIBAN(request.receiver_iban());
+        double amount = request.amount();
+
+        // Check all requirements
+        if (isTransactionAuthorizedForUserAccount(user, senderAccount)) {
+            throw new UserNotTheOwnerOfAccountException("The sender account does not belong to you.");
+        } else if (!senderAccount.isActive()) {
+            throw new IllegalArgumentException("The sender account is currently inactive and can't transfer money.");
+        } else if (!receiverAccount.isActive()) {
+            throw new IllegalArgumentException("The receiver account is currently inactive and can't receive money.");
+        } else if (Objects.equals(senderAccount.getIBAN(), receiverAccount.getIBAN())) {
+            throw new IllegalArgumentException("You can't send money to the same account.");
+        } else if (senderAccount.getType() == AccountType.SAVING || receiverAccount.getType() == AccountType.SAVING) {
+            if (senderAccount.getUser() != user || receiverAccount.getUser() != user) {
+                throw new UserNotTheOwnerOfAccountException("For a transaction from/to a saving account, " +
+                                                                "both accounts need to belong to you.");
+            }
+        } else if (amount <= 0) {
+            throw new IllegalArgumentException("Amount can not be 0 or less than 0.");
+        } else if (!checkAccountBalance(senderAccount, amount)) {
+            throw new InsufficientResourcesException("Insufficient funds to create the transaction.");
+        }
+
+        // If all requirements have been met, create transaction
+        return transferMoney(user, senderAccount, receiverAccount, CurrencyType.EURO, amount, request.description());
+    }
+
     public Transaction transferMoney(User user, Account accountSender, Account accountReceiver,
                                      CurrencyType currencyType, double amount, String description) {
-        // TODO: Add a check to see if the sender account belongs to the user
-        // If any account is a saving account...
-        if (accountSender.getType() == AccountType.SAVING || accountReceiver.getType() == AccountType.SAVING) {
-            // Check if both the sender and receiver account belong to the user performing the transaction.
-            if (accountSender.getUser() == accountReceiver.getUser()) {
-                return createTransaction(user, accountSender, accountReceiver, currencyType, amount, description, TransactionType.TRANSACTION);
-            } else {
-                throw new IllegalArgumentException("You can't transfer from/to a saving account that doesn't belong to you.");
-            }
-        } else { // Proceed with transaction, check if the user (sender) has enough funds
-            if ((accountSender.getBalance() - amount) >= user.getLimits().getAbsoluteLimit()) {
-                return createTransaction(user, accountSender, accountReceiver, currencyType, amount, description, TransactionType.TRANSACTION);
-            } else {
-                throw new IllegalArgumentException("Insufficient funds to proceed with the transaction.");
-            }
-        }
+        // Create the transaction
+        Transaction transaction = createTransaction(user, accountSender, accountReceiver, currencyType, amount,
+                                                    description, TransactionType.TRANSACTION);
+
+        // Update the account balances
+        updateAccountBalance(accountSender, amount, false);
+        updateAccountBalance(accountReceiver, amount, true);
+
+        // Return the transaction
+        return transaction;
     }
 
     public boolean checkAccountBalance(Account account, double amount) {
