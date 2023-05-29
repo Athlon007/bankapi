@@ -2,38 +2,38 @@ package nl.inholland.bank.services;
 
 import nl.inholland.bank.models.*;
 import nl.inholland.bank.models.dtos.TransactionDTO.TransactionRequest;
-import nl.inholland.bank.models.dtos.TransactionDTO.TransactionResponse;
 import nl.inholland.bank.models.dtos.TransactionDTO.TransactionSearchRequest;
 import nl.inholland.bank.models.dtos.TransactionDTO.WithdrawDepositRequest;
 import nl.inholland.bank.models.exceptions.UnauthorizedAccessException;
 import nl.inholland.bank.models.exceptions.UserNotTheOwnerOfAccountException;
 import nl.inholland.bank.repositories.TransactionRepository;
-import org.springframework.data.domain.Page;
+import nl.inholland.bank.repositories.UserRepository;
+import org.hibernate.ObjectNotFoundException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import javax.naming.InsufficientResourcesException;
 import javax.security.auth.login.AccountNotFoundException;
-import java.time.LocalDate;
+import javax.security.sasl.AuthenticationException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 @Service
 public class TransactionService {
     private final TransactionRepository transactionRepository;
+    private final UserRepository userRepository;
     private final UserService userService;
     private final AccountService accountService;
 
+    private static final LocalDateTime EARLIEST_TIME = LocalDateTime.of(1, 1, 1, 0, 0, 0);
 
-    public TransactionService(TransactionRepository transactionRepository, UserService userService,
+    public TransactionService(TransactionRepository transactionRepository, UserRepository userRepository, UserService userService,
                               AccountService accountService) {
         this.transactionRepository = transactionRepository;
+        this.userRepository = userRepository;
         this.userService = userService;
         this.accountService = accountService;
     }
@@ -248,36 +248,55 @@ public class TransactionService {
         return transaction;
     }
 
+    /**
+     * Retrieves transactions dependent on user role and requests
+     * @param page Page of results.
+     * @param limit Limit amount of results.
+     * @param request The request to query by.
+     * @return Returns a list of Transactions.
+     */
     public List<Transaction> getTransactions(Optional<Integer> page, Optional<Integer> limit,
-                                             TransactionSearchRequest request) {
+                                             TransactionSearchRequest request) throws AuthenticationException {
+        // Set up search criteria
+        double minAmount = request.minAmount().orElse(0.0);
+        double maxAmount = request.maxAmount().orElse(Double.MAX_VALUE);
+        LocalDateTime startDateTime = request.startDate().orElse(EARLIEST_TIME);
+        LocalDateTime endDateTime = request.endDate().orElse(LocalDateTime.now());
+        String ibanSender = request.ibanSender().orElse("");
+        String ibanReceiver = request.ibanReceiver().orElse("");
+
+        // Get users by ID
+        User userSender = null;
+        User userReceiver = null;
+        if (request.userSenderId().isPresent()) {
+            userSender = userService.getUserById(request.userSenderId().get());
+        }
+        if (request.userReceiverId().isPresent()) {
+            userReceiver = userService.getUserById(request.userReceiverId().get());
+        }
+
+        // Set up pagination
         int pageNumber = page.orElse(0);
         int pageSize = limit.orElse(10);
-        double min = request.minAmount().orElse(0.0);
-        double max = request.maxAmount().orElse(Double.MAX_VALUE);
-        LocalDateTime start = request.startDate().orElse(LocalDateTime.MIN);
-        LocalDateTime end = request.endDate().orElse(LocalDateTime.now());
-        String sender = request.ibanSender().orElse("");
-        String receiver = request.ibanReceiver().orElse("");
-
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
 
-        // Retrieve transactions by type of values present
-        if (request.ibanSender().isPresent() && request.ibanReceiver().isPresent()) {
-            // Retrieve transaction
-            return transactionRepository.findAllByAmountBetweenAndTimestampBetweenAndAccountSender_IBANAndAccountReceiver_IBAN(
-                    min, max, start, end, sender, receiver, pageable).getContent();
-        } else if (request.ibanSender().isPresent()) {
-            // Retrieve withdrawal
-            return transactionRepository.findAllByAmountBetweenAndTimestampBetweenAndAccountSender_IBAN(
-                    min, max, start, end, sender, pageable).getContent();
-        } else if (request.ibanReceiver().isPresent()) {
-            // Retrieve deposit
-            return transactionRepository.findAllByAmountBetweenAndTimestampBetweenAndAccountReceiver_IBAN(
-                    min, max, start, end, receiver, pageable).getContent();
-        } else {
-            // Retrieve all transactions
-            return transactionRepository.findAll(pageable).getContent();
+        // Check user role
+        Role userRole = userService.getBearerUserRole();
+        if (userRole == null) {
+            throw new AuthenticationException("You are not authorized to perform this action.");
         }
-        // TODO: Add another check if no ibans were given but min/max/start/end was given!!
+
+        // Get user if they have the Role.USER, safety check for regular users to only see their own transactions.
+        User user = null;
+        if (userRole == Role.USER && userRepository.findUserByUsername(userService.getBearerUsername()).isPresent()) {
+            // Add client info to user, this is added as a check so that users can only see transactions
+            // Which they are a part of themselves.
+            user = userRepository.findUserByUsername(userService.getBearerUsername()).get();
+        }
+
+        return transactionRepository.findTransactions(
+                minAmount, maxAmount, startDateTime, endDateTime,
+                ibanSender, ibanReceiver, user, userSender, userReceiver,
+                pageable).getContent();
     }
 }
