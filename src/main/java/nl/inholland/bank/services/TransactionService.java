@@ -133,15 +133,15 @@ public class TransactionService {
      * @return Returns the newly made transaction.
      * @throws AccountNotFoundException If no account has been found.
      * @throws InsufficientResourcesException If not enough money is present on the sender account.
-     * @throws UnauthorizedAccessException If the user is not authorized to perform the transaction.
      * @throws UserNotTheOwnerOfAccountException If the user is not the owner of the transaction.
      */
-    public Transaction processTransaction(TransactionRequest request) throws AccountNotFoundException, InsufficientResourcesException, UnauthorizedAccessException, UserNotTheOwnerOfAccountException
+    public Transaction processTransaction(TransactionRequest request) throws AccountNotFoundException, InsufficientResourcesException, UserNotTheOwnerOfAccountException
     {
         // Get user
-        //User user = new User();
-        //STATIC FOR NOW
-        User user = userService.getUserById(3);
+        User user = null;
+        if (userRepository.findUserByUsername(userService.getBearerUsername()).isPresent()) {
+            user = userRepository.findUserByUsername(userService.getBearerUsername()).get();
+        }
 
         // Check if accounts exists and get the corresponding accounts of the given IBANs
         Account accountSender = accountService.getAccountByIBAN(request.sender_iban());
@@ -165,6 +165,10 @@ public class TransactionService {
         } else if (!checkAccountBalance(accountSender, amount)) {
             throw new InsufficientResourcesException("Insufficient funds to create the transaction.");
         }
+
+        // TODO : Check if value of transactions that day >= daily transaction value limit
+        // TODO : Check if Transaction Value > Transaction Limit
+        // TODO : Check for currency type and map the string to CurrencyType
 
         // If all requirements have been met, create transaction
         return transferMoney(user, accountSender, accountReceiver, CurrencyType.EURO, amount, request.description());
@@ -253,6 +257,7 @@ public class TransactionService {
      * @param page Page of results.
      * @param limit Limit amount of results.
      * @param request The request to query by.
+     * @throws AuthenticationException If user is not authorized to perform the action.
      * @return Returns a list of Transactions.
      */
     public List<Transaction> getTransactions(Optional<Integer> page, Optional<Integer> limit,

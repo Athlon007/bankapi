@@ -10,6 +10,7 @@ import nl.inholland.bank.models.exceptions.UnauthorizedAccessException;
 import nl.inholland.bank.models.exceptions.UserNotTheOwnerOfAccountException;
 import nl.inholland.bank.services.TransactionService;
 import nl.inholland.bank.services.UserService;
+import org.hibernate.ObjectNotFoundException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -74,7 +75,7 @@ public class TransactionController {
 
             // Return the response
             return ResponseEntity.status(201).body(response);
-        } catch (AccountNotFoundException | UserNotTheOwnerOfAccountException | UnauthorizedAccessException e) {
+        } catch (AccountNotFoundException | UserNotTheOwnerOfAccountException e) {
             return ResponseEntity.status(400).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(
@@ -112,7 +113,7 @@ public class TransactionController {
             }
 
             return ResponseEntity.status(200).body(transactionResponses);
-        } catch (AuthenticationException e) {
+        } catch (AuthenticationException  | ObjectNotFoundException e) {
             return ResponseEntity.status(400).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(
