@@ -19,7 +19,7 @@ public class Transaction {
     @Column
     private LocalDateTime timestamp;
 
-    @OneToOne
+    @ManyToOne
     @PrimaryKeyJoinColumn
     private User user;
 
