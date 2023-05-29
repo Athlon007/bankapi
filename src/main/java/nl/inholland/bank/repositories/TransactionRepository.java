@@ -11,7 +11,7 @@ import java.util.List;
 
 @Repository
 public interface TransactionRepository extends CrudRepository<Transaction, Long> {
-    List<Transaction> findAllByTimestampIsBetweenAndUserIdIs(LocalDateTime start, LocalDateTime end, int userId);
+    List<Transaction> findAllByTimestampIsAfterAndUserId(LocalDateTime start, int userId);
 
     /** Retrieves Transactions
      */

@@ -13,7 +13,9 @@ import org.springframework.stereotype.Service;
 import javax.naming.AuthenticationException;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class UserLimitsService {
@@ -36,28 +38,32 @@ public class UserLimitsService {
         this.transactionRepository = transactionRepository;
     }
 
+    // Used by internal methods to get the default limits
+    public Limits getUserLimitsNoAuth(int userId) {
+        if (userLimitsRepository.findFirstByUserId(userId) == null) {
+            throw new ObjectNotFoundException(userId, "User not found");
+        }
+        Limits limits = userLimitsRepository.findFirstByUserId(userId);
+
+        // Get all transactions from today for this user using findAllByTimestampIsAfter.
+        List<Transaction> todayTransactions = transactionRepository.findAllByTimestampIsAfterAndUserId(LocalDate.now().atStartOfDay(), userId);
+        double remainingDailyLimit = calculateRemainingDailyLimit(limits, todayTransactions);
+
+        // Calculate the remaining daily limit
+        limits.setRemainingDailyTransactionLimit(remainingDailyLimit);
+
+        return limits;
+    }
+
     public Limits getUserLimits(int userId) throws AuthenticationException {
-        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findById(userId).orElseThrow(() -> new ObjectNotFoundException(userId, "User not found"));
         Role role = jwtTokenProvider.getRole();
 
         if (role == Role.USER && !user.getUsername().equals(jwtTokenProvider.getUsername())) {
             throw new AuthenticationException("You are not allowed to view this user's limits");
         }
 
-        Limits limits = userLimitsRepository.findFirstByUserId(userId);
-
-        List<Transaction> todaysTransactions = transactionRepository.findAllByTimestampIsBetweenAndUserIdIs(
-                LocalDate.now().atStartOfDay(),
-                LocalDate.now().atTime(LocalTime.MAX),
-                userId
-        );
-
-        double remainingDailyLimit = calculateRemainingDailyLimit(limits, todaysTransactions);
-
-        // Calculate the remaining daily limit
-        limits.setRemainingDailyTransactionLimit(remainingDailyLimit);
-
-        return limits;
+        return getUserLimitsNoAuth(userId);
     }
 
     // Used to initialise the limits for a new user
@@ -86,12 +92,12 @@ public class UserLimitsService {
     private Double calculateRemainingDailyLimit(Limits limits, List<Transaction> todaysTransactions) {
         // Calculate total value of transactions today.
         // Also ignore transactions from/to SAVINGS accounts.
-        double todaysTotal = todaysTransactions.stream()
+        double todayTotal = todaysTransactions.stream()
                 .filter(transaction -> !transaction.getAccountSender().getType().equals(AccountType.SAVING) && !transaction.getAccountReceiver().getType().equals(AccountType.SAVING))
                 .mapToDouble(Transaction::getAmount)
                 .sum();
 
-        return limits.getDailyTransactionLimit() - todaysTotal;
+        return limits.getDailyTransactionLimit() - todayTotal;
     }
 
     public Limits getDefaultLimits() {
@@ -99,6 +105,7 @@ public class UserLimitsService {
         limits.setDailyTransactionLimit(this.defaultDailyTransactionLimit);
         limits.setTransactionLimit(this.defaultTransactionLimit);
         limits.setAbsoluteLimit(this.defaultAbsoluteLimit);
+        limits.setRemainingDailyTransactionLimit(this.defaultDailyTransactionLimit);
         return limits;
     }
 }
