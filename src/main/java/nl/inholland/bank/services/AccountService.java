@@ -6,6 +6,7 @@ import nl.inholland.bank.repositories.AccountRepository;
 import org.hibernate.ObjectNotFoundException;
 import org.springframework.stereotype.Service;
 
+import javax.naming.AuthenticationException;
 import javax.security.auth.login.AccountNotFoundException;
 import java.util.List;
 
@@ -49,8 +50,10 @@ public class AccountService {
         }
     }
 
-    public Account addAccount(AccountRequest accountRequest){
-        User user = userService.getUserById(accountRequest.userId());
+    public Account addAccount(AccountRequest accountRequest) {
+        User user = null;
+        user = userService.getUserById(accountRequest.userId());
+
         AccountType accountType = mapAccountTypeToString(accountRequest.accountType());
 
         if(accountType == AccountType.CURRENT){

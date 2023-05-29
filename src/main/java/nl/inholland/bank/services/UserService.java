@@ -35,8 +35,6 @@ public class UserService {
     @Value("${bankapi.application.request.limits}")
     private int defaultGetAllUsersLimit;
 
-
-
     public UserService(UserRepository userRepository, BCryptPasswordEncoder bCryptPasswordEncoder, JwtTokenProvider jwtTokenProvider, UserLimitsService userLimitsService, AccountRepository accountRepository) {
         this.userRepository = userRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
@@ -98,19 +96,25 @@ public class UserService {
         // Declare pageable, so we can limit the results.
         Pageable pageable = PageRequest.of(pageValue, limitValue);
 
-        // TODO: Calculate remaining limits for today.
+        List<User> users = null;
 
         if (userRole == Role.ADMIN || userRole == Role.EMPLOYEE) {
-            return name.map(
+            users = name.map(
                     s -> userRepository.findAllByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(s, s, pageable).getContent())
                     .orElseGet(() -> userRepository.findAll(pageable).getContent()
                     );
+        } else {
+            users = name.map(
+                            s -> userRepository.findAllByCurrentAccountIsNotNullAndActiveIsTrueAndFirstNameContainingIgnoreCaseOrCurrentAccountIsNotNullAndActiveIsTrueAndLastNameContainingIgnoreCase(name.get(), name.get(), pageable).getContent())
+                    .orElseGet(() -> userRepository.findAllByCurrentAccountIsNotNullAndActiveIsTrue(pageable).getContent()
+                    );
         }
 
-        return name.map(
-                s -> userRepository.findAllByCurrentAccountIsNotNullAndActiveIsTrueAndFirstNameContainingIgnoreCaseOrCurrentAccountIsNotNullAndActiveIsTrueAndLastNameContainingIgnoreCase(name.get(), name.get(), pageable).getContent())
-                .orElseGet(() -> userRepository.findAllByCurrentAccountIsNotNullAndActiveIsTrue(pageable).getContent()
-                );
+        for (User user : users) {
+            user.setLimits(userLimitsService.getUserLimitsNoAuth(user.getId()));
+        }
+
+        return users;
     }
 
     public List<User> getAllUsersWithNoAccounts(Optional<Integer> page, Optional<Integer> limit, Optional<String> name) {
@@ -130,7 +134,9 @@ public class UserService {
     }
 
     public User getUserById(int id) {
-        return userRepository.findById(id).orElseThrow(()-> new ObjectNotFoundException(id, "User not found"));
+        User user = userRepository.findById(id).orElseThrow(()-> new ObjectNotFoundException(id, "User not found"));
+        user.setLimits(userLimitsService.getUserLimitsNoAuth(id));
+        return user;
     }
 
     public String login(LoginRequest loginRequest) throws AuthenticationException, DisabledException {
@@ -166,7 +172,7 @@ public class UserService {
         return new jwt(jwtTokenProvider.createToken(username, user.getRole()), jwtTokenProvider.createRefreshToken(username));
     }
 
-    public User mapUserRequestToUser(UserRequest userRequest) {
+    private User mapUserRequestToUser(UserRequest userRequest) {
         User user = new User();
         user.setFirstName(userRequest.getFirst_name());
         user.setLastName(userRequest.getLast_name());
@@ -274,6 +280,7 @@ public class UserService {
             user.setRole(mapStringToRole((userForAdminRequest.getRole())));
         }
         user.setActive(true); // Reactivate user if it was deactivated.
+        user.setLimits(userLimitsService.getUserLimitsNoAuth(user.getId()));
 
         return userRepository.save(user);
     }
