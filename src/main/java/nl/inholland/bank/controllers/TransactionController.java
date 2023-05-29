@@ -8,10 +8,8 @@ import nl.inholland.bank.models.dtos.TransactionDTO.TransactionSearchRequest;
 import nl.inholland.bank.models.dtos.TransactionDTO.WithdrawDepositRequest;
 import nl.inholland.bank.models.exceptions.UnauthorizedAccessException;
 import nl.inholland.bank.models.exceptions.UserNotTheOwnerOfAccountException;
-import nl.inholland.bank.services.AccountService;
 import nl.inholland.bank.services.TransactionService;
 import nl.inholland.bank.services.UserService;
-import org.springframework.cglib.core.Local;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import javax.naming.InsufficientResourcesException;
 import javax.security.auth.login.AccountNotFoundException;
+import javax.security.sasl.AuthenticationException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -92,30 +91,19 @@ public class TransactionController {
             @RequestParam Optional<LocalDateTime> startDate,
             @RequestParam Optional<LocalDateTime> endDate,
             @RequestParam Optional<String> ibanSender,
-            @RequestParam Optional<String> ibanReceiver
+            @RequestParam Optional<String> ibanReceiver,
+            @RequestParam Optional<Integer> userSenderID,
+            @RequestParam Optional<Integer> userReceiverID
             )
     {
         try {
             // Group values
             TransactionSearchRequest request = new TransactionSearchRequest(
-                    minAmount, maxAmount, startDate, endDate, ibanSender, ibanReceiver
+                    minAmount, maxAmount, startDate, endDate, ibanSender, ibanReceiver, userSenderID, userReceiverID
             );
 
-            System.out.println("Starting retrieval");
-            System.out.println(page);
-            System.out.println(limit);
-            System.out.println(request.ibanSender());
-            System.out.println(request.ibanReceiver());
+            // Retrieve transactions
             List<Transaction> transactions = transactionService.getTransactions(page, limit, request);
-            System.out.println("Finished retrieval");
-            System.out.println(transactions.size());
-            //if (userService.getBearerUserRole() == Role.USER) {
-                // Only return transactions of which the user is a sender or receiver.
-
-            //} else if (userService.getBearerUserRole() == Role.EMPLOYEE) {
-                // Retrieve transactions (Is not limited to their own transactions).
-
-            //}
 
             // Convert transactions to transactionResponses
             List<TransactionResponse> transactionResponses = new ArrayList<>();
@@ -124,10 +112,11 @@ public class TransactionController {
             }
 
             return ResponseEntity.status(200).body(transactionResponses);
-        } catch (Exception e)
-        {
+        } catch (AuthenticationException e) {
+            return ResponseEntity.status(400).body(e.getMessage());
+        } catch (Exception e) {
             return ResponseEntity.badRequest().body(
-                    new ExceptionResponse("Unable to retrieve transactions." + e.getMessage()));
+                    new ExceptionResponse("Unable to retrieve transactions. " + e.getMessage()));
         }
     }
     @PostMapping("/deposit")
