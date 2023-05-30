@@ -13,6 +13,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+
 import javax.naming.InsufficientResourcesException;
 import javax.security.auth.login.AccountNotFoundException;
 import javax.security.sasl.AuthenticationException;
@@ -56,14 +57,14 @@ public class TransactionService {
         return user == account.getUser();
     }
 
-    public Transaction withdrawMoney(WithdrawDepositRequest withdrawDepositRequest) throws AccountNotFoundException, InsufficientResourcesException, UnauthorizedAccessException, UserNotTheOwnerOfAccountException {
+    public Transaction withdrawMoney(WithdrawDepositRequest withdrawDepositRequest) throws AccountNotFoundException, InsufficientResourcesException, AuthenticationException, UserNotTheOwnerOfAccountException {
         Account accountSender = accountService.getAccountByIban(withdrawDepositRequest.IBAN());
         User user = userService.getUserById(withdrawDepositRequest.userId());
         String performerUserName = userService.getBearerUsername();
 
         // This checks if the user is the owner of the account from the request body
         if (!isTransactionAuthorizedForUserAccount(user, accountSender)) {
-            throw new UserNotTheOwnerOfAccountException("You are not the owner of this account or you are not an employee");
+            throw new AuthenticationException("You are not the owner of this account or you are not an employee");
         }
 
         // This checks if the username of the logged-in user is the same as the username of the account owner, or if the logged in user is an employee
@@ -82,7 +83,7 @@ public class TransactionService {
                 throw new AccountNotFoundException("Account not found or inactive");
             }
         } else {
-            throw new UnauthorizedAccessException("You are not authorized to perform this action");
+            throw new AuthenticationException("You are not authorized to perform this action");
         }
     }
 
@@ -121,10 +122,7 @@ public class TransactionService {
     }
 
     public boolean checkAccountExist(Account account) {
-        if (account != null) {
-            return true;
-        }
-        return false;
+        return account != null;
     }
 
     /**

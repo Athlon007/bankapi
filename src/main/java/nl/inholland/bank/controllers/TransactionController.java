@@ -56,9 +56,7 @@ public class TransactionController {
             return ResponseEntity.status(500).body(new ExceptionResponse(e.getMessage()));
         } catch (AccountNotFoundException e) {
             return ResponseEntity.status(404).body(new ExceptionResponse(e.getMessage()));
-        } catch (UnauthorizedAccessException e) {
-            return ResponseEntity.status(403).body(new ExceptionResponse(e.getMessage()));
-        } catch (UserNotTheOwnerOfAccountException e) {
+        } catch (AuthenticationException | UserNotTheOwnerOfAccountException e) {
             return ResponseEntity.status(403).body(new ExceptionResponse(e.getMessage()));
         }
     }
