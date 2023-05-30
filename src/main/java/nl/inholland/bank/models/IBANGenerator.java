@@ -5,11 +5,14 @@ import org.iban4j.*;
 
 
 public class IBANGenerator {
+    public static void main(String[] args) {
+        System.out.println(generateIBAN());
+    }
     /**
      * Generates a random IBAN with the standard (NLxxINHO0xxxxxxxxx).
      * @return Returns a randomly generated IBAN.
      */
-    public static Iban generateIban()
+    public static Iban generateIBAN()
     {
         CountryCode countryCode = CountryCode.NL;
         String bankCode = "INHO";

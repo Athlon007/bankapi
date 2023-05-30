@@ -1,28 +1,39 @@
 package nl.inholland.bank.services;
 
 import nl.inholland.bank.models.*;
+import nl.inholland.bank.models.dtos.TransactionDTO.TransactionRequest;
+import nl.inholland.bank.models.dtos.TransactionDTO.TransactionSearchRequest;
 import nl.inholland.bank.models.dtos.TransactionDTO.WithdrawDepositRequest;
 import nl.inholland.bank.models.exceptions.UnauthorizedAccessException;
 import nl.inholland.bank.models.exceptions.UserNotTheOwnerOfAccountException;
 import nl.inholland.bank.repositories.TransactionRepository;
+import nl.inholland.bank.repositories.UserRepository;
+import org.hibernate.ObjectNotFoundException;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import javax.naming.InsufficientResourcesException;
 import javax.security.auth.login.AccountNotFoundException;
-import java.time.LocalDate;
+import javax.security.sasl.AuthenticationException;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Service
 public class TransactionService {
     private final TransactionRepository transactionRepository;
+    private final UserRepository userRepository;
     private final UserService userService;
     private final AccountService accountService;
 
+    private static final LocalDateTime EARLIEST_TIME = LocalDateTime.of(1, 1, 1, 0, 0, 0);
 
-    public TransactionService(TransactionRepository transactionRepository, UserService userService,
+    public TransactionService(TransactionRepository transactionRepository, UserRepository userRepository, UserService userService,
                               AccountService accountService) {
         this.transactionRepository = transactionRepository;
+        this.userRepository = userRepository;
         this.userService = userService;
         this.accountService = accountService;
     }
@@ -34,14 +45,14 @@ public class TransactionService {
         transaction.setAccountReceiver(accountReceiver);
         transaction.setCurrencyType(currencyType);
         transaction.setAmount(amount);
-        transaction.setTimestamp(LocalDate.now());
+        transaction.setTimestamp(LocalDateTime.now());
         transaction.setDescription(description);
         transaction.setTransactionType(transactionType);
 
         return transaction;
     }
 
-    public boolean isTransactionNotAuthorizedForUserAccount(User user, Account account) {
+    public boolean isTransactionAuthorizedForUserAccount(User user, Account account) {
         return user == account.getUser();
     }
 
@@ -51,7 +62,7 @@ public class TransactionService {
         String performerUserName = userService.getBearerUsername();
 
         // This checks if the user is the owner of the account from the request body
-        if (!isTransactionNotAuthorizedForUserAccount(user, accountSender)) {
+        if (!isTransactionAuthorizedForUserAccount(user, accountSender)) {
             throw new UserNotTheOwnerOfAccountException("You are not the owner of this account or you are not an employee");
         }
 
@@ -80,7 +91,7 @@ public class TransactionService {
         User user = userService.getUserById(depositRequest.userId());
         String performerUserName = userService.getBearerUsername();
 
-        if (!isTransactionNotAuthorizedForUserAccount(user, accountReceiver)) {
+        if (!isTransactionAuthorizedForUserAccount(user, accountReceiver)) {
             throw new UserNotTheOwnerOfAccountException("You are not the owner of this account or you are not an employee");
         }
 
@@ -116,23 +127,91 @@ public class TransactionService {
         return false;
     }
 
+    /**
+     * Processes the transaction and checks for requirements.
+     * @param request The request given of the attempted transaction information.
+     * @return Returns the newly made transaction.
+     * @throws AccountNotFoundException If no account has been found.
+     * @throws InsufficientResourcesException If not enough money is present on the sender account.
+     * @throws UserNotTheOwnerOfAccountException If the user is not the owner of the transaction.
+     */
+    public Transaction processTransaction(TransactionRequest request) throws AccountNotFoundException, InsufficientResourcesException, UserNotTheOwnerOfAccountException
+    {
+        // Get user
+        User user = null;
+        if (userRepository.findUserByUsername(userService.getBearerUsername()).isPresent()) {
+            user = userRepository.findUserByUsername(userService.getBearerUsername()).get();
+        }
+
+        // Check if accounts exists and get the corresponding accounts of the given IBANs
+        Account accountSender = accountService.getAccountByIBAN(request.sender_iban());
+        Account accountReceiver = accountService.getAccountByIBAN(request.receiver_iban());
+        double amount = request.amount();
+
+        // Check all requirements
+        if (!isUserAuthorizedForTransaction(user, accountSender)) {
+            throw new UserNotTheOwnerOfAccountException("You are not authorized to perform this transaction.");
+        } else if (!accountSender.isActive()) {
+            throw new IllegalArgumentException("The sender account is currently inactive and can't transfer money.");
+        } else if (!accountReceiver.isActive()) {
+            throw new IllegalArgumentException("The receiver account is currently inactive and can't receive money.");
+        } else if (Objects.equals(accountSender.getIBAN(), accountReceiver.getIBAN())) {
+            throw new IllegalArgumentException("You can't send money to the same account.");
+        } else if (accountSender.getType() == AccountType.SAVING || accountReceiver.getType() == AccountType.SAVING) {
+            if (accountSender.getUser() != user || accountReceiver.getUser() != user) {
+                throw new UserNotTheOwnerOfAccountException("For a transaction from/to a saving account, " +
+                                                                "both accounts need to belong to you.");
+            }
+        } else if (!checkAccountBalance(accountSender, amount)) {
+            throw new InsufficientResourcesException("Insufficient funds to create the transaction.");
+        }
+
+        // TODO : Check if value of transactions that day >= daily transaction value limit
+        // TODO : Check if Transaction Value > Transaction Limit
+        // TODO : Check for currency type and map the string to CurrencyType
+
+        // If all requirements have been met, create transaction
+        return transferMoney(user, accountSender, accountReceiver, CurrencyType.EURO, amount, request.description());
+    }
+
+    /**
+     * Checks if the user performing the action is the owner of the account OR if the user is an employee.
+     * @param user The user to check their privileges.
+     * @param account The account to compare the owner to.
+     * @return Returns a boolean if the user is authorized.
+     */
+    private boolean isUserAuthorizedForTransaction(User user, Account account)
+    {
+        if (userService.getBearerUserRole() == Role.USER) {
+            return Objects.equals(account.getUser(), user);
+        } else return userService.getBearerUserRole() == Role.EMPLOYEE;
+    }
+
+    /**
+     * Creates a new transaction and updates the balances of the sender and receiver.
+     * @param user The user performing the transaction.
+     * @param accountSender The account where the money originates from.
+     * @param accountReceiver The account where the money will be deposited.
+     * @param currencyType The type of currency used.
+     * @param amount The amount of money transferred.
+     * @param description The description of the transaction.
+     * @return Returns a new transaction.
+     */
     public Transaction transferMoney(User user, Account accountSender, Account accountReceiver,
                                      CurrencyType currencyType, double amount, String description) {
-        // If any account is a saving account...
-        if (accountSender.getType() == AccountType.SAVING || accountReceiver.getType() == AccountType.SAVING) {
-            // Check if both the sender and receiver account belong to the user performing the transaction.
-            if (accountSender.getUser() == accountReceiver.getUser()) {
-                return createTransaction(user, accountSender, accountReceiver, currencyType, amount, description, TransactionType.TRANSACTION);
-            } else {
-                throw new IllegalArgumentException("You can't transfer from/to a saving account that doesn't belong to you.");
-            }
-        } else { // Proceed with transaction, check if the user (sender) has enough funds
-            if ((accountSender.getBalance() - amount) >= user.getLimits().getAbsoluteLimit()) {
-                return createTransaction(user, accountSender, accountReceiver, currencyType, amount, description, TransactionType.TRANSACTION);
-            } else {
-                throw new IllegalArgumentException("Insufficient funds to proceed with the transaction.");
-            }
-        }
+        // Create the transaction
+        Transaction transaction = createTransaction(user, accountSender, accountReceiver, currencyType, amount,
+                                                    description, TransactionType.TRANSACTION);
+
+        // Update the account balances
+        updateAccountBalance(accountSender, amount, false);
+        updateAccountBalance(accountReceiver, amount, true);
+
+        // Save the transaction
+        transactionRepository.save(transaction);
+
+        // Return the transaction
+        return transaction;
     }
 
     public boolean checkAccountBalance(Account account, double amount) {
@@ -171,5 +250,58 @@ public class TransactionService {
         transaction.setTransactionType(TransactionType.DEPOSIT);
 
         return transaction;
+    }
+
+    /**
+     * Retrieves transactions dependent on user role and requests
+     * @param page Page of results.
+     * @param limit Limit amount of results.
+     * @param request The request to query by.
+     * @throws AuthenticationException If user is not authorized to perform the action.
+     * @return Returns a list of Transactions.
+     */
+    public List<Transaction> getTransactions(Optional<Integer> page, Optional<Integer> limit,
+                                             TransactionSearchRequest request) throws AuthenticationException {
+        // Set up search criteria
+        double minAmount = request.minAmount().orElse(0.0);
+        double maxAmount = request.maxAmount().orElse(Double.MAX_VALUE);
+        LocalDateTime startDateTime = request.startDate().orElse(EARLIEST_TIME);
+        LocalDateTime endDateTime = request.endDate().orElse(LocalDateTime.now());
+        String ibanSender = request.ibanSender().orElse("");
+        String ibanReceiver = request.ibanReceiver().orElse("");
+
+        // Get users by ID
+        User userSender = null;
+        User userReceiver = null;
+        if (request.userSenderId().isPresent()) {
+            userSender = userService.getUserById(request.userSenderId().get());
+        }
+        if (request.userReceiverId().isPresent()) {
+            userReceiver = userService.getUserById(request.userReceiverId().get());
+        }
+
+        // Set up pagination
+        int pageNumber = page.orElse(0);
+        int pageSize = limit.orElse(10);
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+
+        // Check user role
+        Role userRole = userService.getBearerUserRole();
+        if (userRole == null) {
+            throw new AuthenticationException("You are not authorized to perform this action.");
+        }
+
+        // Get user if they have the Role.USER, safety check for regular users to only see their own transactions.
+        User user = null;
+        if (userRole == Role.USER && userRepository.findUserByUsername(userService.getBearerUsername()).isPresent()) {
+            // Add client info to user, this is added as a check so that users can only see transactions
+            // Which they are a part of themselves.
+            user = userRepository.findUserByUsername(userService.getBearerUsername()).get();
+        }
+
+        return transactionRepository.findTransactions(
+                minAmount, maxAmount, startDateTime, endDateTime,
+                ibanSender, ibanReceiver, user, userSender, userReceiver,
+                pageable).getContent();
     }
 }
