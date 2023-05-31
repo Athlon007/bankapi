@@ -49,7 +49,6 @@ public class ErrorHandler {
     @ExceptionHandler(AuthenticationException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public String handleAuthenticationException(AuthenticationException e) {
-        writeToFile(e);
         return "{\"error_message\": \"" + e.getMessage() + "\"}";
     }
 
