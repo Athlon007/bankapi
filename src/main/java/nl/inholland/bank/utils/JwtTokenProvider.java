@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import nl.inholland.bank.models.Role;
+import nl.inholland.bank.models.Token;
 import nl.inholland.bank.services.RefreshTokenBlacklistService;
 import nl.inholland.bank.services.UserDetailsService;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,18 +34,20 @@ public class JwtTokenProvider {
         this.refreshTokenBlacklistService = refreshTokenBlacklistService;
     }
 
-    public String createToken(String username, Role role) {
+    public Token createToken(String username, Role role) {
         Claims claims = Jwts.claims().setSubject(username);
         Date issuedAt = new Date();
         Date expiresAt = new Date(issuedAt.getTime() + validityInMilliseconds);
         claims.put("auth", role);
 
-        return Jwts.builder()
+        String jwt = Jwts.builder()
                 .setClaims(claims)
                 .setIssuedAt(issuedAt)
                 .setExpiration(expiresAt)
                 .signWith(jwtKeyProvider.getPrivateKey())
                 .compact();
+        int expires = (int) (issuedAt.getTime() / 1000L);
+        return new Token(jwt, expires);
     }
 
     public String createRefreshToken(String username) {

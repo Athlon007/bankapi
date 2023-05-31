@@ -1,5 +1,6 @@
 package nl.inholland.bank.controllers;
 
+import nl.inholland.bank.models.Token;
 import nl.inholland.bank.models.dtos.ExceptionResponse;
 import nl.inholland.bank.models.dtos.AuthDTO.LoginRequest;
 import nl.inholland.bank.models.dtos.AuthDTO.RefreshTokenRequest;
@@ -14,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.naming.AuthenticationException;
+
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
@@ -23,27 +26,20 @@ public class AuthController {
         this.userService = userService;
     }
 
-
     @PostMapping("/login")
     @PreAuthorize("permitAll()")
-    public ResponseEntity<Object> login(@Validated @RequestBody LoginRequest loginRequest) {
-        try {
-            return ResponseEntity.status(200).body(new jwt(userService.login(loginRequest), userService.createRefreshToken(loginRequest.username())));
-        } catch (DisabledException e) {
-            return ResponseEntity.badRequest().body(new ExceptionResponse(e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new ExceptionResponse("Unable to login: " + e.getMessage()));
-        }
+    public ResponseEntity<Object> login(@Validated @RequestBody LoginRequest loginRequest) throws AuthenticationException {
+        Token token = userService.login(loginRequest);
+        return ResponseEntity.status(200).body(new jwt(
+                token.jwt(),
+                userService.createRefreshToken(loginRequest.username()),
+                loginRequest.username(),
+                token.expiresAt()
+        ));
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<Object> refresh(@Validated @RequestBody RefreshTokenRequest refreshTokenRequest) {
-        try {
-            return ResponseEntity.status(200).body(userService.refresh(refreshTokenRequest));
-        } catch (DisabledException e) {
-            return ResponseEntity.badRequest().body(new ExceptionResponse(e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new ExceptionResponse("Unable to refresh token"));
-        }
+    public ResponseEntity<Object> refresh(@Validated @RequestBody RefreshTokenRequest refreshTokenRequest) throws AuthenticationException {
+        return ResponseEntity.status(200).body(userService.refresh(refreshTokenRequest));
     }
 }
