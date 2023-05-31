@@ -164,6 +164,7 @@ public class UserController {
                     user.getCurrentAccount().getIBAN(),
                     user.getCurrentAccount().getType().toString(),
                     user.getCurrentAccount().getCurrencyType().toString(),
+                    user.getCurrentAccount().isActive(),
                     user.getCurrentAccount().getBalance()
             );
         } else {
@@ -177,6 +178,7 @@ public class UserController {
                     user.getSavingAccount().getIBAN(),
                     user.getSavingAccount().getType().toString(),
                     user.getSavingAccount().getCurrencyType().toString(),
+                    user.getSavingAccount().isActive(),
                     user.getSavingAccount().getBalance()
             );
         } else {

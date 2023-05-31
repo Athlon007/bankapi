@@ -51,6 +51,7 @@ public class AccountController {
                             account.getIBAN(),
                             account.getCurrencyType().toString(),
                             account.getType().toString(),
+                            account.isActive(),
                             account.getBalance()
                     );
                     accountResponses.add(accountResponse);
@@ -76,6 +77,7 @@ public class AccountController {
                         account.getIBAN(),
                         account.getCurrencyType().toString(),
                         account.getType().toString(),
+                        account.isActive(),
                         account.getBalance()
                 );
 
