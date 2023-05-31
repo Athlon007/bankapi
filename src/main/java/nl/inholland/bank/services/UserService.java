@@ -343,6 +343,6 @@ public class UserService {
     }
 
     public int getUserIdByUsername(String username) {
-        return userRepository.findIdByUsername(username).orElseThrow(()-> new ObjectNotFoundException((Object) username, "User not found"));
+        return userRepository.findUserByUsername(username).orElseThrow(()-> new ObjectNotFoundException((Object) username, "User not found")).getId();
     }
 }

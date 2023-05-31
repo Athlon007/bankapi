@@ -40,6 +40,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
             SecurityContextHolder.getContext().setAuthentication(authentication);
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            //response.getWriter().write("{\n\"error_message\": \"Bearer token is missing, invalid or expired.\"\n}");
             response.getWriter().write("{\n\"error_message\": \"Bearer token is missing, invalid or expired.\"\n}");
             response.getWriter().flush();
             return;
