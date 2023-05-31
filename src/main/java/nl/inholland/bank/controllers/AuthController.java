@@ -27,13 +27,19 @@ public class AuthController {
     @PostMapping("/login")
     @PreAuthorize("permitAll()")
     public ResponseEntity<Object> login(@Validated @RequestBody LoginRequest loginRequest) throws AuthenticationException {
-        Token token = userService.login(loginRequest);
-        return ResponseEntity.status(200).body(new jwt(
-                token.jwt(),
-                userService.createRefreshToken(loginRequest.username()),
-                loginRequest.username(),
-                token.expiresAt()
-        ));
+        try {
+            Token token = userService.login(loginRequest);
+            return ResponseEntity.status(200).body(new jwt(
+                    token.jwt(),
+                    userService.createRefreshToken(loginRequest.username()),
+                    loginRequest.username(),
+                    token.expiresAt()
+            ));
+        } catch (AuthenticationException e) {
+            // In this case, we don't want to tell the user that the username or password is incorrect.
+            // This may lead potential attacker to know that the username is correct, and only the password is wrong.
+            return ResponseEntity.status(401).body(new ExceptionResponse("Invalid username or password"));
+        }
     }
 
     @PostMapping("/refresh")
