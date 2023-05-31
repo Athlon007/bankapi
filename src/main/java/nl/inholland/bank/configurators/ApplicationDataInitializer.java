@@ -9,6 +9,7 @@ import nl.inholland.bank.models.dtos.AccountDTO.AccountRequest;
 import nl.inholland.bank.models.dtos.TransactionDTO.WithdrawDepositRequest;
 import nl.inholland.bank.models.dtos.UserDTO.UserForAdminRequest;
 import nl.inholland.bank.models.dtos.UserDTO.UserRequest;
+import nl.inholland.bank.models.exceptions.UserNotTheOwnerOfAccountException;
 import nl.inholland.bank.services.AccountService;
 import nl.inholland.bank.services.TransactionService;
 import nl.inholland.bank.services.UserService;
@@ -95,12 +96,26 @@ public class ApplicationDataInitializer implements ApplicationRunner {
                 3);
         accountService.addAccount(accountRequest2);
 
-        //Transaction
+
+        //Transaction Withdraw and Deposit
         WithdrawDepositRequest withdrawDepositRequest = new WithdrawDepositRequest(
-                "NL01INHO0000000001",
+                "NL60INHO9935031775",
                 300,
                 CurrencyType.EURO,
                 3);
 
+        try {
+            transactionService.depositMoney(withdrawDepositRequest);
+        } catch (UserNotTheOwnerOfAccountException e) {
+            throw new RuntimeException(e);
+        }
+
+       Account accountSender = accountService.getAccountByIban(withdrawDepositRequest.IBAN());
+
+        try {
+            transactionService.withdrawMoney(withdrawDepositRequest);
+        } catch (UserNotTheOwnerOfAccountException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

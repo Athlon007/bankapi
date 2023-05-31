@@ -4,7 +4,6 @@ import nl.inholland.bank.models.*;
 import nl.inholland.bank.models.dtos.TransactionDTO.TransactionRequest;
 import nl.inholland.bank.models.dtos.TransactionDTO.TransactionSearchRequest;
 import nl.inholland.bank.models.dtos.TransactionDTO.WithdrawDepositRequest;
-import nl.inholland.bank.models.exceptions.UnauthorizedAccessException;
 import nl.inholland.bank.models.exceptions.UserNotTheOwnerOfAccountException;
 import nl.inholland.bank.repositories.TransactionRepository;
 import nl.inholland.bank.repositories.UserRepository;
@@ -12,6 +11,7 @@ import org.hibernate.ObjectNotFoundException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
 
 import javax.naming.InsufficientResourcesException;
 import javax.security.auth.login.AccountNotFoundException;
@@ -56,14 +56,14 @@ public class TransactionService {
         return user == account.getUser();
     }
 
-    public Transaction withdrawMoney(WithdrawDepositRequest withdrawDepositRequest) throws AccountNotFoundException, InsufficientResourcesException, UnauthorizedAccessException, UserNotTheOwnerOfAccountException {
+    public Transaction withdrawMoney(WithdrawDepositRequest withdrawDepositRequest) throws AccountNotFoundException, InsufficientResourcesException, AuthenticationException, UserNotTheOwnerOfAccountException {
         Account accountSender = accountService.getAccountByIban(withdrawDepositRequest.IBAN());
         User user = userService.getUserById(withdrawDepositRequest.userId());
         String performerUserName = userService.getBearerUsername();
 
         // This checks if the user is the owner of the account from the request body
         if (!isTransactionAuthorizedForUserAccount(user, accountSender)) {
-            throw new UserNotTheOwnerOfAccountException("You are not the owner of this account or you are not an employee");
+            throw new AuthenticationException("You are not the owner of this account or you are not an employee");
         }
 
         // This checks if the username of the logged-in user is the same as the username of the account owner, or if the logged in user is an employee
@@ -76,17 +76,18 @@ public class TransactionService {
                     throw new InsufficientResourcesException("Account does not have enough balance");
                 }
 
-                Transaction transaction = mapWithdrawRequestToTransaction(withdrawDepositRequest);
+                Transaction transaction = createTransaction(user, accountSender, null, withdrawDepositRequest.currencyType(), withdrawDepositRequest.amount(), "Withdraw successful", TransactionType.WITHDRAWAL);
+//                Transaction transaction = mapWithdrawRequestToTransaction(withdrawDepositRequest);
                 return transactionRepository.save(transaction);
             } else {
                 throw new AccountNotFoundException("Account not found or inactive");
             }
         } else {
-            throw new UnauthorizedAccessException("You are not authorized to perform this action");
+            throw new AuthenticationException("You are not authorized to perform this action");
         }
     }
 
-    public Transaction depositMoney(WithdrawDepositRequest depositRequest) throws AccountNotFoundException, UnauthorizedAccessException, UserNotTheOwnerOfAccountException, InsufficientResourcesException {
+    public Transaction depositMoney(WithdrawDepositRequest depositRequest) throws AccountNotFoundException, AuthenticationException, UserNotTheOwnerOfAccountException, InsufficientResourcesException {
         Account accountReceiver = accountService.getAccountByIban(depositRequest.IBAN());
         User user = userService.getUserById(depositRequest.userId());
         String performerUserName = userService.getBearerUsername();
@@ -101,13 +102,14 @@ public class TransactionService {
 
             if (checkAccountExist(accountReceiver) && accountReceiver.isActive()) {
                 updateAccountBalance(accountReceiver, depositRequest.amount(), true);
-                Transaction transaction = mapDepositRequestToTransaction(depositRequest);
+//                Transaction transaction = mapDepositRequestToTransaction(depositRequest);
+                Transaction transaction = createTransaction(user, null, accountReceiver, depositRequest.currencyType(), depositRequest.amount(), "Deposit successful", TransactionType.DEPOSIT);
                 return transactionRepository.save(transaction);
             } else {
                 throw new AccountNotFoundException("Account not found or inactive");
             }
         } else {
-            throw new UnauthorizedAccessException("You are not authorized to perform this action");
+            throw new AuthenticationException("You are not authorized to perform this action");
         }
     }
 
@@ -121,10 +123,7 @@ public class TransactionService {
     }
 
     public boolean checkAccountExist(Account account) {
-        if (account != null) {
-            return true;
-        }
-        return false;
+        return account != null;
     }
 
     /**
@@ -227,29 +226,6 @@ public class TransactionService {
         }
 
         accountService.updateAccount(account);
-    }
-
-    public Transaction mapWithdrawRequestToTransaction(WithdrawDepositRequest withdrawDepositRequest) {
-        Transaction transaction = new Transaction();
-        transaction.setAccountSender(accountService.getAccountByIban(withdrawDepositRequest.IBAN()));
-        transaction.setAmount(withdrawDepositRequest.amount());
-        transaction.setCurrencyType(CurrencyType.EURO);
-        User user = userService.getUserById(withdrawDepositRequest.userId());
-        transaction.setUser(user);
-        transaction.setTransactionType(TransactionType.WITHDRAWAL);
-        return transaction;
-    }
-
-    private Transaction mapDepositRequestToTransaction(WithdrawDepositRequest depositRequest) {
-        Transaction transaction = new Transaction();
-        transaction.setAccountReceiver(accountService.getAccountByIban(depositRequest.IBAN()));
-        transaction.setAmount(depositRequest.amount());
-        transaction.setCurrencyType(CurrencyType.EURO);
-        User user = userService.getUserById(depositRequest.userId());
-        transaction.setUser(user);
-        transaction.setTransactionType(TransactionType.DEPOSIT);
-
-        return transaction;
     }
 
     /**

@@ -6,7 +6,6 @@ import nl.inholland.bank.models.dtos.TransactionDTO.TransactionRequest;
 import nl.inholland.bank.models.dtos.TransactionDTO.TransactionResponse;
 import nl.inholland.bank.models.dtos.TransactionDTO.TransactionSearchRequest;
 import nl.inholland.bank.models.dtos.TransactionDTO.WithdrawDepositRequest;
-import nl.inholland.bank.models.exceptions.UnauthorizedAccessException;
 import nl.inholland.bank.models.exceptions.UserNotTheOwnerOfAccountException;
 import nl.inholland.bank.services.TransactionService;
 import nl.inholland.bank.services.UserService;
@@ -56,9 +55,7 @@ public class TransactionController {
             return ResponseEntity.status(500).body(new ExceptionResponse(e.getMessage()));
         } catch (AccountNotFoundException e) {
             return ResponseEntity.status(404).body(new ExceptionResponse(e.getMessage()));
-        } catch (UnauthorizedAccessException e) {
-            return ResponseEntity.status(403).body(new ExceptionResponse(e.getMessage()));
-        } catch (UserNotTheOwnerOfAccountException e) {
+        } catch (AuthenticationException | UserNotTheOwnerOfAccountException e) {
             return ResponseEntity.status(403).body(new ExceptionResponse(e.getMessage()));
         }
     }
@@ -137,7 +134,7 @@ public class TransactionController {
             return ResponseEntity.status(201).body(response);
         } catch (AccountNotFoundException e) {
             return ResponseEntity.status(404).body(new ExceptionResponse(e.getMessage()));
-        } catch (UnauthorizedAccessException e) {
+        } catch (AuthenticationException e) {
             return ResponseEntity.status(403).body(new ExceptionResponse(e.getMessage()));
         } catch (UserNotTheOwnerOfAccountException e) {
             return ResponseEntity.status(403).body(new ExceptionResponse(e.getMessage()));
