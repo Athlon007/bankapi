@@ -23,5 +23,6 @@ public interface UserRepository extends CrudRepository<User, Integer> {
 
 
     Optional<User> findUserByUsername(String username);
+    Optional<Integer> findIdByUsername(String username);
 
 }
