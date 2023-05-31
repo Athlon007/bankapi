@@ -152,7 +152,7 @@ public class TransactionController {
                     null,
                     transaction.getAmount(),
                     transaction.getTimestamp(),
-                    "Withdrawal successful",
+                    "Successfully withdrawn: " + transaction.getAmount() + " " + transaction.getCurrencyType() + " from your account",
                     TransactionType.WITHDRAWAL
             );
         }
@@ -163,7 +163,7 @@ public class TransactionController {
                     transaction.getAccountReceiver().getIBAN(),
                     transaction.getAmount(),
                     transaction.getTimestamp(),
-                    "Deposit successful",
+                    "Successfully deposited: " + transaction.getAmount() + " " + transaction.getCurrencyType() + " into your account",
                     TransactionType.DEPOSIT
             );
         }
