@@ -49,9 +49,7 @@ public class TransactionTests {
         transaction.setAccountReceiver(account);
         transaction.setAccountSender(account);
         transaction.setUser(account.getUser());
-
     }
-
 
     @Test
     void amountCannotBeNegative() {
