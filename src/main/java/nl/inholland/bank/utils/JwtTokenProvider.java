@@ -13,6 +13,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
+import javax.naming.AuthenticationException;
 import java.util.Date;
 
 @Component
@@ -79,12 +80,12 @@ public class JwtTokenProvider {
         }
     }
 
-    public String refreshTokenUsername(String refreshToken) {
+    public String refreshTokenUsername(String refreshToken) throws AuthenticationException {
         try {
             // Check if token is blacklisted.
-            if (refreshTokenBlacklistService.isBlacklisted(refreshToken)) {
-                throw new RuntimeException("Refresh token has already been used.");
-            }
+            if (refreshTokenBlacklistService.isBlacklisted(refreshToken))
+                throw new AuthenticationException("Refresh token has already been used.");
+
             Jws<Claims> claims = Jwts.parserBuilder()
                     .setSigningKey(jwtKeyProvider.getPrivateKey())
                     .build()
@@ -97,10 +98,10 @@ public class JwtTokenProvider {
             if (claims.getBody().getExpiration().after(new Date())) {
                 return claims.getBody().getSubject();
             } else {
-                throw new RuntimeException("Refresh token is expired.");
+                throw new AuthenticationException("Refresh token is expired.");
             }
         } catch (Exception e) {
-            throw new RuntimeException(e.getMessage());
+            throw e;
         }
     }
 

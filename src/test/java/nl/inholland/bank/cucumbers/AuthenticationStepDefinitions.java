@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
+import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -21,6 +22,8 @@ public class AuthenticationStepDefinitions extends BaseStepDefinitions {
     public static final String LOGIN_ENDPOINT = "/auth/login";
 
     private jwt jwt;
+
+    private String oldRefreshToken;
 
     @Given("I have a valid login credentials")
     public void iHaveAValidLoginCredentials() {
@@ -65,6 +68,22 @@ public class AuthenticationStepDefinitions extends BaseStepDefinitions {
                 "/auth/refresh",
                 HttpMethod.POST,
                 new HttpEntity<>(new RefreshTokenRequest(jwt.refresh_token()), headers),
+                String.class
+        );
+    }
+
+    @And("I keep the refresh token")
+    public void iKeepTheRefreshToken() {
+        oldRefreshToken = jwt.refresh_token();
+    }
+
+    @When("I call the application refresh token endpoint again with old refresh token")
+    public void iCallTheApplicationRefreshTokenEndpointAgainWithOldRefreshToken() {
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        response = restTemplate.exchange(
+                "/auth/refresh",
+                HttpMethod.POST,
+                new HttpEntity<>(new RefreshTokenRequest(oldRefreshToken), headers),
                 String.class
         );
     }
