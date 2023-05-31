@@ -21,6 +21,7 @@ import java.util.Optional;
 
 @Controller
 @RequestMapping("/users")
+@CrossOrigin(origins = "*")
 public class UserController {
     private final UserService userService;
     private final UserLimitsService userLimitsService;
