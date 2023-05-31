@@ -97,7 +97,7 @@ public class ApplicationDataInitializer implements ApplicationRunner {
         accountService.addAccount(accountRequest2);
 
 
-        //Transaction
+        //Transaction Withdraw and Deposit
         WithdrawDepositRequest withdrawDepositRequest = new WithdrawDepositRequest(
                 "NL60INHO9935031775",
                 300,
@@ -110,18 +110,12 @@ public class ApplicationDataInitializer implements ApplicationRunner {
             throw new RuntimeException(e);
         }
 
-        System.out.println("Deposit successfull");
-
        Account accountSender = accountService.getAccountByIban(withdrawDepositRequest.IBAN());
-
-       System.out.println(accountSender.getBalance());
 
         try {
             transactionService.withdrawMoney(withdrawDepositRequest);
         } catch (UserNotTheOwnerOfAccountException e) {
             throw new RuntimeException(e);
         }
-
-        System.out.println("Withdraw successfull");
     }
 }

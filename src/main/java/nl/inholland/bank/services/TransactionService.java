@@ -228,31 +228,6 @@ public class TransactionService {
         accountService.updateAccount(account);
     }
 
-//    public Transaction mapWithdrawRequestToTransaction(WithdrawDepositRequest withdrawDepositRequest) {
-//        Transaction transaction = new Transaction();
-//        transaction.setAccountSender(accountService.getAccountByIban(withdrawDepositRequest.IBAN()));
-//        transaction.setAmount(withdrawDepositRequest.amount());
-//        transaction.setCurrencyType(CurrencyType.EURO);
-//        User user = userService.getUserById(withdrawDepositRequest.userId());
-//        transaction.setUser(user);
-//        transaction.setTransactionType(TransactionType.WITHDRAWAL);
-//        transaction.setTimestamp(LocalDateTime.now());
-//        return transaction;
-//    }
-//
-//    private Transaction mapDepositRequestToTransaction(WithdrawDepositRequest depositRequest) {
-//        Transaction transaction = new Transaction();
-//        transaction.setAccountReceiver(accountService.getAccountByIban(depositRequest.IBAN()));
-//        transaction.setAmount(depositRequest.amount());
-//        transaction.setCurrencyType(CurrencyType.EURO);
-//        User user = userService.getUserById(depositRequest.userId());
-//        transaction.setUser(user);
-//        transaction.setTransactionType(TransactionType.DEPOSIT);
-//        transaction.setTimestamp(LocalDateTime.now());
-//
-//        return transaction;
-//    }
-
     /**
      * Retrieves transactions dependent on user role and requests
      * @param page Page of results.
