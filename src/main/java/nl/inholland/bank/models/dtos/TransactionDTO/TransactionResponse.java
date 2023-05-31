@@ -5,7 +5,6 @@ import nl.inholland.bank.models.TransactionType;
 
 import java.time.LocalDateTime;
 
-public record TransactionResponse(long id,    @JsonInclude(JsonInclude.Include.NON_NULL)
-String sender_iban,     @JsonInclude(JsonInclude.Include.NON_NULL)
+public record TransactionResponse(long id,@JsonInclude(JsonInclude.Include.NON_NULL) String sender_iban,@JsonInclude(JsonInclude.Include.NON_NULL)
 String receiver_iban, double amount, LocalDateTime timestamp, String description, TransactionType transactionType) {
 }
