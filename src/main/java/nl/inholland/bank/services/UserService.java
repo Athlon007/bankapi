@@ -171,7 +171,7 @@ public class UserService {
 
         Token token = jwtTokenProvider.createToken(username, user.getRole());
 
-        return new jwt(token.jwt(), jwtTokenProvider.createRefreshToken(username), username, token.expiresAt());
+        return new jwt(token.jwt(), jwtTokenProvider.createRefreshToken(username), user.getId(), token.expiresAt());
     }
 
     private User mapUserRequestToUser(UserRequest userRequest) {
@@ -340,5 +340,9 @@ public class UserService {
             throw new IllegalArgumentException("Invalid account type.");
         }
         userRepository.save(user);
+    }
+
+    public int getUserIdByUsername(String username) {
+        return userRepository.findUserByUsername(username).orElseThrow(()-> new ObjectNotFoundException((Object) username, "User not found")).getId();
     }
 }

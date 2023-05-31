@@ -1,6 +1,7 @@
 package nl.inholland.bank.controllers;
 
 import nl.inholland.bank.models.Token;
+import nl.inholland.bank.models.User;
 import nl.inholland.bank.models.dtos.ExceptionResponse;
 import nl.inholland.bank.models.dtos.AuthDTO.LoginRequest;
 import nl.inholland.bank.models.dtos.AuthDTO.RefreshTokenRequest;
@@ -29,10 +30,11 @@ public class AuthController {
     public ResponseEntity<Object> login(@Validated @RequestBody LoginRequest loginRequest) throws AuthenticationException {
         try {
             Token token = userService.login(loginRequest);
+            int id = userService.getUserIdByUsername(loginRequest.username());
             return ResponseEntity.status(200).body(new jwt(
                     token.jwt(),
                     userService.createRefreshToken(loginRequest.username()),
-                    loginRequest.username(),
+                    id,
                     token.expiresAt()
             ));
         } catch (AuthenticationException e) {
