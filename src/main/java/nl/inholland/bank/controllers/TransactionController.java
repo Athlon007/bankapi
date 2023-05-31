@@ -152,7 +152,8 @@ public class TransactionController {
                     null,
                     transaction.getAmount(),
                     transaction.getTimestamp(),
-                    "Withdrawal successful"
+                    "Withdrawal successful",
+                    TransactionType.WITHDRAWAL
             );
         }
         if (transaction.getTransactionType() == TransactionType.DEPOSIT) {
@@ -162,7 +163,8 @@ public class TransactionController {
                     transaction.getAccountReceiver().getIBAN(),
                     transaction.getAmount(),
                     transaction.getTimestamp(),
-                    "Deposit successful"
+                    "Deposit successful",
+                    TransactionType.DEPOSIT
             );
         }
         if (transaction.getTransactionType() == TransactionType.TRANSACTION) {
@@ -172,7 +174,8 @@ public class TransactionController {
                     transaction.getAccountReceiver().getIBAN(),
                     transaction.getAmount(),
                     transaction.getTimestamp(),
-                    "Successfully transferred: " + transaction.getAmount() + transaction.getCurrencyType()
+                    "Successfully transferred: " + transaction.getAmount() + transaction.getCurrencyType(),
+                    TransactionType.TRANSACTION
             );
         }
         return response;
