@@ -93,7 +93,11 @@ public class UserLimitsService {
         // Calculate total value of transactions today.
         // Also ignore transactions from/to SAVINGS accounts.
         double todayTotal = todaysTransactions.stream()
-                .filter(transaction -> !transaction.getAccountSender().getType().equals(AccountType.SAVING) && !transaction.getAccountReceiver().getType().equals(AccountType.SAVING))
+                .filter(transaction ->
+                        transaction.getAccountSender() != null
+                        && !transaction.getAccountSender().getType().equals(AccountType.SAVING)
+                        && transaction.getAccountReceiver() != null
+                        && !transaction.getAccountReceiver().getType().equals(AccountType.SAVING))
                 .mapToDouble(Transaction::getAmount)
                 .sum();
 
