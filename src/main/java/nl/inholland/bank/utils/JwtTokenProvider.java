@@ -47,7 +47,7 @@ public class JwtTokenProvider {
                 .setExpiration(expiresAt)
                 .signWith(jwtKeyProvider.getPrivateKey())
                 .compact();
-        int expires = (int) (issuedAt.getTime() / 1000L);
+        long expires = expiresAt.getTime();
         return new Token(jwt, expires);
     }
 
