@@ -148,6 +148,7 @@ public class TransactionController {
         if (transaction.getTransactionType() == TransactionType.WITHDRAWAL) {
             response = new TransactionResponse(
                     transaction.getId(),
+                    userService.getBearerUsername(),
                     transaction.getAccountSender().getIBAN(),
                     null,
                     transaction.getAmount(),
@@ -159,6 +160,7 @@ public class TransactionController {
         if (transaction.getTransactionType() == TransactionType.DEPOSIT) {
             response = new TransactionResponse(
                     transaction.getId(),
+                    userService.getBearerUsername(),
                     null,
                     transaction.getAccountReceiver().getIBAN(),
                     transaction.getAmount(),
@@ -170,6 +172,7 @@ public class TransactionController {
         if (transaction.getTransactionType() == TransactionType.TRANSACTION) {
             response = new TransactionResponse(
                     transaction.getId(),
+                    userService.getBearerUsername(),
                     transaction.getAccountSender().getIBAN(),
                     transaction.getAccountReceiver().getIBAN(),
                     transaction.getAmount(),
