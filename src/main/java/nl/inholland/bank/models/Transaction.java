@@ -78,18 +78,10 @@ public class Transaction {
     }
 
     public void setAccountSender(Account accountSender) {
-        if (accountSender == null) {
-            throw new IllegalArgumentException("Account sender cannot be null");
-        }
-
         this.accountSender = accountSender;
     }
 
     public void setAccountReceiver(Account accountReceiver) {
-        if (accountReceiver == null) {
-            throw new IllegalArgumentException("Account receiver cannot be null");
-        }
-
         this.accountReceiver = accountReceiver;
     }
 
