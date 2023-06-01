@@ -41,6 +41,10 @@ public class AccountStepDefinitions extends BaseStepDefinitions{
     public void iCallTheApplicationAccountsEndPointWithIBANCurrencyTypeAccountTypeUserId(String IBAN, String currencyType, String accountType, int userId) {
         headers.setContentType(MediaType.APPLICATION_JSON);
 
+        if (StorageForTestsInstance.getInstance().getJwt() != null) {
+            headers.setBearerAuth(StorageForTestsInstance.getInstance().getJwt().access_token());
+        }
+
         AccountRequest accountRequest = new AccountRequest(
                 IBAN,
                 currencyType,
@@ -57,10 +61,10 @@ public class AccountStepDefinitions extends BaseStepDefinitions{
     }
 
     @And("I get an account's IBAN {string}")
-    public void iGetAnAccountSIBAN(String IBAN) {
+    public void iGetAnAccountSIBAN(String IBAN) throws JsonProcessingException {
         // get the account response
-        AccountResponse accountResponse = objectMapper.convertValue(
-                StorageForTestsInstance.getInstance().getResponse().getBody(),
+        AccountResponse accountResponse = objectMapper.readValue(
+                StorageForTestsInstance.getInstance().getResponse().getBody().toString(),
                 AccountResponse.class
         );
 

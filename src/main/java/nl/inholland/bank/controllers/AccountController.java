@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import javax.naming.AuthenticationException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -66,12 +67,16 @@ public class AccountController {
 
 
     @PostMapping
-    public ResponseEntity addAccount(@RequestBody AccountRequest accountRequest) {
-//        if (userService.getBearerUserRole() != Role.EMPLOYEE && userService.getBearerUserRole() != Role.ADMIN) {
-//            return ResponseEntity.status(401).body("Unauthorized");
+    public ResponseEntity addAccount(@RequestBody AccountRequest accountRequest) throws AuthenticationException {
+        if (userService.getBearerUserRole() != Role.EMPLOYEE && userService.getBearerUserRole() != Role.ADMIN)
+            throw new AuthenticationException("Unauthorized");
 //        } else {
             try{
+                System.out.println(accountRequest);
+
                 Account account = accountService.addAccount(accountRequest);
+
+                System.out.println(account);
 
                 AccountResponse accountResponse = new AccountResponse(
                         account.getId(),

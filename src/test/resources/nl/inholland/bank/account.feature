@@ -9,7 +9,7 @@ Feature: Everything associated with the Account
     And I get 1 elements in the list
 
   Scenario: Create an account as employee
-    Given I have a valid login credentials
+    Given I have a valid employee login credentials
     And I call the application login endpoint
     And I receive a token
     Given I call the application accounts end point with IBAN "NL60INHO9935031745", currencyType "EURO", accountType "SAVING", userId 3
