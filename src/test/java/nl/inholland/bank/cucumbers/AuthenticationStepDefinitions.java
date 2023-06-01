@@ -33,6 +33,11 @@ public class AuthenticationStepDefinitions extends BaseStepDefinitions {
         loginRequest = new LoginRequest(CLIENT_USERNAME, CLIENT_PASSWORD);
     }
 
+    @Given("I have a valid employee login credentials")
+    public void iHaveAValidEmployeeLoginCredentials() {
+        loginRequest = new LoginRequest(EMPLOYEE_USERNAME, EMPLOYEE_PASSWORD);
+    }
+
     @When("I call the application login endpoint")
     public void iCallTheApplicationLoginEndpoint() {
         headers.setContentType(MediaType.APPLICATION_JSON);

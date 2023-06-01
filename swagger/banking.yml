@@ -103,7 +103,8 @@ paths:
       description: >
         Registers a new user.<br><br>
         **Guests** can register themselves.<br>
-        **Employees** can register new users.
+        **Employees** can register new users.<br><br>
+        Only ADMIN can register user with a role different than CLIENT.
       operationId: registerUser
       requestBody:
         description: User details to register
@@ -144,6 +145,8 @@ paths:
                 active: true
         "400":
           $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /users/{id}:
     get:
       tags:

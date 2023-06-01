@@ -21,6 +21,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
@@ -160,10 +161,13 @@ public class UserService {
         user.setBsn(userRequest.getBsn());
         user.setPhoneNumber(userRequest.getPhone_number());
         // Convert string of format "yyyy-MM-dd" to LocalDate
-        if (userRequest.getBirth_date() == null) {
+        if (userRequest.getBirth_date() == null || userRequest.getBirth_date().isEmpty()) {
             throw new IllegalArgumentException("Birth date is required.");
         }
-        LocalDate dateOfBirth = LocalDate.parse(userRequest.getBirth_date());
+        if (!userRequest.getBirth_date().matches("\\d{4}-\\d{2}-\\d{2}")) {
+            throw new IllegalArgumentException("Birth date must be in format yyyy-MM-dd");
+        }
+        LocalDate dateOfBirth = LocalDate.parse(userRequest.getBirth_date(), DateTimeFormatter.ofPattern("yyyy-MM-dd"));
         user.setDateOfBirth(dateOfBirth);
         user.setUsername(userRequest.getUsername());
         user.setPassword(bCryptPasswordEncoder.encode(userRequest.getPassword()));

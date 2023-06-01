@@ -76,8 +76,12 @@ public class UserController {
     }
 
     @PostMapping
-    //@PreAuthorize("hasAuthority('ADMIN') or hasAuthority('EMPLOYEE')")
     public ResponseEntity addUser(@RequestBody UserForAdminRequest request) throws AuthenticationException, IllegalArgumentException {
+        // Check if request exists.
+        if (request == null) {
+            return ResponseEntity.badRequest().body(new ExceptionResponse("Request is empty"));
+        }
+
         UserRequest userRequest = request;
         // If request has not role, it is a request from a client
         if (request.getRole() == null) {
@@ -94,12 +98,7 @@ public class UserController {
         }
 
         User user = userService.addUser(userRequest);
-
-        if (userService.getBearerUserRole() == null) {
-            return ResponseEntity.status(201).body(mapUserToUserForClientResponse(user));
-        } else {
-            return ResponseEntity.status(201).body(mapUserToUserResponse(user));
-        }
+        return ResponseEntity.status(201).body(mapUserToUserResponse(user));
     }
 
 

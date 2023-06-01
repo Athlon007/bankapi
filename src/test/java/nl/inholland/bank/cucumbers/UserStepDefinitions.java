@@ -3,9 +3,12 @@ package nl.inholland.bank.cucumbers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cucumber.java.en.And;
+import io.cucumber.java.en.Given;
 import io.cucumber.java.en.When;
 import nl.inholland.bank.models.User;
+import nl.inholland.bank.models.dtos.UserDTO.UserForAdminRequest;
 import nl.inholland.bank.models.dtos.UserDTO.UserForClientResponse;
+import nl.inholland.bank.models.dtos.UserDTO.UserRequest;
 import nl.inholland.bank.models.dtos.UserDTO.UserResponse;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -134,5 +137,87 @@ public class UserStepDefinitions extends BaseStepDefinitions {
         }
 
         Assert.isTrue(userResponses.get(0).firstname().equals(firstName), "First name is not " + firstName);
+    }
+
+    @Given("I call the application register endpoint with username {string}, first name {string}, last name {string}, email {string}, password {string}, bsn {string}, phone number {string} and birth-date {string}")
+    public void iCallTheApplicationRegisterEndpointWithFirstNameLastNameEmailPasswordBsnPhoneNumberAndBirthDate(String username, String firstName, String lastName, String email, String password, String bsn, String phoneNumber, String birthDate) {
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        UserRequest user = new UserRequest(
+                email,
+                username,
+                password,
+                firstName,
+                lastName,
+                bsn,
+                phoneNumber,
+                birthDate
+        );
+
+        StorageForTestsInstance.getInstance().setResponse(restTemplate.exchange(
+                USERS_ENDPOINT,
+                HttpMethod.POST,
+                new HttpEntity<>(user, headers),
+                String.class
+        ));
+    }
+
+    @And("I get a user with first name {string} and last name {string}")
+    public void iGetAUserWithFirstNameAndLastName(String firstName, String lastName) throws JsonProcessingException {
+        // Get UserResponse from response
+        UserResponse userResponse = objectMapper.readValue(
+                StorageForTestsInstance.getInstance().getResponse().getBody().toString(),
+                UserResponse.class
+        );
+    }
+
+    @Given("I call the application register endpoint with no body")
+    public void iCallTheApplicationRegisterEndpointWithNoBody() {
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        StorageForTestsInstance.getInstance().setResponse(restTemplate.exchange(
+                USERS_ENDPOINT,
+                HttpMethod.POST,
+                new HttpEntity<>(null, headers),
+                String.class
+        ));
+    }
+
+    @Given("I call the application register endpoint with username {string}, first name {string}, last name {string}, email {string}, password {string}, bsn {string}, phone number {string}, birth-date {string}, and role {string}")
+    public void iCallTheApplicationRegisterEndpointWithUsernameFirstNameLastNameEmailPasswordBsnPhoneNumberBirthDateAndRole(String username, String firstName, String lastName, String email, String password, String bsn, String phoneNumber, String birthDate, String role) {
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        UserForAdminRequest user = new UserForAdminRequest(
+                email,
+                username,
+                password,
+                firstName,
+                lastName,
+                bsn,
+                phoneNumber,
+                birthDate,
+                role
+        );
+
+        if (StorageForTestsInstance.getInstance().getJwt() != null) {
+            headers.setBearerAuth(StorageForTestsInstance.getInstance().getJwt().access_token());
+        }
+
+        StorageForTestsInstance.getInstance().setResponse(restTemplate.exchange(
+                USERS_ENDPOINT,
+                HttpMethod.POST,
+                new HttpEntity<>(user, headers),
+                String.class
+        ));
+    }
+
+    @And("The user has role of {string}")
+    public void theUserHasRoleOf(String role) throws JsonProcessingException {
+        UserResponse userResponse = objectMapper.readValue(
+                StorageForTestsInstance.getInstance().getResponse().getBody().toString(),
+                UserResponse.class
+        );
+
+        Assert.isTrue(userResponse.role().equalsIgnoreCase(role), "User role is not " + role + ". User role is: " + userResponse.role());
     }
 }

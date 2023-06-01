@@ -1,12 +1,12 @@
 package nl.inholland.bank.models;
 
-import io.micrometer.common.lang.NonNullFields;
-import io.micrometer.common.lang.Nullable;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import nl.inholland.bank.models.exceptions.OperationNotAllowedException;
+import org.springframework.lang.NonNullFields;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -68,6 +68,14 @@ public class User {
         this.setUsername(username);
         this.setPassword(password);
         this.setRole(role);
+    }
+
+    public void setFirstName(String name) {
+        if (name == null || name.length() == 0) {
+            throw new IllegalArgumentException("First name cannot be empty");
+        }
+
+        this.firstName = name;
     }
 
     public void setLastName(String name) {
