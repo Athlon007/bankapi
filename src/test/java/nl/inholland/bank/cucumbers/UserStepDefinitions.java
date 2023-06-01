@@ -6,6 +6,7 @@ import io.cucumber.java.Before;
 import io.cucumber.java.BeforeAll;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import nl.inholland.bank.models.User;
 import nl.inholland.bank.models.dtos.UserDTO.UserForAdminRequest;
@@ -325,5 +326,25 @@ public class UserStepDefinitions extends BaseStepDefinitions {
                 new HttpEntity<>(null, headers),
                 String.class
         ));
+    }
+
+    @Then("User is inactive")
+    public void userIsInactive() throws JsonProcessingException {
+        UserResponse userResponse = objectMapper.readValue(
+                StorageForTestsInstance.getInstance().getResponse().getBody().toString(),
+                UserResponse.class
+        );
+
+        Assert.isTrue(!userResponse.active(), "User is not inactive");
+    }
+
+    @Then("User is active")
+    public void userIsActive() throws JsonProcessingException {
+        UserResponse userResponse = objectMapper.readValue(
+                StorageForTestsInstance.getInstance().getResponse().getBody().toString(),
+                UserResponse.class
+        );
+
+        Assert.isTrue(userResponse.active(), "User is not active");
     }
 }

@@ -259,6 +259,9 @@ public class UserService {
         if (userRequest.getBirth_date() == null) {
             throw new IllegalArgumentException("Birth date is required.");
         }
+        if (!userRequest.getBirth_date().matches("\\d{4}-\\d{2}-\\d{2}")) {
+            throw new IllegalArgumentException("Birth date must be in format yyyy-MM-dd");
+        }
         user.setDateOfBirth(LocalDate.parse(userRequest.getBirth_date()));
         user.setUsername(userRequest.getUsername());
         if (!isPasswordValid(userRequest.getPassword())) {
@@ -279,6 +282,10 @@ public class UserService {
 
     public void deleteUser(int id) throws AuthenticationException, OperationNotAllowedException {
         User user = userRepository.findById(id).orElseThrow(()-> new ObjectNotFoundException(id, "User not found"));
+
+        if (getBearerUserRole() != Role.ADMIN && user.getRole() == Role.ADMIN) {
+            throw new AuthenticationException("You are not authorized to delete a user.");
+        }
 
         // Check if user has savings or checking accounts.
         // Users with any of these accounts cannot be deleted, but they can be deactivated.
