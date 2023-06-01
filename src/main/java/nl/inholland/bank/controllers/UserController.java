@@ -70,7 +70,8 @@ public class UserController {
     @PostMapping
     public ResponseEntity addUser(@RequestBody UserForAdminRequest request) throws AuthenticationException, IllegalArgumentException {
         // Check if request exists.
-        if (request == null) {
+        if (!isUserForAdminRequestValid(request)) {
+            System.out.println("Request is empty");
             return ResponseEntity.badRequest().body(new ExceptionResponse("Request is empty"));
         }
 
@@ -147,7 +148,7 @@ public class UserController {
     }
 
     private UserResponse mapUserToUserResponse(User user) {
-        AccountResponse currentAccountResponse;
+        AccountResponse currentAccountResponse = null;
         if (user.getCurrentAccount() != null) {
             currentAccountResponse = new AccountResponse(
                     user.getCurrentAccount().getId(),
@@ -156,11 +157,9 @@ public class UserController {
                     user.getCurrentAccount().getType().toString(),
                     user.getCurrentAccount().getBalance()
             );
-        } else {
-            currentAccountResponse = null;
         }
 
-        AccountResponse savingAccountResponse;
+        AccountResponse savingAccountResponse = null;
         if (user.getSavingAccount() != null) {
             savingAccountResponse = new AccountResponse(
                     user.getSavingAccount().getId(),
@@ -169,8 +168,6 @@ public class UserController {
                     user.getSavingAccount().getCurrencyType().toString(),
                     user.getSavingAccount().getBalance()
             );
-        } else {
-            savingAccountResponse = null;
         }
 
         String dateOfBirth = user.getDateOfBirth().toString();
@@ -198,5 +195,9 @@ public class UserController {
                 user.getLastName(),
                 user.getCurrentAccount() == null ? null : user.getCurrentAccount().getIBAN()
         );
+    }
+
+    private boolean isUserForAdminRequestValid(UserRequest request) {
+        return request.getEmail() != null && request.getUsername() != null && request.getPassword() != null;
     }
 }

@@ -6,6 +6,7 @@ import nl.inholland.bank.configuration.ApiTestConfiguration;
 import nl.inholland.bank.controllers.UserController;
 import nl.inholland.bank.models.*;
 import nl.inholland.bank.models.dtos.UserDTO.UserForAdminRequest;
+import nl.inholland.bank.models.dtos.UserDTO.UserLimitsRequest;
 import nl.inholland.bank.models.dtos.UserDTO.UserRequest;
 import nl.inholland.bank.services.UserLimitsService;
 import nl.inholland.bank.services.UserService;
@@ -52,6 +53,7 @@ public class UserControllerTests {
     private User mockUser;
     private UserRequest mockUserRequest;
     private UserForAdminRequest mockUserForAdminRequest;
+    private UserLimitsRequest mockUserLimitsRequest;
 
     private ObjectMapper mapper = new ObjectMapper();
 
@@ -96,6 +98,7 @@ public class UserControllerTests {
 
         mockUserRequest = new UserRequest("email@ex.com", "user", "Password1!", "Firstly", "Fister", "820510026", "0612345678", "2000-09-08");
         mockUserForAdminRequest = new UserForAdminRequest("email@mail.com", "user2", "Password1!", "Firstly", "Fister", "820510026", "0612345678", "2000-09-08", "employee");
+        mockUserLimitsRequest = new UserLimitsRequest(1000, 1000, 0);
     }
 
     @Test
@@ -201,8 +204,67 @@ public class UserControllerTests {
         mockMvc.perform(post)
                 .andExpect(MockMvcResultMatchers.status().isCreated())
                 .andExpect(jsonPath("$.id").value(1));
+    }
 
+    @Test
+    @WithMockUser(username = "user", roles = { "USER" })
+    void addingNewUserWithoutBodyReturnsBadRequest() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.post("/users")
+                .contentType("application/json")
+                .content("{}")
+        )
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+    }
 
+    @Test
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
+    void updatingUserAsAdminReturnsUpdatedUser() throws Exception {
+        Mockito.when(userService.updateUser(1, mockUserForAdminRequest)).thenReturn(mockUser);
+
+        mockMvc.perform(MockMvcRequestBuilders.put("/users/1")
+                .contentType("application/json")
+                .content(mapper.writeValueAsString(mockUserForAdminRequest))
+        )
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.role").exists());
+    }
+
+    @Test
+    @WithMockUser(username = "user", roles = { "user" })
+    void updatingUserAsUserReturnsUpdatedUser() throws Exception {
+        Mockito.when(userService.updateUser(1, mockUserRequest)).thenReturn(mockUser);
+
+        mockMvc.perform(MockMvcRequestBuilders.put("/users/1")
+                        .contentType("application/json")
+                        .content(mapper.writeValueAsString(mockUserRequest))
+                )
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.role").exists());
+    }
+
+    @Test
+    @WithMockUser(username = "employee", roles = { "EMPLOYEE"})
+    void deletingUserReturns200Response() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.delete("/users/1"))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+    }
+
+    @Test
+    @WithMockUser(username = "employee", roles = { "EMPLOYEE"})
+    void updatingUserLimitsReturnsUserLimits() throws Exception {
+        Mockito.when(userLimitsService.updateUserLimits(1, mockUserLimitsRequest)).thenReturn(mockUser.getLimits());
+
+        mockMvc.perform(MockMvcRequestBuilders.put("/users/1/limits")
+                        .contentType("application/json")
+                        .content(mapper.writeValueAsString(mockUserLimitsRequest))
+                )
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(jsonPath("$.transaction_limit").value(1000))
+                .andExpect(jsonPath("$.daily_transaction_limit").value(1000))
+                .andExpect(jsonPath("$.absolute_limit").value(0))
+                .andExpect(jsonPath("$.remaining_daily_transaction_limit").value(1000));
     }
 }
 
