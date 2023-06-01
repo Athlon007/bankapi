@@ -344,4 +344,13 @@ class UserTests {
         Assertions.assertEquals("Password must contain at least one digit, one lowercase character, one uppercase character and one special character", exception.getMessage());
     }
 
+    @Test
+    void getAuthorityFromRole() {
+        Assertions.assertEquals("USER", user.getRole().getAuthority());
+    }
+
+    @Test
+    void getPasswordReturnsPassword() {
+        Assertions.assertEquals("Password1!", user.getPassword());
+    }
 }
