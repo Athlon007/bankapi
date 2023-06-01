@@ -21,7 +21,7 @@ public class AccountService {
         this.userService = userService;
     }
 
-    public Account createAccount(User user, String IBAN, AccountType accountType, CurrencyType currencyType){
+    public Account createAccount(User user, String IBAN, AccountType accountType, CurrencyType currencyType) {
         Account account = new Account();
         account.setUser(user);
         account.setIBAN(IBAN);
@@ -33,12 +33,12 @@ public class AccountService {
         return account;
     }
 
-    public boolean isActive(Account account){
+    public boolean isActive(Account account) {
         return account.isActive();
     }
 
     public Account getAccountById(int id) {
-        return accountRepository.findById(id).orElseThrow(()-> new ObjectNotFoundException(id, "Account not found"));
+        return accountRepository.findById(id).orElseThrow(() -> new ObjectNotFoundException(id, "Account not found"));
     }
 
     public Account getAccountByIBAN(String iban) throws AccountNotFoundException {
@@ -54,17 +54,20 @@ public class AccountService {
         User user = null;
         user = userService.getUserById(accountRequest.userId());
 
-        AccountType accountType = mapAccountTypeToString(accountRequest.accountType());
+        if (!IBANGenerator.isValidIBAN(accountRequest.IBAN())) {
+            throw new IllegalArgumentException("IBAN is not valid");
+        }
 
-        if(accountType == AccountType.CURRENT){
-            if (doesUserHaveAccountType(user, AccountType.CURRENT)){
+        AccountType accountType = mapAccountTypeToString(accountRequest.accountType());
+        if (accountType == AccountType.CURRENT) {
+            if (doesUserHaveAccountType(user, AccountType.CURRENT)) {
                 throw new IllegalArgumentException("User already has a current account");
             }
         } else if (accountType == AccountType.SAVING) {
-            if(!doesUserHaveAccountType(user, AccountType.CURRENT)){
+            if (!doesUserHaveAccountType(user, AccountType.CURRENT)) {
                 throw new IllegalArgumentException("User does not have a current account");
             }
-            if(doesUserHaveAccountType(user, AccountType.SAVING)){
+            if (doesUserHaveAccountType(user, AccountType.SAVING)) {
                 throw new IllegalArgumentException("User already has a saving account");
             }
         }
@@ -76,23 +79,28 @@ public class AccountService {
         return responseAccount;
     }
 
+    public boolean checkIfIbanIsAccordingToRules(String iban) {
+        return IBANGenerator.isValidIBAN(iban);
+    }
+
     // Get all accounts that belong to a user (max. 1 current account and max. 1 saving account)
-    public List<Account> getAccountsByUserId(User user){
-            return accountRepository.findAllByUser(user);
+    public List<Account> getAccountsByUserId(User user) {
+        return accountRepository.findAllByUser(user);
     }
 
     // Check if the user has a certain account type, returns true if the user has the account type
-    public boolean doesUserHaveAccountType(User user, AccountType accountType){
+    public boolean doesUserHaveAccountType(User user, AccountType accountType) {
         List<Account> accounts = getAccountsByUserId(user);
         for (Account account : accounts) {
-            if (account.getType() == accountType){
+            if (account.getType().equals(accountType)) {
                 return true;
             }
         }
         return false;
     }
 
-    public Account mapAccountRequestToAccount(AccountRequest accountRequest){
+
+    public Account mapAccountRequestToAccount(AccountRequest accountRequest) {
         Account account = new Account();
         User user = userService.getUserById(accountRequest.userId());
         account.setUser(user);
@@ -105,8 +113,8 @@ public class AccountService {
         return account;
     }
 
-    public CurrencyType mapCurrencyTypeToString(String currencyType){
-        switch (currencyType){
+    public CurrencyType mapCurrencyTypeToString(String currencyType) {
+        switch (currencyType) {
             case "EUR":
                 return CurrencyType.EURO;
             default:
@@ -114,19 +122,20 @@ public class AccountService {
         }
     }
 
-    public AccountType mapAccountTypeToString(String accountType){
-        switch (accountType){
+    public AccountType mapAccountTypeToString(String accountType) {
+        switch (accountType) {
             case "CURRENT":
                 return AccountType.CURRENT;
             case "SAVING":
                 return AccountType.SAVING;
             default:
-                return AccountType.CURRENT;
+                throw new IllegalArgumentException("Invalid accountType: " + accountType);
         }
     }
 
+
     public Account getAccountByIban(String iban) {
-        return accountRepository.findByIBAN(iban).orElseThrow(()-> new IllegalArgumentException("Account not found"));
+        return accountRepository.findByIBAN(iban).orElseThrow(() -> new IllegalArgumentException("Account not found"));
     }
 
     public void updateAccount(Account account) {
