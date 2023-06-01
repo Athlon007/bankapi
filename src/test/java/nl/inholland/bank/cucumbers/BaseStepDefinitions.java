@@ -12,12 +12,13 @@ import org.springframework.http.ResponseEntity;
 public class BaseStepDefinitions {
     @Autowired
     protected TestRestTemplate restTemplate;
-
-    protected ResponseEntity response;
     protected HttpHeaders headers = new HttpHeaders();
 
     public static final String VALID_USERNAME = "admin";
     public static final String VALID_PASSWORD = "Password1!";
     public static final String INVALID_USERNAME = "brteabtea";
     public static final String INVALID_PASSWORD = "Password1gertabh!";
+
+    public static final String CLIENT_USERNAME = "client";
+    public static final String CLIENT_PASSWORD = "Password3!";
 }

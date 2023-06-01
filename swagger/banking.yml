@@ -59,7 +59,17 @@ paths:
             type: string
         - in: query
           name: has_no_accounts
-          description: Filter by users that have no accounts
+          description: >
+            Filter by users that have no accounts.<br>
+            Note: This parameter is only available for employees and admins. Clients always see users that have an account.
+          required: false
+          schema:
+            type: boolean
+        - in: query
+          name: active
+          description: >
+              Filter by users that are active or inactive.<br>
+              Note: This parameter is only available for employees and admins. Clients always see active users.
           required: false
           schema:
             type: boolean

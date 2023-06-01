@@ -36,13 +36,11 @@ public class UserController {
             @RequestParam Optional<Integer> page,
             @RequestParam Optional<Integer> limit,
             @RequestParam Optional<String> name,
-            @RequestParam(name = "has_no_accounts") Optional<Boolean> hasNoAccounts
+            @RequestParam(name = "has_no_accounts") Optional<Boolean> hasNoAccounts,
+            @RequestParam Optional<Boolean> active
     ) {
         try {
-            // If hasNoAccount is true, use the correct method
-            List<User> users = hasNoAccounts.isPresent() && Boolean.TRUE.equals(hasNoAccounts.get()) ?
-                    userService.getAllUsersWithNoAccounts(page, limit, name) :
-                    userService.getAllUsers(page, limit, name);
+            List<User> users = userService.getAllUsers(page, limit, name, hasNoAccounts, active);
 
             if (userService.getBearerUserRole() == Role.USER) {
                 List<UserForClientResponse> userForClientResponses = new ArrayList<>();
