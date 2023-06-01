@@ -1,23 +1,30 @@
 package nl.inholland.bank.controllers;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import net.minidev.json.JSONUtil;
 import nl.inholland.bank.configuration.ApiTestConfiguration;
 import nl.inholland.bank.controllers.UserController;
-import nl.inholland.bank.models.Role;
-import nl.inholland.bank.models.User;
+import nl.inholland.bank.models.*;
+import nl.inholland.bank.models.dtos.UserDTO.UserForAdminRequest;
 import nl.inholland.bank.models.dtos.UserDTO.UserRequest;
+import nl.inholland.bank.services.UserLimitsService;
 import nl.inholland.bank.services.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import javax.naming.AuthenticationException;
@@ -37,8 +44,14 @@ public class UserControllerTests {
 
     @MockBean
     private UserService userService;
+    @MockBean
+    private UserLimitsService userLimitsService;
 
     private User mockUser;
+    private UserRequest mockUserRequest;
+    private UserForAdminRequest mockUserForAdminRequest;
+
+    private ObjectMapper mapper = new ObjectMapper();
 
     @BeforeEach
     void setUp() {
@@ -53,13 +66,39 @@ public class UserControllerTests {
         mockUser.setPassword("Password1!");
         mockUser.setRole(Role.USER);
         mockUser.setBsn("123456782");
+
+        Limits limits = new Limits();
+        limits.setTransactionLimit(1000);
+        limits.setDailyTransactionLimit(1000);
+        limits.setAbsoluteLimit(0);
+        limits.setRemainingDailyTransactionLimit(1000);
+        mockUser.setLimits(limits);
+
+        Account currentAccount = new Account();
+        currentAccount.setType(AccountType.CURRENT);
+        currentAccount.setBalance(1000);
+        currentAccount.setIBAN("NL01INHO0000000001");
+        currentAccount.setUser(mockUser);
+        currentAccount.setId(1);
+        currentAccount.setCurrencyType(CurrencyType.EURO);
+        mockUser.setCurrentAccount(currentAccount);
+
+        Account savingAccount = new Account();
+        savingAccount.setType(AccountType.SAVING);
+        savingAccount.setBalance(1000);
+        savingAccount.setIBAN("NL01INHO0000000002");
+        savingAccount.setUser(mockUser);
+        savingAccount.setId(1);
+        savingAccount.setCurrencyType(CurrencyType.EURO);
+        mockUser.setSavingAccount(savingAccount);
+
+        mockUserRequest = new UserRequest("email@ex.com", "user", "Password1!", "Firstly", "Fister", "820510026", "0612345678", "2000-09-08");
+        mockUserForAdminRequest = new UserForAdminRequest("email@mail.com", "user2", "Password1!", "Firstly", "Fister", "820510026", "0612345678", "2000-09-08", "employee");
     }
 
     @Test
     @WithMockUser(username = "admin", roles = { "ADMIN" })
     void gettingAllUsersAsAdminShouldReturnListWithOneUser() throws Exception {
-
-
         Mockito.when(userService.getAllUsers(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()))
                 .thenReturn(List.of(
                         mockUser
@@ -113,4 +152,37 @@ public class UserControllerTests {
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.role").doesNotExist());
     }
+
+    @Test
+    @WithMockUser(username = "user")
+    void userGettingOwnLimitsShouldReturnLimits() throws Exception {
+        Mockito.when(userLimitsService.getUserLimits(1)).thenReturn(mockUser.getLimits());
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/users/1/limits"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(jsonPath("$.transaction_limit").value(1000))
+                .andExpect(jsonPath("$.daily_transaction_limit").value(1000))
+                .andExpect(jsonPath("$.absolute_limit").value(0))
+                .andExpect(jsonPath("$.remaining_daily_transaction_limit").value(1000));
+    }
+
+    @Test
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
+    void addingNewUserShouldReturnUser() throws Exception {
+        Mockito.when(userService.addUser(mockUserForAdminRequest)).thenReturn(mockUser);
+        Mockito.when(userService.getBearerUserRole()).thenReturn(Role.ADMIN);
+
+        MockHttpServletRequestBuilder post = MockMvcRequestBuilders.post("/users")
+                .contentType("application/json")
+                .content(mapper.writeValueAsString(mockUserForAdminRequest))
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + "token");
+
+        mockMvc.perform(post)
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.role").exists());
+
+
+    }
 }
+

@@ -73,6 +73,6 @@ public class UserLimitStepDefinitions extends BaseStepDefinitions {
         Assertions.assertEquals(transactionLimit, userLimitsResponse.transaction_limit());
         Assertions.assertEquals(dailyLimit, userLimitsResponse.daily_transaction_limit());
         Assertions.assertEquals(absoluteLimit, userLimitsResponse.absolute_limit());
-        Assertions.assertEquals(remainingDailyLimit, userLimitsResponse.remaining_daily_limit());
+        Assertions.assertEquals(remainingDailyLimit, userLimitsResponse.remaining_daily_transaction_limit());
     }
 }

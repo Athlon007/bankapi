@@ -79,6 +79,6 @@ public class UserDTOsTests {
         assert userLimitResponse.transaction_limit() == 1;
         assert userLimitResponse.daily_transaction_limit() == 1;
         assert userLimitResponse.absolute_limit() == 1;
-        assert userLimitResponse.remaining_daily_limit() == 1;
+        assert userLimitResponse.remaining_daily_transaction_limit() == 1;
     }
 }

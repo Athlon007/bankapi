@@ -8,7 +8,4 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 public class ApiTestConfiguration {
     @MockBean
     private JwtTokenProvider mockJwtTokenProvider;
-
-    @MockBean
-    private UserLimitsService mockUserLimitsService;
 }
