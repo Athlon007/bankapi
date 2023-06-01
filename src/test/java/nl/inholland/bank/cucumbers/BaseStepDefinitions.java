@@ -31,4 +31,7 @@ public class BaseStepDefinitions {
         StorageForTestsInstance.getInstance().setJwt(null);
         StorageForTestsInstance.getInstance().setResponse(null);
     }
+
+  
+    public static final int USER_ID = 3;
 }
