@@ -32,7 +32,7 @@ paths:
         Returns an array of all users. Every entry has only basic information about the user.<br>
         If user is an employee, it will return all users with IDs (see UserResponse).<br>
         If user is a client, it will return UserForClientResponse.
-      operationId: getAccounts
+      operationId: getUsers
       security:
         - bearerAuth: []
       parameters:
