@@ -23,4 +23,6 @@ public class BaseStepDefinitions {
 
     public static final String EMPLOYEE_USERNAME = "employee";
     public static final String EMPLOYEE_PASSWORD = "Password2!";
+  
+    public static final int USER_ID = 3;
 }
