@@ -32,7 +32,7 @@ paths:
         Returns an array of all users. Every entry has only basic information about the user.<br>
         If user is an employee, it will return all users with IDs (see UserResponse).<br>
         If user is a client, it will return UserForClientResponse.
-      operationId: getAccounts
+      operationId: getUsers
       security:
         - bearerAuth: []
       parameters:
@@ -59,7 +59,17 @@ paths:
             type: string
         - in: query
           name: has_no_accounts
-          description: Filter by users that have no accounts
+          description: >
+            Filter by users that have no accounts.<br>
+            Note: This parameter is only available for employees and admins. Clients always see users that have an account.
+          required: false
+          schema:
+            type: boolean
+        - in: query
+          name: active
+          description: >
+              Filter by users that are active or inactive.<br>
+              Note: This parameter is only available for employees and admins. Clients always see active users.
           required: false
           schema:
             type: boolean
@@ -93,7 +103,8 @@ paths:
       description: >
         Registers a new user.<br><br>
         **Guests** can register themselves.<br>
-        **Employees** can register new users.
+        **Employees** can register new users.<br><br>
+        Only ADMIN can register user with a role different than CLIENT.
       operationId: registerUser
       requestBody:
         description: User details to register
@@ -134,6 +145,8 @@ paths:
                 active: true
         "400":
           $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /users/{id}:
     get:
       tags:
@@ -709,7 +722,9 @@ paths:
       description: >
         Upon successful login, returns authentication token and refresh token.<br<br>
         **access_token** is valid for 6 minutes.<br>
-        **refresh_token** is valid for 60 minutes. After using it, it will be invalidated.
+        **refresh_token** is valid for 60 minutes. After using it, it will be invalidated.<br>
+        **id** represents the user id.<br>
+        **expires_at** represents the expiration date of the access token.<br>
       operationId: login
       requestBody:
         content:
