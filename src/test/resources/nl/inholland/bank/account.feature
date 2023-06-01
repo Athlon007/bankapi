@@ -1,9 +1,17 @@
-Feature: Everything associated with the Account management
+Feature: Everything associated with the Account
 
-  Scenario: Retrieve all accounts for a specific user ID
-    Given The endpoint "/accounts/{id}" is available for the "GET" method
-    When I send a "GET" request to "/accounts/{id}" with the following parameters:
-      | id |
-      | {user_id} |
-    Then the response status code should be 200
-    And the response body should contain a list of accounts
+  Scenario: Endpoint check
+    Given I have a valid login credentials
+    And I call the application login endpoint
+    And I receive a token
+    When I call the application accounts endpoint with user id 3
+    Then I get HTTP status 200
+    And I get 1 elements in the list
+
+  Scenario: Create an account as employee
+    Given I have a valid login credentials
+    And I call the application login endpoint
+    And I receive a token
+    Given I call the application accounts end point with IBAN "NL60INHO9935031745", currencyType "EURO", accountType "SAVING", userId 3
+    And I get an account's IBAN "NL60INHO9935031745"
+

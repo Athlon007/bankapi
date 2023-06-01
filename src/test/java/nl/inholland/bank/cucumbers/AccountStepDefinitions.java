@@ -1,46 +1,78 @@
 package nl.inholland.bank.cucumbers;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
-import org.junit.jupiter.api.Assertions;
+import io.jsonwebtoken.lang.Assert;
+import nl.inholland.bank.models.dtos.AccountDTO.AccountRequest;
+import nl.inholland.bank.models.dtos.AccountDTO.AccountResponse;
 import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 
 import java.util.List;
 
-public class AccountStepDefinitions extends BaseStepDefinitions {
-    private int userId;
+public class AccountStepDefinitions extends BaseStepDefinitions{
 
-    @Given("The endpoint {string} is available for the {string} method")
-    public void theEndpointIsAvailableForTheMethod(String endpoint, String method) {
-        response = restTemplate.exchange(
-                "/" + endpoint,
-                HttpMethod.OPTIONS,
-                new HttpEntity<>(null, new HttpHeaders()),
-                String.class
-        );
+    public static final String ACCOUNTS_ENDPOINT = "/accounts";
 
-        List<String> options = List.of(response.getHeaders().get("Allow").get(0).replaceAll("]", "").split(","));
-        Assertions.assertTrue(options.contains(method.toUpperCase()));
-    }
+    private ObjectMapper objectMapper = new ObjectMapper();
 
-    @When("I retrieve all accounts for user with ID {integer}")
-    public void iRetrieveAllAccountsForUserWithID(int userId) {
-        this.userId = USER_ID; // Store the user ID for later use
-        String endpoint = "/accounts/" + userId;
-        response = restTemplate.exchange(
-                endpoint,
+    @When("I call the application accounts endpoint with user id {int}")
+    public void iCallTheApplicationAccountsEndpointWithUserId(int userId) {
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        if (StorageForTestsInstance.getInstance().getJwt() != null) {
+            headers.setBearerAuth(StorageForTestsInstance.getInstance().getJwt().access_token());
+        }
+
+        StorageForTestsInstance.getInstance().setResponse(restTemplate.exchange(
+                ACCOUNTS_ENDPOINT + "/" + userId,
                 HttpMethod.GET,
-                new HttpEntity<>(null, new HttpHeaders()),
+                new HttpEntity<>(null, headers),
                 String.class
-        );
+        ));
     }
 
-    @And("I get HTTP status {int}")
-    public void iGetHTTPStatus(int code) {
-        Assertions.assertEquals(code, response.getStatusCode().value());
+    @Then("I get HTTP status code {int}")
+    public void iGetHTTPStatusCode(int expectedStatusCode) {
+        System.out.println("Response: " + StorageForTestsInstance.getInstance().getResponse().getBody());
+        Assert.isTrue(StorageForTestsInstance.getInstance().getResponse().getStatusCode().value() == expectedStatusCode,
+                "Status code is not " + expectedStatusCode);
+    }
+    
+
+    @Given("I call the application accounts end point with IBAN {string}, currencyType {string}, accountType {string}, userId {int}")
+    public void iCallTheApplicationAccountsEndPointWithIBANCurrencyTypeAccountTypeUserId(String IBAN, String currencyType, String accountType, int userId) {
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        AccountRequest accountRequest = new AccountRequest(
+                IBAN,
+                currencyType,
+                accountType,
+                userId
+        );
+
+        StorageForTestsInstance.getInstance().setResponse(restTemplate.exchange(
+                ACCOUNTS_ENDPOINT,
+                HttpMethod.POST,
+                new HttpEntity<>(accountRequest, headers),
+                String.class
+        ));
+    }
+
+
+    @And("I get an account's IBAN {string}")
+    public void iGetAnAccountSIBAN(String IBAN) {
+        // get the account response
+        AccountResponse accountResponse = objectMapper.convertValue(
+                StorageForTestsInstance.getInstance().getResponse().getBody(),
+                AccountResponse.class
+        );
+
+        Assert.isTrue(accountResponse.IBAN().equals(IBAN), "IBAN is " + IBAN);
     }
 }
