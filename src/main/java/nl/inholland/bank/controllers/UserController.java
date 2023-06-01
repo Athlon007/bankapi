@@ -164,6 +164,7 @@ public class UserController {
                     user.getCurrentAccount().getId(),
                     user.getCurrentAccount().getIBAN(),
                     user.getCurrentAccount().getCurrencyType().toString(),
+                    user.getCurrentAccount().getType().toString(),
                     user.getCurrentAccount().isActive(),
                     user.getCurrentAccount().getBalance()
             );
