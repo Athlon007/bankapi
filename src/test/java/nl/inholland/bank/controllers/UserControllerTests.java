@@ -1,4 +1,4 @@
-package nl.inholland.bank;
+package nl.inholland.bank.controllers;
 
 import nl.inholland.bank.configuration.ApiTestConfiguration;
 import nl.inholland.bank.controllers.UserController;

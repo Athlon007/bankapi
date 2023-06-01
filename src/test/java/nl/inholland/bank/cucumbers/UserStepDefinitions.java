@@ -310,4 +310,20 @@ public class UserStepDefinitions extends BaseStepDefinitions {
                 String.class
         ));
     }
+
+    @When("I call the delete user endpoint for user {int}")
+    public void iCallTheDeleteUserEndpointForUser(int id) {
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        if (StorageForTestsInstance.getInstance().getJwt() != null) {
+            headers.setBearerAuth(StorageForTestsInstance.getInstance().getJwt().access_token());
+        }
+
+        StorageForTestsInstance.getInstance().setResponse(restTemplate.exchange(
+                USERS_ENDPOINT + "/" + id,
+                HttpMethod.DELETE,
+                new HttpEntity<>(null, headers),
+                String.class
+        ));
+    }
 }

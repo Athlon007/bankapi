@@ -1,4 +1,4 @@
-Feature: Everything to do with users API
+Feature: PUT requests to User endpoint
 
   Scenario: Updating user as admin should return 200 and updated UserResponse object
     Given I have a valid login credentials

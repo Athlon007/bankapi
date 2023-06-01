@@ -34,9 +34,6 @@ public class ServerStepDefinitions extends BaseStepDefinitions {
             headers.setBearerAuth(StorageForTestsInstance.getInstance().getJwt().access_token());
         }
 
-        // print headers
-        System.out.println(headers);
-
         StorageForTestsInstance.getInstance().setResponse(restTemplate.exchange(
                 "/" + endpoint,
                 HttpMethod.OPTIONS,
@@ -44,9 +41,8 @@ public class ServerStepDefinitions extends BaseStepDefinitions {
                 String.class
         ));
 
-        System.out.println(StorageForTestsInstance.getInstance().getResponse().getHeaders().get("Allow").get(0).replaceAll("]", "").split(","));
-
         List<String> options = List.of(StorageForTestsInstance.getInstance().getResponse().getHeaders().get("Allow").get(0).replaceAll("]", "").split(","));
+        System.out.println("Options: "+ options);
         Assertions.assertTrue(options.contains(method.toUpperCase()));
     }
     @And("I get HTTP status {int}")
