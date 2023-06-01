@@ -220,4 +220,36 @@ public class UserStepDefinitions extends BaseStepDefinitions {
 
         Assert.isTrue(userResponse.role().equalsIgnoreCase(role), "User role is not " + role + ". User role is: " + userResponse.role());
     }
+
+    @And("I request user with id {string}")
+    public void iRequestUserWithId(String userId) {
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        if (StorageForTestsInstance.getInstance().getJwt() != null) {
+            headers.setBearerAuth(StorageForTestsInstance.getInstance().getJwt().access_token());
+        }
+
+        StorageForTestsInstance.getInstance().setResponse(restTemplate.exchange(
+                USERS_ENDPOINT + "/" + userId,
+                HttpMethod.GET,
+                new HttpEntity<>(null, headers),
+                String.class
+        ));
+    }
+
+    @And("Response is kind of UserForClientResponse")
+    public void responseIsKindOfUserForClientResponse() {
+        Assert.isTrue(!StorageForTestsInstance.getInstance().getResponse().getBody().toString().contains("role"), "Response is not kind of UserForClientResponse");
+    }
+
+    @And("I get a user for client with first name {string} and last name {string}")
+    public void iGetAUserForClientWithFirstNameAndLastName(String firstName, String lastName) throws JsonProcessingException {
+        UserForClientResponse userResponse = objectMapper.readValue(
+                StorageForTestsInstance.getInstance().getResponse().getBody().toString(),
+                UserForClientResponse.class
+        );
+
+        Assert.isTrue(userResponse.firstname().equals(firstName), "First name is not " + firstName);
+        Assert.isTrue(userResponse.lastname().equals(lastName), "Last name is not " + lastName);
+    }
 }

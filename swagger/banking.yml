@@ -157,7 +157,7 @@ paths:
         - bearerAuth: []
       description: >
         Returns an user with following ID.<br><br>
-        For employee, or client accessign his own user, it will return User schema.<br>
+        For employee, or client accessing his own user, it will return User schema.<br>
         For client accessing other user, it will return UserForClientResponse schema.<br>
       operationId: getUser
       parameters:
@@ -1055,7 +1055,7 @@ components:
     NotAllowed:
       description: "User is not allowed to perform this action."
     BadRequest:
-      description: "Request body is incorrect."
+      description: "Request body or URL parameter is incorrect."
     NotFound:
       description: "Element does not exist."
     Created:

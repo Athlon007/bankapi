@@ -8,6 +8,7 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import javax.naming.AuthenticationException;
 import java.io.FileWriter;
@@ -77,7 +78,14 @@ public class ErrorHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public String handleHttpMessageNotReadableException(HttpMessageNotReadableException e) {
         // Body is not readable or missing.
-        return "{\"error_message\": \"" + e.getMessage() + "\"}";
+        return "{\"error_message\": \"Body does not match the schema, is unreadable, or is missing.\"}";
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public String handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException e) {
+        // Argument in the URL is not of the correct type.
+        return "{\"error_message\": \"URL argument is invalid.\"}";
     }
 
     @ExceptionHandler(Exception.class)

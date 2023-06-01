@@ -64,15 +64,11 @@ public class UserController {
 
     @GetMapping("/{id}")
     public ResponseEntity getUserById(@PathVariable int id) {
-        try {
-            User user = userService.getUserById(id);
-            if (userService.getBearerUserRole() == Role.USER && !userService.getBearerUsername().equals(user.getUsername())) {
-                return ResponseEntity.status(200).body(mapUserToUserForClientResponse(user));
-            }
-            return ResponseEntity.status(200).body(mapUserToUserResponse(user));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new ExceptionResponse("Unable to get user"));
+        User user = userService.getUserById(id);
+        if (userService.getBearerUserRole() == Role.USER && !userService.getBearerUsername().equals(user.getUsername())) {
+            return ResponseEntity.status(200).body(mapUserToUserForClientResponse(user));
         }
+        return ResponseEntity.status(200).body(mapUserToUserResponse(user));
     }
 
     @PostMapping
