@@ -176,7 +176,7 @@ public class User {
         // - Must contain at least one lowercase character
         // - Must contain at least one uppercase character
         // - Must contain at least one special character
-        if (!password.matches("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*()_+-={}:;'\",./<>?]).{8,}$")) {
+        if (!password.matches("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*()_+={}:;'\",.<>?]).{8,}$")) {
             throw new IllegalArgumentException("Password must contain at least one digit, one lowercase character, one uppercase character and one special character");
         }
 
