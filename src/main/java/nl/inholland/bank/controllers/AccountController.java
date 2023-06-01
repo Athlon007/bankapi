@@ -34,7 +34,7 @@ public class AccountController {
             User user = userService.getUserById(id);
 
             // Employee/Admin and the owner of the account can see the account
-            if (userService.getBearerUserRole() == null || userService.getBearerUserRole() != Role.EMPLOYEE) {
+            if (userService.getBearerUserRole() == null && userService.getBearerUserRole() != Role.EMPLOYEE && userService.getBearerUserRole() != Role.ADMIN) {
                 return ResponseEntity.status(401).body("Unauthorized");
             }
 
@@ -67,9 +67,9 @@ public class AccountController {
 
     @PostMapping
     public ResponseEntity addAccount(@RequestBody AccountRequest accountRequest) {
-        if (userService.getBearerUserRole() != Role.EMPLOYEE) {
-            return ResponseEntity.status(401).body("Unauthorized");
-        } else {
+//        if (userService.getBearerUserRole() != Role.EMPLOYEE && userService.getBearerUserRole() != Role.ADMIN) {
+//            return ResponseEntity.status(401).body("Unauthorized");
+//        } else {
             try{
                 Account account = accountService.addAccount(accountRequest);
 
@@ -87,6 +87,6 @@ public class AccountController {
             catch (Exception e){
                 return ResponseEntity.badRequest().body(e.getMessage());
             }
-        }
+//        }
     }
 }

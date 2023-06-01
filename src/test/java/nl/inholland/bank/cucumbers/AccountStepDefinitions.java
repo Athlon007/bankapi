@@ -37,14 +37,6 @@ public class AccountStepDefinitions extends BaseStepDefinitions{
         ));
     }
 
-    @Then("I get HTTP status code {int}")
-    public void iGetHTTPStatusCode(int expectedStatusCode) {
-        System.out.println("Response: " + StorageForTestsInstance.getInstance().getResponse().getBody());
-        Assert.isTrue(StorageForTestsInstance.getInstance().getResponse().getStatusCode().value() == expectedStatusCode,
-                "Status code is not " + expectedStatusCode);
-    }
-    
-
     @Given("I call the application accounts end point with IBAN {string}, currencyType {string}, accountType {string}, userId {int}")
     public void iCallTheApplicationAccountsEndPointWithIBANCurrencyTypeAccountTypeUserId(String IBAN, String currencyType, String accountType, int userId) {
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -63,7 +55,6 @@ public class AccountStepDefinitions extends BaseStepDefinitions{
                 String.class
         ));
     }
-
 
     @And("I get an account's IBAN {string}")
     public void iGetAnAccountSIBAN(String IBAN) {
