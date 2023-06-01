@@ -230,6 +230,14 @@ public class UserService {
 
         User user = userRepository.findById(id).orElseThrow(()-> new ObjectNotFoundException(id, "User not found"));
 
+        if (userRepository.findUserByUsername(userRequest.getUsername()).isPresent() && !user.getUsername().equals(userRequest.getUsername())) {
+            throw new IllegalArgumentException("Username already exists.");
+        }
+
+        if (userRepository.existsByEmail(userRequest.getEmail()) && !user.getEmail().equals(userRequest.getEmail())) {
+            throw new IllegalArgumentException("Email already exists.");
+        }
+
         String currentUserName = getBearerUsername();
         Role currentUserRole = getBearerUserRole();
 

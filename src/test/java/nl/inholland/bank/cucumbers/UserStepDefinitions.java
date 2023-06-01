@@ -279,4 +279,32 @@ public class UserStepDefinitions extends BaseStepDefinitions {
                 String.class
         ));
     }
+
+    @And("I update user with id {string} with username {string}, first name {string}, last name {string}, email {string}, password {string}, bsn {string}, phone number {string} and birth-date {string} and role {string}")
+    public void andIUpdateUserWithIdWithUsernameFirstNameLastNameEmailPasswordBsnPhoneNumberAndBirthDateAndRole(String id, String username, String firstName, String lastName, String email, String password, String bsn, String phoneNumber, String birthDate, String role) {
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        UserForAdminRequest user = new UserForAdminRequest(
+                email,
+                username,
+                password,
+                firstName,
+                lastName,
+                bsn,
+                phoneNumber,
+                birthDate,
+                role
+        );
+
+        if (StorageForTestsInstance.getInstance().getJwt() != null) {
+            headers.setBearerAuth(StorageForTestsInstance.getInstance().getJwt().access_token());
+        }
+
+        StorageForTestsInstance.getInstance().setResponse(restTemplate.exchange(
+                USERS_ENDPOINT + "/" + id,
+                HttpMethod.PUT,
+                new HttpEntity<>(user, headers),
+                String.class
+        ));
+    }
 }

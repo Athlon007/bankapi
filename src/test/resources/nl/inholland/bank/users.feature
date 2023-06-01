@@ -239,3 +239,32 @@ Feature: Everything to do with users API
       And I receive a token
       And I update user with id "1" with username "admin", first name "John", last name "Doe", email "mail@example.com", password "Password1!", bsn "318419403", phone number "0612345678" and birth-date "2000-09-08"
       Then I get HTTP status 401
+
+  Scenario: Updating username to already existing username should return 400
+      Given I have a valid login credentials
+      And I call the application login endpoint
+      And I receive a token
+      And I update user with id "3" with username "employee", first name "John", last name "Doe", email "mail@example.com", password "Password123!", bsn "318419403", phone number "0612345678" and birth-date "2000-09-08"
+      Then I get HTTP status 400
+
+  Scenario: Updating email to already existing email should return 400
+      Given I have a valid login credentials
+      And I call the application login endpoint
+      And I receive a token
+      And I update user with id "3" with username "client", first name "John", last name "Doe", email "admin@example.com", password "Password123!", bsn "318419403", phone number "0612345678" and birth-date "2000-09-08"
+      Then I get HTTP status 400
+    
+  Scenario: Updating an admin as an eployee should return 401
+        Given I have a valid employee login credentials
+        And I call the application login endpoint
+        And I receive a token
+        And I update user with id "1" with username "admin", first name "John", last name "Doe", email "mail@example.com", password "Password1!", bsn "318419403", phone number "0612345678" and birth-date "2000-09-08"
+        Then I get HTTP status 401
+
+  Scenario: Updating other user's role as employee should return 401
+    Given I have a valid employee login credentials
+    And I call the application login endpoint
+    And I receive a token
+    And I update user with id "3" with username "client", first name "John", last name "Doe", email "mail@example.com", password "Password123!", bsn "318419403", phone number "0612345678" and birth-date "2000-09-08" and role "admin"
+    Then I get HTTP status 401
+
