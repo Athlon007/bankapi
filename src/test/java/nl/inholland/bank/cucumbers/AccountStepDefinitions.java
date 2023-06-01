@@ -60,8 +60,8 @@ public class AccountStepDefinitions extends BaseStepDefinitions{
         ));
     }
 
-    @And("I get an account's IBAN {string}")
-    public void iGetAnAccountSIBAN(String IBAN) throws JsonProcessingException {
+    @And("I get an account's IBAN {string} and currencyType {string} and accountType {string} and id {int}")
+    public void iGetAnAccountSIBANAndCurrencyTypeAndAccountTypeAndId(String IBAN, String currencyType, String accountType, int id) throws JsonProcessingException {
         // get the account response
         AccountResponse accountResponse = objectMapper.readValue(
                 StorageForTestsInstance.getInstance().getResponse().getBody().toString(),
@@ -69,5 +69,24 @@ public class AccountStepDefinitions extends BaseStepDefinitions{
         );
 
         Assert.isTrue(accountResponse.IBAN().equals(IBAN), "IBAN is " + IBAN);
+        Assert.isTrue(accountResponse.currency_type().equals(currencyType), "currencyType is " + currencyType);
+        Assert.isTrue(accountResponse.account_type().equals(accountType), "accountType is " + accountType);
+        Assert.isTrue(accountResponse.id() == id, "id is " + id);
+    }
+
+    @When("I call the application accounts end point with user id {int}")
+    public void iCallTheApplicationAccountsEndPointWithUserId(int userId) {
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        if (StorageForTestsInstance.getInstance().getJwt() != null) {
+            headers.setBearerAuth(StorageForTestsInstance.getInstance().getJwt().access_token());
+        }
+
+        StorageForTestsInstance.getInstance().setResponse(restTemplate.exchange(
+                ACCOUNTS_ENDPOINT + "/" + userId,
+                HttpMethod.GET,
+                new HttpEntity<>(null, headers),
+                String.class
+        ));
     }
 }
