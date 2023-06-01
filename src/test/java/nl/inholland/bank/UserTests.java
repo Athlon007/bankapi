@@ -41,14 +41,14 @@ class UserTests {
     @Test
     void bsnMustAlwaysBe8Or9Digits() {
         Exception exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            user.setBsn("1234567890");
+            user.setBsn("0750600");
         });
 
         Assertions.assertEquals("BSN must be 8 or 9 digits long", exception.getMessage());
 
         // Check if setting correct one does NOT throw an exception
-        user.setBsn("12345678");
-        Assertions.assertEquals("12345678", user.getBsn());
+        user.setBsn("075060097");
+        Assertions.assertEquals("075060097", user.getBsn());
     }
 
     @Test
