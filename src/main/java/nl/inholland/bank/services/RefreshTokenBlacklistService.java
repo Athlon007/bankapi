@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class RefreshTokenBlacklistService {
-    private RefreshTokenBlacklistRepository refreshTokenBlacklistRepository;
+    private final RefreshTokenBlacklistRepository refreshTokenBlacklistRepository;
 
     public RefreshTokenBlacklistService(RefreshTokenBlacklistRepository refreshTokenBlacklistRepository) {
         this.refreshTokenBlacklistRepository = refreshTokenBlacklistRepository;

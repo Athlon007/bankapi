@@ -139,7 +139,7 @@ public class UserService {
         return user;
     }
 
-    public String login(LoginRequest loginRequest) throws AuthenticationException, DisabledException {
+    public Token login(LoginRequest loginRequest) throws AuthenticationException, DisabledException {
         User user = userRepository.findUserByUsername(loginRequest.username())
                 .orElseThrow(() -> new AuthenticationException("Username not found"));
 
@@ -169,7 +169,9 @@ public class UserService {
             throw new DisabledException("User has been deactivated. Please contact customer support.");
         }
 
-        return new jwt(jwtTokenProvider.createToken(username, user.getRole()), jwtTokenProvider.createRefreshToken(username));
+        Token token = jwtTokenProvider.createToken(username, user.getRole());
+
+        return new jwt(token.jwt(), jwtTokenProvider.createRefreshToken(username), user.getId(), token.expiresAt());
     }
 
     private User mapUserRequestToUser(UserRequest userRequest) {
@@ -338,5 +340,9 @@ public class UserService {
             throw new IllegalArgumentException("Invalid account type.");
         }
         userRepository.save(user);
+    }
+
+    public int getUserIdByUsername(String username) {
+        return userRepository.findUserByUsername(username).orElseThrow(()-> new ObjectNotFoundException((Object) username, "User not found")).getId();
     }
 }

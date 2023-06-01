@@ -16,6 +16,7 @@ import java.util.List;
 
 @Controller
 @RequestMapping("/accounts")
+@CrossOrigin(origins = "*")
 public class AccountController {
     private AccountService accountService;
     private UserService userService;

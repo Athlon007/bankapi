@@ -27,6 +27,7 @@ import java.util.Optional;
 
 @Controller
 @RequestMapping("/transactions")
+@CrossOrigin(origins = "*")
 public class TransactionController {
     private final TransactionService transactionService;
     private final UserService userService;

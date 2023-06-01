@@ -21,6 +21,7 @@ import java.util.Optional;
 
 @Controller
 @RequestMapping("/users")
+@CrossOrigin(origins = "*")
 public class UserController {
     private final UserService userService;
     private final UserLimitsService userLimitsService;
@@ -162,7 +163,6 @@ public class UserController {
             currentAccountResponse = new AccountResponse(
                     user.getCurrentAccount().getId(),
                     user.getCurrentAccount().getIBAN(),
-                    user.getCurrentAccount().getType().toString(),
                     user.getCurrentAccount().getCurrencyType().toString(),
                     user.getCurrentAccount().isActive(),
                     user.getCurrentAccount().getBalance()

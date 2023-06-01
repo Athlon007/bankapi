@@ -2,6 +2,7 @@ package nl.inholland.bank.utils;
 
 import org.hibernate.ObjectNotFoundException;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -48,7 +49,6 @@ public class ErrorHandler {
     @ExceptionHandler(AuthenticationException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public String handleAuthenticationException(AuthenticationException e) {
-        writeToFile(e);
         return "{\"error_message\": \"" + e.getMessage() + "\"}";
     }
 
@@ -62,6 +62,13 @@ public class ErrorHandler {
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
     public String handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException e) {
+        return "{\"error_message\": \"" + e.getMessage() + "\"}";
+    }
+
+    @ExceptionHandler(DisabledException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public String handleDisabledException(DisabledException e) {
+        // This one is thrown when a user tries to log in with an account that is disabled.
         return "{\"error_message\": \"" + e.getMessage() + "\"}";
     }
 
