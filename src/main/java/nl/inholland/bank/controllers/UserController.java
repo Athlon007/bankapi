@@ -36,13 +36,11 @@ public class UserController {
             @RequestParam Optional<Integer> page,
             @RequestParam Optional<Integer> limit,
             @RequestParam Optional<String> name,
-            @RequestParam(name = "has_no_accounts") Optional<Boolean> hasNoAccounts
+            @RequestParam(name = "has_no_accounts") Optional<Boolean> hasNoAccounts,
+            @RequestParam Optional<Boolean> active
     ) {
         try {
-            // If hasNoAccount is true, use the correct method
-            List<User> users = hasNoAccounts.isPresent() && Boolean.TRUE.equals(hasNoAccounts.get()) ?
-                    userService.getAllUsersWithNoAccounts(page, limit, name) :
-                    userService.getAllUsers(page, limit, name);
+            List<User> users = userService.getAllUsers(page, limit, name, hasNoAccounts, active);
 
             if (userService.getBearerUserRole() == Role.USER) {
                 List<UserForClientResponse> userForClientResponses = new ArrayList<>();
@@ -78,8 +76,12 @@ public class UserController {
     }
 
     @PostMapping
-    //@PreAuthorize("hasAuthority('ADMIN') or hasAuthority('EMPLOYEE')")
     public ResponseEntity addUser(@RequestBody UserForAdminRequest request) throws AuthenticationException, IllegalArgumentException {
+        // Check if request exists.
+        if (request == null) {
+            return ResponseEntity.badRequest().body(new ExceptionResponse("Request is empty"));
+        }
+
         UserRequest userRequest = request;
         // If request has not role, it is a request from a client
         if (request.getRole() == null) {
@@ -96,12 +98,7 @@ public class UserController {
         }
 
         User user = userService.addUser(userRequest);
-
-        if (userService.getBearerUserRole() == null) {
-            return ResponseEntity.status(201).body(mapUserToUserForClientResponse(user));
-        } else {
-            return ResponseEntity.status(201).body(mapUserToUserResponse(user));
-        }
+        return ResponseEntity.status(201).body(mapUserToUserResponse(user));
     }
 
 

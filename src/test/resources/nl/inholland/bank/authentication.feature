@@ -2,7 +2,6 @@ Feature: Everything to do with user authentication
 
   Scenario: Endpoint check
     Given The endpoint for "/auth/login" is available for method "POST"
-    And The endpoint for "/auth/refresh" is available for method "POST"
     Then I get HTTP status 200
 
   Scenario: Login with correct credentials

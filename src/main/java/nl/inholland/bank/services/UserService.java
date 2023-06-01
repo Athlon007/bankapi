@@ -21,6 +21,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
@@ -83,7 +84,7 @@ public class UserService {
         return userRepository.findUserByUsername(user.getUsername()).orElseThrow(() -> new ObjectNotFoundException(user.getId(), "User"));
     }
 
-    public List<User> getAllUsers(Optional<Integer> page, Optional<Integer> limit, Optional<String> name) {
+    public List<User> getAllUsers(Optional<Integer> page, Optional<Integer> limit, Optional<String> name, Optional<Boolean> hasNoAccount, Optional<Boolean> isActive) {
         // If user has role ADMIN, return all users.
         // Otherwise, return only users that have accounts.
 
@@ -99,15 +100,9 @@ public class UserService {
         List<User> users = null;
 
         if (userRole == Role.ADMIN || userRole == Role.EMPLOYEE) {
-            users = name.map(
-                    s -> userRepository.findAllByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(s, s, pageable).getContent())
-                    .orElseGet(() -> userRepository.findAll(pageable).getContent()
-                    );
+            users = userRepository.findUsers(pageable, name, hasNoAccount, isActive).getContent();
         } else {
-            users = name.map(
-                            s -> userRepository.findAllByCurrentAccountIsNotNullAndActiveIsTrueAndFirstNameContainingIgnoreCaseOrCurrentAccountIsNotNullAndActiveIsTrueAndLastNameContainingIgnoreCase(name.get(), name.get(), pageable).getContent())
-                    .orElseGet(() -> userRepository.findAllByCurrentAccountIsNotNullAndActiveIsTrue(pageable).getContent()
-                    );
+            users = userRepository.findUsers(pageable, name, Optional.of(false), Optional.of(true)).getContent();
         }
 
         for (User user : users) {
@@ -115,22 +110,6 @@ public class UserService {
         }
 
         return users;
-    }
-
-    public List<User> getAllUsersWithNoAccounts(Optional<Integer> page, Optional<Integer> limit, Optional<String> name) {
-        // Users cannot see other users without accounts anyway.
-        // Might as well return empty array.
-        if (getBearerUserRole() == Role.USER) {
-            return List.of();
-        }
-
-        Pageable pageable = PageRequest.of(page.orElse(0), limit.orElse(defaultGetAllUsersLimit));
-
-        // We're only checking if current account is null,
-        // because user cannot have saving account without current account anyway.
-        return name.map(
-                s -> userRepository.findAllByCurrentAccountIsNullAndFirstNameContainingIgnoreCaseOrCurrentAccountIsNullAndLastNameContainingIgnoreCase(name.get(), name.get(), pageable))
-                .orElseGet(() -> userRepository.findAllByCurrentAccountIsNull(pageable)).getContent();
     }
 
     public User getUserById(int id) {
@@ -182,10 +161,13 @@ public class UserService {
         user.setBsn(userRequest.getBsn());
         user.setPhoneNumber(userRequest.getPhone_number());
         // Convert string of format "yyyy-MM-dd" to LocalDate
-        if (userRequest.getBirth_date() == null) {
+        if (userRequest.getBirth_date() == null || userRequest.getBirth_date().isEmpty()) {
             throw new IllegalArgumentException("Birth date is required.");
         }
-        LocalDate dateOfBirth = LocalDate.parse(userRequest.getBirth_date());
+        if (!userRequest.getBirth_date().matches("\\d{4}-\\d{2}-\\d{2}")) {
+            throw new IllegalArgumentException("Birth date must be in format yyyy-MM-dd");
+        }
+        LocalDate dateOfBirth = LocalDate.parse(userRequest.getBirth_date(), DateTimeFormatter.ofPattern("yyyy-MM-dd"));
         user.setDateOfBirth(dateOfBirth);
         user.setUsername(userRequest.getUsername());
         user.setPassword(bCryptPasswordEncoder.encode(userRequest.getPassword()));

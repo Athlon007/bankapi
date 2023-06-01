@@ -2,6 +2,7 @@ package nl.inholland.bank.utils;
 
 import org.hibernate.ObjectNotFoundException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -40,7 +41,7 @@ public class ErrorHandler {
 
     // IllegalArgumentException.
     @ExceptionHandler(IllegalArgumentException.class)
-    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public String handleIllegalArgumentException(IllegalArgumentException e) {
         writeToFile(e);
         return "{\"error_message\": \"" + e.getMessage() + "\"}";
@@ -69,6 +70,13 @@ public class ErrorHandler {
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public String handleDisabledException(DisabledException e) {
         // This one is thrown when a user tries to log in with an account that is disabled.
+        return "{\"error_message\": \"" + e.getMessage() + "\"}";
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public String handleHttpMessageNotReadableException(HttpMessageNotReadableException e) {
+        // Body is not readable or missing.
         return "{\"error_message\": \"" + e.getMessage() + "\"}";
     }
 
