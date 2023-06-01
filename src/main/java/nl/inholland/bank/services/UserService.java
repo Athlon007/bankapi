@@ -45,17 +45,17 @@ public class UserService {
     }
 
     public User addUser(UserRequest userRequest) throws AuthenticationException {
+        // If current token bearer is not an admin, and userRequest is type of UserForAdminRequest, throw exception.
+        if (getBearerUserRole() != Role.ADMIN && userRequest instanceof UserForAdminRequest) {
+            throw new AuthenticationException("You are not authorized to create accounts with roles. Remove 'role' from request body.");
+        }
+
         if (userRepository.findUserByUsername(userRequest.getUsername()).isPresent()) {
             throw new IllegalArgumentException("Username already exists.");
         }
 
         if (!isPasswordValid(userRequest.getPassword())) {
             throw new IllegalArgumentException("Password does not meet requirements.");
-        }
-
-        // If current token bearer is not an admin, and userRequest is type of UserForAdminRequest, throw exception.
-        if (getBearerUserRole() != Role.ADMIN && userRequest instanceof UserForAdminRequest) {
-            throw new AuthenticationException("You are not authorized to create accounts with roles. Remove 'role' from request body.");
         }
 
         User user = mapUserRequestToUser(userRequest);

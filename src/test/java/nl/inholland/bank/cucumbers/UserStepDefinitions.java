@@ -2,6 +2,8 @@ package nl.inholland.bank.cucumbers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.cucumber.java.Before;
+import io.cucumber.java.BeforeAll;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.When;
@@ -183,7 +185,7 @@ public class UserStepDefinitions extends BaseStepDefinitions {
         ));
     }
 
-    @Given("I call the application register endpoint with username {string}, first name {string}, last name {string}, email {string}, password {string}, bsn {string}, phone number {string}, birth-date {string}, and role {string}")
+    @When("I call the application register endpoint with username {string}, first name {string}, last name {string}, email {string}, password {string}, bsn {string}, phone number {string}, birth-date {string}, and role {string}")
     public void iCallTheApplicationRegisterEndpointWithUsernameFirstNameLastNameEmailPasswordBsnPhoneNumberBirthDateAndRole(String username, String firstName, String lastName, String email, String password, String bsn, String phoneNumber, String birthDate, String role) {
         headers.setContentType(MediaType.APPLICATION_JSON);
 
@@ -201,6 +203,7 @@ public class UserStepDefinitions extends BaseStepDefinitions {
 
         if (StorageForTestsInstance.getInstance().getJwt() != null) {
             headers.setBearerAuth(StorageForTestsInstance.getInstance().getJwt().access_token());
+            System.out.println("JWT: " + StorageForTestsInstance.getInstance().getJwt().access_token());
         }
 
         StorageForTestsInstance.getInstance().setResponse(restTemplate.exchange(

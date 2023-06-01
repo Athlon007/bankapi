@@ -73,7 +73,7 @@ Feature: GET requests on User end-point
     Given I have a valid login credentials
     And I call the application login endpoint
     And I receive a token
-    And I request user with id "1"
+    When I request user with id "1"
     Then I get HTTP status 200
     And I get a user with first name "Namey" and last name "McNameface"
     And The user has role of "admin"
@@ -82,7 +82,7 @@ Feature: GET requests on User end-point
     Given I have a valid employee login credentials
     And I call the application login endpoint
     And I receive a token
-    And I request user with id "3"
+    When I request user with id "3"
     Then I get HTTP status 200
     And I get a user with first name "Yo" and last name "Mama"
     And The user has role of "user"
@@ -91,7 +91,7 @@ Feature: GET requests on User end-point
     Given I have a valid user login credentials
     And I call the application login endpoint
     And I receive a token
-    And I request user with id "3"
+    When I request user with id "3"
     Then I get HTTP status 200
     And I get a user with first name "Yo" and last name "Mama"
     And The user has role of "user"
@@ -100,25 +100,25 @@ Feature: GET requests on User end-point
     Given I have a valid user login credentials
     And I call the application login endpoint
     And I receive a token
-    And I request user with id "1"
+    When I request user with id "1"
     Then I get HTTP status 200
     And I get a user for client with first name "Namey" and last name "McNameface"
     And Response is kind of UserForClientResponse
 
   Scenario: Getting user by ID as guest should return 401
-    Given I request user with id "1"
+    When I request user with id "1"
     Then I get HTTP status 401
 
   Scenario: Getting user that does not exist should return 404
     Given I have a valid login credentials
     And I call the application login endpoint
     And I receive a token
-    And I request user with id "999"
+    When I request user with id "999"
     Then I get HTTP status 404
 
   Scenario: Getting users with invalid ID should return 400
     Given I have a valid login credentials
     And I call the application login endpoint
     And I receive a token
-    And I request user with id "banana"
+    When I request user with id "banana"
     Then I get HTTP status 400
