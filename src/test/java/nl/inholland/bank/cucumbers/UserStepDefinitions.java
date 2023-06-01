@@ -2,8 +2,11 @@ package nl.inholland.bank.cucumbers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.cucumber.java.Before;
+import io.cucumber.java.BeforeAll;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import nl.inholland.bank.models.User;
 import nl.inholland.bank.models.dtos.UserDTO.UserForAdminRequest;
@@ -183,8 +186,106 @@ public class UserStepDefinitions extends BaseStepDefinitions {
         ));
     }
 
-    @Given("I call the application register endpoint with username {string}, first name {string}, last name {string}, email {string}, password {string}, bsn {string}, phone number {string}, birth-date {string}, and role {string}")
+    @When("I call the application register endpoint with username {string}, first name {string}, last name {string}, email {string}, password {string}, bsn {string}, phone number {string}, birth-date {string}, and role {string}")
     public void iCallTheApplicationRegisterEndpointWithUsernameFirstNameLastNameEmailPasswordBsnPhoneNumberBirthDateAndRole(String username, String firstName, String lastName, String email, String password, String bsn, String phoneNumber, String birthDate, String role) {
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        UserForAdminRequest user = new UserForAdminRequest(
+                email,
+                username,
+                password,
+                firstName,
+                lastName,
+                bsn,
+                phoneNumber,
+                birthDate,
+                role
+        );
+
+        if (StorageForTestsInstance.getInstance().getJwt() != null) {
+            headers.setBearerAuth(StorageForTestsInstance.getInstance().getJwt().access_token());
+            System.out.println("JWT: " + StorageForTestsInstance.getInstance().getJwt().access_token());
+        }
+
+        StorageForTestsInstance.getInstance().setResponse(restTemplate.exchange(
+                USERS_ENDPOINT,
+                HttpMethod.POST,
+                new HttpEntity<>(user, headers),
+                String.class
+        ));
+    }
+
+    @And("The user has role of {string}")
+    public void theUserHasRoleOf(String role) throws JsonProcessingException {
+        UserResponse userResponse = objectMapper.readValue(
+                StorageForTestsInstance.getInstance().getResponse().getBody().toString(),
+                UserResponse.class
+        );
+
+        Assert.isTrue(userResponse.role().equalsIgnoreCase(role), "User role is not " + role + ". User role is: " + userResponse.role());
+    }
+
+    @And("I request user with id {string}")
+    public void iRequestUserWithId(String userId) {
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        if (StorageForTestsInstance.getInstance().getJwt() != null) {
+            headers.setBearerAuth(StorageForTestsInstance.getInstance().getJwt().access_token());
+        }
+
+        StorageForTestsInstance.getInstance().setResponse(restTemplate.exchange(
+                USERS_ENDPOINT + "/" + userId,
+                HttpMethod.GET,
+                new HttpEntity<>(null, headers),
+                String.class
+        ));
+    }
+
+    @And("Response is kind of UserForClientResponse")
+    public void responseIsKindOfUserForClientResponse() {
+        Assert.isTrue(!StorageForTestsInstance.getInstance().getResponse().getBody().toString().contains("role"), "Response is not kind of UserForClientResponse");
+    }
+
+    @And("I get a user for client with first name {string} and last name {string}")
+    public void iGetAUserForClientWithFirstNameAndLastName(String firstName, String lastName) throws JsonProcessingException {
+        UserForClientResponse userResponse = objectMapper.readValue(
+                StorageForTestsInstance.getInstance().getResponse().getBody().toString(),
+                UserForClientResponse.class
+        );
+
+        Assert.isTrue(userResponse.firstname().equals(firstName), "First name is not " + firstName);
+        Assert.isTrue(userResponse.lastname().equals(lastName), "Last name is not " + lastName);
+    }
+
+    @And("I update user with id {string} with username {string}, first name {string}, last name {string}, email {string}, password {string}, bsn {string}, phone number {string} and birth-date {string}")
+    public void iUpdateUserWithIdWithUsernameFirstNameLastNameEmailPasswordBsnPhoneNumberAndBirthDate(String id, String username, String firstName, String lastName, String email, String password, String bsn, String phoneNumber, String birthDate) {
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        UserRequest user = new UserRequest(
+                email,
+                username,
+                password,
+                firstName,
+                lastName,
+                bsn,
+                phoneNumber,
+                birthDate
+        );
+
+        if (StorageForTestsInstance.getInstance().getJwt() != null) {
+            headers.setBearerAuth(StorageForTestsInstance.getInstance().getJwt().access_token());
+        }
+
+        StorageForTestsInstance.getInstance().setResponse(restTemplate.exchange(
+                USERS_ENDPOINT + "/" + id,
+                HttpMethod.PUT,
+                new HttpEntity<>(user, headers),
+                String.class
+        ));
+    }
+
+    @And("I update user with id {string} with username {string}, first name {string}, last name {string}, email {string}, password {string}, bsn {string}, phone number {string} and birth-date {string} and role {string}")
+    public void andIUpdateUserWithIdWithUsernameFirstNameLastNameEmailPasswordBsnPhoneNumberAndBirthDateAndRole(String id, String username, String firstName, String lastName, String email, String password, String bsn, String phoneNumber, String birthDate, String role) {
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         UserForAdminRequest user = new UserForAdminRequest(
@@ -204,20 +305,46 @@ public class UserStepDefinitions extends BaseStepDefinitions {
         }
 
         StorageForTestsInstance.getInstance().setResponse(restTemplate.exchange(
-                USERS_ENDPOINT,
-                HttpMethod.POST,
+                USERS_ENDPOINT + "/" + id,
+                HttpMethod.PUT,
                 new HttpEntity<>(user, headers),
                 String.class
         ));
     }
 
-    @And("The user has role of {string}")
-    public void theUserHasRoleOf(String role) throws JsonProcessingException {
+    @When("I call the delete user endpoint for user {int}")
+    public void iCallTheDeleteUserEndpointForUser(int id) {
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        if (StorageForTestsInstance.getInstance().getJwt() != null) {
+            headers.setBearerAuth(StorageForTestsInstance.getInstance().getJwt().access_token());
+        }
+
+        StorageForTestsInstance.getInstance().setResponse(restTemplate.exchange(
+                USERS_ENDPOINT + "/" + id,
+                HttpMethod.DELETE,
+                new HttpEntity<>(null, headers),
+                String.class
+        ));
+    }
+
+    @Then("User is inactive")
+    public void userIsInactive() throws JsonProcessingException {
         UserResponse userResponse = objectMapper.readValue(
                 StorageForTestsInstance.getInstance().getResponse().getBody().toString(),
                 UserResponse.class
         );
 
-        Assert.isTrue(userResponse.role().equalsIgnoreCase(role), "User role is not " + role + ". User role is: " + userResponse.role());
+        Assert.isTrue(!userResponse.active(), "User is not inactive");
+    }
+
+    @Then("User is active")
+    public void userIsActive() throws JsonProcessingException {
+        UserResponse userResponse = objectMapper.readValue(
+                StorageForTestsInstance.getInstance().getResponse().getBody().toString(),
+                UserResponse.class
+        );
+
+        Assert.isTrue(userResponse.active(), "User is not active");
     }
 }

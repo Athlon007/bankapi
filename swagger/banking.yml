@@ -157,7 +157,7 @@ paths:
         - bearerAuth: []
       description: >
         Returns an user with following ID.<br><br>
-        For employee, or client accessign his own user, it will return User schema.<br>
+        For employee, or client accessing his own user, it will return User schema.<br>
         For client accessing other user, it will return UserForClientResponse schema.<br>
       operationId: getUser
       parameters:
@@ -211,8 +211,9 @@ paths:
       description: >
         Updates the information of the provdied user ID.<br><br>
         **Users** can only update their own user profile.<br>
-        **Employees** can update anyone's user.<br><br>
-        In both cases, it returns UserResponse schema.<br><br>
+        **Employees** can update other employees or users. They cannot update admins.<br>
+        **Admin** can update any user.<br><br>
+        In all cases, it returns UserResponse schema.<br><br>
         **Note:** Clients and Employees cannot update user role.
       operationId: updateUser
       parameters:
@@ -231,6 +232,7 @@ paths:
             schema:
               $ref: "#/components/schemas/UserRequest"
             example:
+              username: "bobby"
               email: "bobby@mail.com"
               password: "123456"
               firstname: "Bobby"
@@ -277,8 +279,11 @@ paths:
       security:
         - bearerAuth: []
       description: >
-        Closes the user user IF no banking user has been tied to this user.<br>
-        Otherwise, deactivates the user user.
+        Closes the user user IF no account has been tied to the user.<br>
+        Otherwise, deactivates the user.<br><br>
+        **Users** can only deactivate/delete their own user.<br>
+        **Employees** cannot deactivate/delete Admins.<br>
+        **Admin** can deactivate/delete any user.
       operationId: deleteUser
       parameters:
         - name: id
@@ -1055,7 +1060,7 @@ components:
     NotAllowed:
       description: "User is not allowed to perform this action."
     BadRequest:
-      description: "Request body is incorrect."
+      description: "Request body or URL parameter is incorrect."
     NotFound:
       description: "Element does not exist."
     Created:

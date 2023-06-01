@@ -45,17 +45,17 @@ public class UserService {
     }
 
     public User addUser(UserRequest userRequest) throws AuthenticationException {
+        // If current token bearer is not an admin, and userRequest is type of UserForAdminRequest, throw exception.
+        if (getBearerUserRole() != Role.ADMIN && userRequest instanceof UserForAdminRequest) {
+            throw new AuthenticationException("You are not authorized to create accounts with roles. Remove 'role' from request body.");
+        }
+
         if (userRepository.findUserByUsername(userRequest.getUsername()).isPresent()) {
             throw new IllegalArgumentException("Username already exists.");
         }
 
         if (!isPasswordValid(userRequest.getPassword())) {
             throw new IllegalArgumentException("Password does not meet requirements.");
-        }
-
-        // If current token bearer is not an admin, and userRequest is type of UserForAdminRequest, throw exception.
-        if (getBearerUserRole() != Role.ADMIN && userRequest instanceof UserForAdminRequest) {
-            throw new AuthenticationException("You are not authorized to create accounts with roles. Remove 'role' from request body.");
         }
 
         User user = mapUserRequestToUser(userRequest);
@@ -230,6 +230,14 @@ public class UserService {
 
         User user = userRepository.findById(id).orElseThrow(()-> new ObjectNotFoundException(id, "User not found"));
 
+        if (userRepository.findUserByUsername(userRequest.getUsername()).isPresent() && !user.getUsername().equals(userRequest.getUsername())) {
+            throw new IllegalArgumentException("Username already exists.");
+        }
+
+        if (userRepository.existsByEmail(userRequest.getEmail()) && !user.getEmail().equals(userRequest.getEmail())) {
+            throw new IllegalArgumentException("Email already exists.");
+        }
+
         String currentUserName = getBearerUsername();
         Role currentUserRole = getBearerUserRole();
 
@@ -251,6 +259,9 @@ public class UserService {
         if (userRequest.getBirth_date() == null) {
             throw new IllegalArgumentException("Birth date is required.");
         }
+        if (!userRequest.getBirth_date().matches("\\d{4}-\\d{2}-\\d{2}")) {
+            throw new IllegalArgumentException("Birth date must be in format yyyy-MM-dd");
+        }
         user.setDateOfBirth(LocalDate.parse(userRequest.getBirth_date()));
         user.setUsername(userRequest.getUsername());
         if (!isPasswordValid(userRequest.getPassword())) {
@@ -271,6 +282,10 @@ public class UserService {
 
     public void deleteUser(int id) throws AuthenticationException, OperationNotAllowedException {
         User user = userRepository.findById(id).orElseThrow(()-> new ObjectNotFoundException(id, "User not found"));
+
+        if (getBearerUserRole() != Role.ADMIN && user.getRole() == Role.ADMIN) {
+            throw new AuthenticationException("You are not authorized to delete a user.");
+        }
 
         // Check if user has savings or checking accounts.
         // Users with any of these accounts cannot be deleted, but they can be deactivated.

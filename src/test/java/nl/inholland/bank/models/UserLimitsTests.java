@@ -1,4 +1,4 @@
-package nl.inholland.bank;
+package nl.inholland.bank.models;
 
 import nl.inholland.bank.models.Limits;
 import org.junit.jupiter.api.Assertions;
@@ -43,5 +43,18 @@ public class UserLimitsTests {
         });
 
         Assertions.assertEquals("Daily transaction limit cannot be lower than 0", exception.getMessage());
+    }
+
+    @Test
+    void settingRemainingDailyTransactionLimitsBelowZeroShouldSwitchItToZero() {
+        limits.setRemainingDailyTransactionLimit(-1000);
+        Assertions.assertEquals(0, limits.getRemainingDailyTransactionLimit());
+    }
+
+    @Test
+    void settingUserShouldWork() {
+        User user = new User();
+        limits.setUser(user);
+        Assertions.assertEquals(user, limits.getUser());
     }
 }

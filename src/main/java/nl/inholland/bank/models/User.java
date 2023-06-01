@@ -1,10 +1,12 @@
 package nl.inholland.bank.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import lombok.ToString;
 import nl.inholland.bank.models.exceptions.OperationNotAllowedException;
 import org.springframework.lang.NonNullFields;
 
@@ -40,6 +42,8 @@ public class User {
     @NonNull
     private String username;
     @NonNull
+    @ToString.Exclude
+    @JsonIgnore // Better safe than sorry
     private String password;
     @NonNull
     private Role role;
@@ -176,7 +180,7 @@ public class User {
         // - Must contain at least one lowercase character
         // - Must contain at least one uppercase character
         // - Must contain at least one special character
-        if (!password.matches("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*()_+-={}:;'\",./<>?]).{8,}$")) {
+        if (!password.matches("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*()_+={}:;'\",.<>?]).{8,}$")) {
             throw new IllegalArgumentException("Password must contain at least one digit, one lowercase character, one uppercase character and one special character");
         }
 
