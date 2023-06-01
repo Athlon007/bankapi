@@ -1,10 +1,12 @@
 package nl.inholland.bank.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import lombok.ToString;
 import nl.inholland.bank.models.exceptions.OperationNotAllowedException;
 import org.springframework.lang.NonNullFields;
 
@@ -40,6 +42,8 @@ public class User {
     @NonNull
     private String username;
     @NonNull
+    @ToString.Exclude
+    @JsonIgnore // Better safe than sorry
     private String password;
     @NonNull
     private Role role;
