@@ -39,27 +39,23 @@ public class UserController {
             @RequestParam(name = "has_no_accounts") Optional<Boolean> hasNoAccounts,
             @RequestParam Optional<Boolean> active
     ) {
-        try {
-            List<User> users = userService.getAllUsers(page, limit, name, hasNoAccounts, active);
+        List<User> users = userService.getAllUsers(page, limit, name, hasNoAccounts, active);
 
-            if (userService.getBearerUserRole() == Role.USER) {
-                List<UserForClientResponse> userForClientResponses = new ArrayList<>();
-                for (User user : users) {
-                    userForClientResponses.add(mapUserToUserForClientResponse(user));
-                }
-
-                return ResponseEntity.status(200).body(userForClientResponses);
-            }
+        if (userService.getBearerUserRole() == Role.EMPLOYEE || userService.getBearerUserRole() == Role.ADMIN) {
             List<UserResponse> userResponses = new ArrayList<>();
             for (User user : users) {
                 userResponses.add(mapUserToUserResponse(user));
             }
 
             return ResponseEntity.status(200).body(userResponses);
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-            return ResponseEntity.badRequest().body(new ExceptionResponse("Unable to get users"));
         }
+
+        List<UserForClientResponse> userForClientResponses = new ArrayList<>();
+        for (User user : users) {
+            userForClientResponses.add(mapUserToUserForClientResponse(user));
+        }
+
+        return ResponseEntity.status(200).body(userForClientResponses);
     }
 
     @GetMapping("/{id}")
