@@ -124,4 +124,8 @@ public class JwtTokenProvider {
                 () -> new RuntimeException("No role found in authentication.")
         );
     }
+
+    public void clearAuthentication() {
+        this.authentication = null;
+    }
 }

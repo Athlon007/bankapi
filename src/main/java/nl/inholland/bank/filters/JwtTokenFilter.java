@@ -25,6 +25,9 @@ public class JwtTokenFilter extends OncePerRequestFilter {
     public void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws IOException, ServletException {
         String token = getToken(request);
 
+        // Before each check, clear the old authentication.
+        jwtTokenProvider.clearAuthentication();
+
 
         try {
             Authentication authentication = jwtTokenProvider.getAuthentication(token);
