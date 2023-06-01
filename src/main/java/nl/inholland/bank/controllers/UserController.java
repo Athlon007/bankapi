@@ -163,8 +163,8 @@ public class UserController {
             currentAccountResponse = new AccountResponse(
                     user.getCurrentAccount().getId(),
                     user.getCurrentAccount().getIBAN(),
-                    user.getCurrentAccount().getType().toString(),
                     user.getCurrentAccount().getCurrencyType().toString(),
+                    user.getCurrentAccount().getType().toString(),
                     user.getCurrentAccount().getBalance()
             );
         } else {
