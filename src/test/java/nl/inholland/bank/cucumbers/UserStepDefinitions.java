@@ -252,4 +252,31 @@ public class UserStepDefinitions extends BaseStepDefinitions {
         Assert.isTrue(userResponse.firstname().equals(firstName), "First name is not " + firstName);
         Assert.isTrue(userResponse.lastname().equals(lastName), "Last name is not " + lastName);
     }
+
+    @And("I update user with id {string} with username {string}, first name {string}, last name {string}, email {string}, password {string}, bsn {string}, phone number {string} and birth-date {string}")
+    public void iUpdateUserWithIdWithUsernameFirstNameLastNameEmailPasswordBsnPhoneNumberAndBirthDate(String id, String username, String firstName, String lastName, String email, String password, String bsn, String phoneNumber, String birthDate) {
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        UserRequest user = new UserRequest(
+                email,
+                username,
+                password,
+                firstName,
+                lastName,
+                bsn,
+                phoneNumber,
+                birthDate
+        );
+
+        if (StorageForTestsInstance.getInstance().getJwt() != null) {
+            headers.setBearerAuth(StorageForTestsInstance.getInstance().getJwt().access_token());
+        }
+
+        StorageForTestsInstance.getInstance().setResponse(restTemplate.exchange(
+                USERS_ENDPOINT + "/" + id,
+                HttpMethod.PUT,
+                new HttpEntity<>(user, headers),
+                String.class
+        ));
+    }
 }
