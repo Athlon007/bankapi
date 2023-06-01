@@ -20,4 +20,6 @@ public class BaseStepDefinitions {
     public static final String VALID_PASSWORD = "Password1!";
     public static final String INVALID_USERNAME = "brteabtea";
     public static final String INVALID_PASSWORD = "Password1gertabh!";
+
+    public static final int USER_ID = 3;
 }
