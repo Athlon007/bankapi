@@ -709,7 +709,9 @@ paths:
       description: >
         Upon successful login, returns authentication token and refresh token.<br<br>
         **access_token** is valid for 6 minutes.<br>
-        **refresh_token** is valid for 60 minutes. After using it, it will be invalidated.
+        **refresh_token** is valid for 60 minutes. After using it, it will be invalidated.<br>
+        **id** represents the user id.<br>
+        **expires_at** represents the expiration date of the access token.<br>
       operationId: login
       requestBody:
         content:
