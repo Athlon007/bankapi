@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.DisabledException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -101,6 +102,14 @@ public class ErrorHandler {
     public String handleMethodNotAllowedException(MethodNotAllowedException e) {
         // Method is not allowed.
         return "{\"error_message\": \"Method is not allowed.\"}";
+    }
+
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    @ResponseStatus(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
+    public String handleHttpMediaTypeNotSupportedException(HttpMediaTypeNotSupportedException e) {
+        // Media type is not supported.
+        String mediaType = e.getContentType().getType();
+        return "{\"error_message\": \"Media type of type: " + mediaType + "\"}";
     }
 
     @ExceptionHandler(Exception.class)
