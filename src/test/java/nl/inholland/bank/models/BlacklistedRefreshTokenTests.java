@@ -24,4 +24,10 @@ public class BlacklistedRefreshTokenTests {
         blacklistedRefreshToken = new BlacklistedRefreshToken("token");
         Assertions.assertEquals("token", blacklistedRefreshToken.getToken());
     }
+
+    @Test
+    void settingAndGettingIdShouldWork() {
+        blacklistedRefreshToken.setId(1);
+        Assertions.assertEquals(1, blacklistedRefreshToken.getId());
+    }
 }

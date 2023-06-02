@@ -4,6 +4,7 @@ import nl.inholland.bank.models.dtos.AccountDTO.AccountResponse;
 
 public record UserResponse(
         int id,
+        String username,
         String email,
         String firstname,
         String lastname,

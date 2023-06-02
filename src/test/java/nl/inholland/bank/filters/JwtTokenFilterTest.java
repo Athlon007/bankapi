@@ -18,7 +18,7 @@ public class JwtTokenFilterTest {
     @Test
     void incorrectTokenShouldThrowException() {
         MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setAuthType("Bearer " + "incorrecttoken");
+        request.setAuthType("Bearer incorrecttoken");
         MockHttpServletResponse response = new MockHttpServletResponse();
         MockFilterChain chain = new MockFilterChain();
 

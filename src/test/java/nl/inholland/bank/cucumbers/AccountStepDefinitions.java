@@ -16,14 +16,14 @@ public class AccountStepDefinitions extends BaseStepDefinitions {
 
     @Given("The endpoint {string} is available for the {string} method")
     public void theEndpointIsAvailableForTheMethod(String endpoint, String method) {
-        response = restTemplate.exchange(
+        StorageForTestsInstance.getInstance().setResponse(restTemplate.exchange(
                 "/" + endpoint,
                 HttpMethod.OPTIONS,
                 new HttpEntity<>(null, new HttpHeaders()),
                 String.class
-        );
+        ));
 
-        List<String> options = List.of(response.getHeaders().get("Allow").get(0).replaceAll("]", "").split(","));
+        List<String> options = List.of(StorageForTestsInstance.getInstance().getResponse().getHeaders().get("Allow").get(0).replaceAll("]", "").split(","));
         Assertions.assertTrue(options.contains(method.toUpperCase()));
     }
 
@@ -31,16 +31,16 @@ public class AccountStepDefinitions extends BaseStepDefinitions {
     public void iRetrieveAllAccountsForUserWithID(int userId) {
         this.userId = USER_ID; // Store the user ID for later use
         String endpoint = "/accounts/" + userId;
-        response = restTemplate.exchange(
+        StorageForTestsInstance.getInstance().setResponse(restTemplate.exchange(
                 endpoint,
                 HttpMethod.GET,
                 new HttpEntity<>(null, new HttpHeaders()),
                 String.class
-        );
+        ));
     }
 
     @And("I get HTTP status {int}")
     public void iGetHTTPStatus(int code) {
-        Assertions.assertEquals(code, response.getStatusCode().value());
+        Assertions.assertEquals(code, StorageForTestsInstance.getInstance().getResponse().getStatusCode().value());
     }
 }

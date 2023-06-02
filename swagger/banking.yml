@@ -132,6 +132,7 @@ paths:
                 $ref: "#/components/schemas/UserResponse"
               example:
                 id: 1
+                username: "bobby"
                 email: "bobby@mail.com"
                 firstname: "Bobby"
                 lastname: "Bobberson"
@@ -179,6 +180,7 @@ paths:
                   - $ref: "#/components/schemas/UserForClientResponse"
                 example:
                   id: 1
+                  username: "bobby"
                   email: "bobby@mail.com"
                   first_name: "Bobby"
                   last_name: "Bobberson"
@@ -250,6 +252,7 @@ paths:
                   - $ref: "#/components/schemas/UserResponse"
                 example:
                   id: 1
+                  username: "bobby"
                   email: "bobby@mail.com"
                   first_name: "Bobby"
                   last_name: "Bobberson"
@@ -805,9 +808,9 @@ components:
         id:
           type: integer
           format: int64
-        email:
-          type: string
         username:
+          type: string
+        email:
           type: string
         first_name:
           type: string
