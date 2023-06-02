@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import javax.naming.AuthenticationException;
 import javax.security.auth.login.AccountNotFoundException;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class AccountService {
@@ -37,9 +38,6 @@ public class AccountService {
         return account.isActive();
     }
 
-    public Account getAccountById(int id) {
-        return accountRepository.findById(id).orElseThrow(() -> new ObjectNotFoundException(id, "Account not found"));
-    }
 
     public Account getAccountByIBAN(String iban) throws AccountNotFoundException {
         if (IBANGenerator.isValidIBAN(iban)) {
@@ -72,15 +70,16 @@ public class AccountService {
             }
         }
 
-        Account account = mapAccountRequestToAccount(accountRequest);
-
+        Account account = createAccount(
+                user,
+                accountRequest.IBAN(),
+                accountType,
+                mapCurrencyTypeToString(accountRequest.currencyType())
+        );
         Account responseAccount = accountRepository.save(account);
         userService.assignAccountToUser(user, responseAccount);
-        return responseAccount;
-    }
 
-    public boolean checkIfIbanIsAccordingToRules(String iban) {
-        return IBANGenerator.isValidIBAN(iban);
+        return responseAccount;
     }
 
     // Get all accounts that belong to a user (max. 1 current account and max. 1 saving account)
@@ -99,38 +98,19 @@ public class AccountService {
         return false;
     }
 
-
-    public Account mapAccountRequestToAccount(AccountRequest accountRequest) {
-        Account account = new Account();
-        User user = userService.getUserById(accountRequest.userId());
-        account.setUser(user);
-        account.setIBAN(accountRequest.IBAN());
-        account.setType(mapAccountTypeToString(accountRequest.accountType()));
-        account.setCurrencyType(mapCurrencyTypeToString(accountRequest.currencyType()));
-        account.setBalance(0);
-        account.setActive(true);
-
-        return account;
-    }
-
     public CurrencyType mapCurrencyTypeToString(String currencyType) {
-        switch (currencyType) {
-            case "EUR":
-                return CurrencyType.EURO;
-            default:
-                return CurrencyType.EURO;
+        if (currencyType.equals("EURO")) {
+            return CurrencyType.EURO;
         }
+        throw new IllegalArgumentException("Invalid currencyType: " + currencyType);
     }
 
     public AccountType mapAccountTypeToString(String accountType) {
-        switch (accountType) {
-            case "CURRENT":
-                return AccountType.CURRENT;
-            case "SAVING":
-                return AccountType.SAVING;
-            default:
-                throw new IllegalArgumentException("Invalid accountType: " + accountType);
-        }
+        return switch (accountType) {
+            case "CURRENT" -> AccountType.CURRENT;
+            case "SAVING" -> AccountType.SAVING;
+            default -> throw new IllegalArgumentException("Invalid accountType: " + accountType);
+        };
     }
 
 
@@ -141,4 +121,17 @@ public class AccountService {
     public void updateAccount(Account account) {
         accountRepository.save(account);
     }
+
+    public Account getAccountById(int id) {
+        return accountRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Account not found"));
+    }
+
+    public void activateOrDeactivateTheAccount(Account account, boolean isActive) {
+        account.setActive(isActive);
+        accountRepository.save(account);
+    }
+
+
+
+
 }
