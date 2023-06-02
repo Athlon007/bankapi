@@ -85,6 +85,7 @@ public class UserControllerTests {
         currentAccount.setUser(mockUser);
         currentAccount.setId(1);
         currentAccount.setCurrencyType(CurrencyType.EURO);
+        currentAccount.setActive(true);
         mockUser.setCurrentAccount(currentAccount);
 
         Account savingAccount = new Account();

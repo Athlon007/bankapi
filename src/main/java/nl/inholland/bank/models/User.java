@@ -202,7 +202,7 @@ public class User {
             throw new OperationNotAllowedException("User already has a current account");
         }
 
-        if (currentAccount.getType() != AccountType.CURRENT) {
+        if (currentAccount.getType() == null || currentAccount.getType() != AccountType.CURRENT) {
             throw new IllegalArgumentException("Account type must be CURRENT");
         }
 
@@ -215,15 +215,18 @@ public class User {
         if (savingAccount == null && this.savingAccount.getBalance() > 0) {
             throw new OperationNotAllowedException("Cannot remove saving account with balance");
         }
-        else if (savingAccount != null) {
-            if (savingAccount.getType() != AccountType.SAVING) {
-                throw new IllegalArgumentException("Account type must be SAVING");
-            }
 
-            // We cannot set saving account, if user does not have a current account.
-            if (this.currentAccount == null) {
-                throw new OperationNotAllowedException("Cannot set saving account without current account");
-            }
+        if (savingAccount.getType() == null || savingAccount.getType() != AccountType.SAVING) {
+            throw new IllegalArgumentException("Account type must be SAVING");
+        }
+
+        // We cannot set saving account, if user does not have a current account.
+        if (this.currentAccount == null) {
+            throw new OperationNotAllowedException("Cannot set saving account without current account");
+        }
+
+        if (!this.currentAccount.isActive()) {
+            throw new OperationNotAllowedException("Cannot set saving account when current account is inactive");
         }
 
         this.savingAccount = savingAccount;

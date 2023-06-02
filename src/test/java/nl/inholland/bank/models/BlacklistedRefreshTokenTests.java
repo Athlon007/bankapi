@@ -6,7 +6,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.junit.jupiter.api.Assertions;
 
 @SpringBootTest
-public class BlacklistedRefreshTokenTests {
+class BlacklistedRefreshTokenTests {
 
     private BlacklistedRefreshToken blacklistedRefreshToken;
 

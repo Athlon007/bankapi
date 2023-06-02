@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-public class TokenTests {
+class TokenTests {
     @Test
     void settingTokenRecordShouldWork() {
         Token token = new Token("token", 1000);
