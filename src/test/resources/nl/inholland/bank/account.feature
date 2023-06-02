@@ -12,9 +12,9 @@ Feature: Everything associated with the Account
     Given I have a valid employee login credentials
     And I call the application login endpoint
     And I receive a token
-    Given I call the application accounts end point with IBAN "NL60INHO9935031745", currencyType "EURO", accountType "SAVING", userId 3
+    Given I call the application accounts end point with IBAN "NL09RABO9091319364", currencyType "EURO", accountType "SAVING", userId 3
     Then I get HTTP status 201
-    And I get an account's IBAN "NL60INHO9935031745" and currencyType "EURO" and accountType "SAVING" and id 3
+    And I get an account's IBAN "NL09RABO9091319364" and currencyType "EURO" and accountType "SAVING" and id 3
 
 
   Scenario: Get accounts by user id without employee or admin credentials should result in 401
