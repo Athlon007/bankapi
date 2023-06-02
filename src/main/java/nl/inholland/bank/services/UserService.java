@@ -155,8 +155,8 @@ public class UserService {
 
     private User mapUserRequestToUser(UserRequest userRequest) {
         User user = new User();
-        user.setFirstName(userRequest.getFirst_name());
-        user.setLastName(userRequest.getLast_name());
+        user.setFirstName(userRequest.getFirstname());
+        user.setLastName(userRequest.getLastname());
         user.setEmail(userRequest.getEmail());
         user.setBsn(userRequest.getBsn());
         user.setPhoneNumber(userRequest.getPhone_number());
@@ -250,8 +250,8 @@ public class UserService {
             throw new AuthenticationException("You are not authorized to update this user.");
         }
 
-        user.setFirstName(userRequest.getFirst_name());
-        user.setLastName(userRequest.getLast_name());
+        user.setFirstName(userRequest.getFirstname());
+        user.setLastName(userRequest.getLastname());
         user.setEmail(userRequest.getEmail());
         user.setBsn(userRequest.getBsn());
         user.setPhoneNumber(userRequest.getPhone_number());
