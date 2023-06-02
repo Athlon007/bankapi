@@ -36,13 +36,13 @@ Feature: GET requests on User end-point
     Then I get HTTP status 200
     And I get 1 elements in the list
 
-  Scenario: Getting all users that have name like "o"
+  Scenario: Getting all users that have name like "yo mama"
     Given I have a valid login credentials
     And I call the application login endpoint
     And I receive a token
-    When I call the application users endpoint with name "o"
+    When I call the application users endpoint with name "yo mama"
     Then I get HTTP status 200
-    And I get 2 elements in the list
+    And I get 1 elements in the list
 
   Scenario: Getting all users that have no accounts
     Given I have a valid login credentials
@@ -100,9 +100,9 @@ Feature: GET requests on User end-point
     Given I have a valid user login credentials
     And I call the application login endpoint
     And I receive a token
-    When I request user with id "1"
+    When I request user with id "2"
     Then I get HTTP status 200
-    And I get a user for client with first name "Namey" and last name "McNameface"
+    And I get a user for client with first name "Goofy" and last name "Ahh"
     And Response is kind of UserForClientResponse
 
   Scenario: Getting user by ID as guest should return 401

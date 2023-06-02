@@ -264,10 +264,15 @@ public class UserService {
         }
         user.setDateOfBirth(LocalDate.parse(userRequest.getBirth_date()));
         user.setUsername(userRequest.getUsername());
-        if (!isPasswordValid(userRequest.getPassword())) {
-            throw new IllegalArgumentException("Password is not valid.");
+        if (userRequest.getPassword() == null || userRequest.getPassword().length() == 0) {
+            // If password is empty, keep the old password.
+            user.setPassword(user.getPassword());
+        } else {
+            if (!isPasswordValid(userRequest.getPassword())) {
+                throw new IllegalArgumentException("Password is not valid.");
+            }
+            user.setPassword(bCryptPasswordEncoder.encode(userRequest.getPassword()));
         }
-        user.setPassword(bCryptPasswordEncoder.encode(userRequest.getPassword()));
         if (userRequest instanceof UserForAdminRequest userForAdminRequest) {
             if (getBearerUserRole() != Role.ADMIN) {
                 throw new AuthenticationException("You are not authorized to change the role of a user.");

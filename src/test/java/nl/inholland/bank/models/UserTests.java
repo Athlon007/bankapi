@@ -353,4 +353,17 @@ class UserTests {
     void getPasswordReturnsPassword() {
         Assertions.assertEquals("Password1!", user.getPassword());
     }
+
+    @Test
+    void addingSavingAccountWhenUserHasDeactivatedCurrentAccountResultsInOperationNotAllowedException() {
+        Account savingAccount = new Account();
+        savingAccount.setType(AccountType.SAVING);
+
+        Exception exception = Assertions.assertThrows(OperationNotAllowedException.class, () -> {
+            user.getCurrentAccount().setActive(false);
+            user.setSavingAccount(savingAccount);
+        });
+
+        Assertions.assertEquals("Cannot set saving account when current account is inactive", exception.getMessage());
+    }
 }
