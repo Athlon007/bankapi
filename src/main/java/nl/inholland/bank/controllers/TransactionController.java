@@ -10,6 +10,7 @@ import nl.inholland.bank.models.exceptions.UserNotTheOwnerOfAccountException;
 import nl.inholland.bank.services.TransactionService;
 import nl.inholland.bank.services.UserService;
 import org.hibernate.ObjectNotFoundException;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -61,7 +62,7 @@ public class TransactionController {
         }
     }
 
-    @PostMapping
+    @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Object> transferMoney(@RequestBody TransactionRequest request)
     {
         try {
@@ -81,7 +82,7 @@ public class TransactionController {
         }
     }
 
-    @GetMapping
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Object> getTransactions(
             @RequestParam Optional<Integer> page,
             @RequestParam Optional<Integer> limit,
