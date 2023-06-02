@@ -21,14 +21,25 @@ Feature: Everything associated with the Account
     When I call the application accounts end point with user id 3
     Then I get HTTP status 401
 
-    Scenario: Creating an current account to a user who already have a current account should result in 400
+  Scenario: Creating an current account to a user who already have a current account should result in 400
     Given I have a valid employee login credentials
     And I call the application login endpoint
     And I receive a token
     Given I call the application accounts end point with IBAN "NL60INHO9935031745", currencyType "EURO", accountType "CURRENT", userId 3
     Then I get HTTP status 400
 
-      Scenario: Creating an account with invalid IBAN should result in 400
+  Scenario: Creating an account with invalid IBAN should result in 400
+    Given I have a valid employee login credentials
+    And I call the application login endpoint
+    And I receive a token
+    Given I call the application accounts end point with IBAN "111", currencyType "EURO", accountType "SAVING", userId 3
+    Then I get HTTP status 400
 
+    Scenario: Creating an account with invalid accountType should result in 400
+    Given I have a valid employee login credentials
+    And I call the application login endpoint
+    And I receive a token
+    Given I call the application accounts end point with IBAN "NL60INHO9935031745", currencyType "EURO", accountType "SAVING-CURRENT", userId 3
+    Then I get HTTP status 400
 
 
