@@ -32,7 +32,7 @@ paths:
         Returns an array of all users. Every entry has only basic information about the user.<br>
         If user is an employee, it will return all users with IDs (see UserResponse).<br>
         If user is a client, it will return UserForClientResponse.
-      operationId: getAccounts
+      operationId: getUsers
       security:
         - bearerAuth: []
       parameters:
@@ -59,7 +59,17 @@ paths:
             type: string
         - in: query
           name: has_no_accounts
-          description: Filter by users that have no accounts
+          description: >
+            Filter by users that have no accounts.<br>
+            Note: This parameter is only available for employees and admins. Clients always see users that have an account.
+          required: false
+          schema:
+            type: boolean
+        - in: query
+          name: active
+          description: >
+              Filter by users that are active or inactive.<br>
+              Note: This parameter is only available for employees and admins. Clients always see active users.
           required: false
           schema:
             type: boolean
@@ -93,7 +103,8 @@ paths:
       description: >
         Registers a new user.<br><br>
         **Guests** can register themselves.<br>
-        **Employees** can register new users.
+        **Employees** can register new users.<br><br>
+        Only ADMIN can register user with a role different than CLIENT.
       operationId: registerUser
       requestBody:
         description: User details to register
@@ -134,6 +145,8 @@ paths:
                 active: true
         "400":
           $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /users/{id}:
     get:
       tags:
@@ -144,7 +157,7 @@ paths:
         - bearerAuth: []
       description: >
         Returns an user with following ID.<br><br>
-        For employee, or client accessign his own user, it will return User schema.<br>
+        For employee, or client accessing his own user, it will return User schema.<br>
         For client accessing other user, it will return UserForClientResponse schema.<br>
       operationId: getUser
       parameters:
@@ -198,8 +211,9 @@ paths:
       description: >
         Updates the information of the provdied user ID.<br><br>
         **Users** can only update their own user profile.<br>
-        **Employees** can update anyone's user.<br><br>
-        In both cases, it returns UserResponse schema.<br><br>
+        **Employees** can update other employees or users. They cannot update admins.<br>
+        **Admin** can update any user.<br><br>
+        In all cases, it returns UserResponse schema.<br><br>
         **Note:** Clients and Employees cannot update user role.
       operationId: updateUser
       parameters:
@@ -218,6 +232,7 @@ paths:
             schema:
               $ref: "#/components/schemas/UserRequest"
             example:
+              username: "bobby"
               email: "bobby@mail.com"
               password: "123456"
               firstname: "Bobby"
@@ -264,8 +279,11 @@ paths:
       security:
         - bearerAuth: []
       description: >
-        Closes the user user IF no banking user has been tied to this user.<br>
-        Otherwise, deactivates the user user.
+        Closes the user user IF no account has been tied to the user.<br>
+        Otherwise, deactivates the user.<br><br>
+        **Users** can only deactivate/delete their own user.<br>
+        **Employees** cannot deactivate/delete Admins.<br>
+        **Admin** can deactivate/delete any user.
       operationId: deleteUser
       parameters:
         - name: id
@@ -709,7 +727,9 @@ paths:
       description: >
         Upon successful login, returns authentication token and refresh token.<br<br>
         **access_token** is valid for 6 minutes.<br>
-        **refresh_token** is valid for 60 minutes. After using it, it will be invalidated.
+        **refresh_token** is valid for 60 minutes. After using it, it will be invalidated.<br>
+        **id** represents the user id.<br>
+        **expires_at** represents the expiration date of the access token.<br>
       operationId: login
       requestBody:
         content:
@@ -733,7 +753,7 @@ paths:
                 example:
                   access_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
                   refresh_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
-                  username: "abcd123"
+                  id: 1
                   expires_at: 1622563200
         "401":
           $ref: "#/components/responses/Unauthorized"
@@ -770,7 +790,7 @@ paths:
                 example:
                   access_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
                   refresh_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
-                  username: "abcd123"
+                  id: 1
                   expires_at: 1622563200
         "401":
           $ref: "#/components/responses/Unauthorized"
@@ -986,8 +1006,9 @@ components:
           type: string
         refresh_token:
           type: string
-        username:
-          type: string
+        int:
+          type: integer
+          format: int64
         expires_at:
           type: integer
           format: int64
@@ -1039,7 +1060,7 @@ components:
     NotAllowed:
       description: "User is not allowed to perform this action."
     BadRequest:
-      description: "Request body is incorrect."
+      description: "Request body or URL parameter is incorrect."
     NotFound:
       description: "Element does not exist."
     Created:

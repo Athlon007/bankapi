@@ -36,50 +36,45 @@ public class UserController {
             @RequestParam Optional<Integer> page,
             @RequestParam Optional<Integer> limit,
             @RequestParam Optional<String> name,
-            @RequestParam(name = "has_no_accounts") Optional<Boolean> hasNoAccounts
+            @RequestParam(name = "has_no_accounts") Optional<Boolean> hasNoAccounts,
+            @RequestParam Optional<Boolean> active
     ) {
-        try {
-            // If hasNoAccount is true, use the correct method
-            List<User> users = hasNoAccounts.isPresent() && Boolean.TRUE.equals(hasNoAccounts.get()) ?
-                    userService.getAllUsersWithNoAccounts(page, limit, name) :
-                    userService.getAllUsers(page, limit, name);
+        List<User> users = userService.getAllUsers(page, limit, name, hasNoAccounts, active);
 
-            if (userService.getBearerUserRole() == Role.USER) {
-                List<UserForClientResponse> userForClientResponses = new ArrayList<>();
-                for (User user : users) {
-                    userForClientResponses.add(mapUserToUserForClientResponse(user));
-                }
-
-                return ResponseEntity.status(200).body(userForClientResponses);
-            }
+        if (userService.getBearerUserRole() == Role.EMPLOYEE || userService.getBearerUserRole() == Role.ADMIN) {
             List<UserResponse> userResponses = new ArrayList<>();
             for (User user : users) {
                 userResponses.add(mapUserToUserResponse(user));
             }
 
             return ResponseEntity.status(200).body(userResponses);
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-            return ResponseEntity.badRequest().body(new ExceptionResponse("Unable to get users"));
         }
+
+        List<UserForClientResponse> userForClientResponses = new ArrayList<>();
+        for (User user : users) {
+            userForClientResponses.add(mapUserToUserForClientResponse(user));
+        }
+
+        return ResponseEntity.status(200).body(userForClientResponses);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity getUserById(@PathVariable int id) {
-        try {
-            User user = userService.getUserById(id);
-            if (userService.getBearerUserRole() == Role.USER && !userService.getBearerUsername().equals(user.getUsername())) {
-                return ResponseEntity.status(200).body(mapUserToUserForClientResponse(user));
-            }
-            return ResponseEntity.status(200).body(mapUserToUserResponse(user));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new ExceptionResponse("Unable to get user"));
+        User user = userService.getUserById(id);
+        if (userService.getBearerUserRole() == Role.USER && !userService.getBearerUsername().equals(user.getUsername())) {
+            return ResponseEntity.status(200).body(mapUserToUserForClientResponse(user));
         }
+        return ResponseEntity.status(200).body(mapUserToUserResponse(user));
     }
 
     @PostMapping
-    //@PreAuthorize("hasAuthority('ADMIN') or hasAuthority('EMPLOYEE')")
     public ResponseEntity addUser(@RequestBody UserForAdminRequest request) throws AuthenticationException, IllegalArgumentException {
+        // Check if request exists.
+        if (!isUserForAdminRequestValid(request)) {
+            System.out.println("Request is empty");
+            return ResponseEntity.badRequest().body(new ExceptionResponse("Request is empty"));
+        }
+
         UserRequest userRequest = request;
         // If request has not role, it is a request from a client
         if (request.getRole() == null) {
@@ -96,12 +91,7 @@ public class UserController {
         }
 
         User user = userService.addUser(userRequest);
-
-        if (userService.getBearerUserRole() == null) {
-            return ResponseEntity.status(201).body(mapUserToUserForClientResponse(user));
-        } else {
-            return ResponseEntity.status(201).body(mapUserToUserResponse(user));
-        }
+        return ResponseEntity.status(201).body(mapUserToUserResponse(user));
     }
 
 
@@ -158,30 +148,28 @@ public class UserController {
     }
 
     private UserResponse mapUserToUserResponse(User user) {
-        AccountResponse currentAccountResponse;
+        AccountResponse currentAccountResponse = null;
         if (user.getCurrentAccount() != null) {
             currentAccountResponse = new AccountResponse(
                     user.getCurrentAccount().getId(),
                     user.getCurrentAccount().getIBAN(),
-                    user.getCurrentAccount().getType().toString(),
                     user.getCurrentAccount().getCurrencyType().toString(),
+                    user.getCurrentAccount().getType().toString(),
+                    user.getCurrentAccount().isActive(),
                     user.getCurrentAccount().getBalance()
             );
-        } else {
-            currentAccountResponse = null;
         }
 
-        AccountResponse savingAccountResponse;
+        AccountResponse savingAccountResponse = null;
         if (user.getSavingAccount() != null) {
             savingAccountResponse = new AccountResponse(
                     user.getSavingAccount().getId(),
                     user.getSavingAccount().getIBAN(),
                     user.getSavingAccount().getType().toString(),
                     user.getSavingAccount().getCurrencyType().toString(),
+                    user.getSavingAccount().isActive(),
                     user.getSavingAccount().getBalance()
             );
-        } else {
-            savingAccountResponse = null;
         }
 
         String dateOfBirth = user.getDateOfBirth().toString();
@@ -209,5 +197,9 @@ public class UserController {
                 user.getLastName(),
                 user.getCurrentAccount() == null ? null : user.getCurrentAccount().getIBAN()
         );
+    }
+
+    private boolean isUserForAdminRequestValid(UserRequest request) {
+        return request.getEmail() != null && request.getUsername() != null && request.getPassword() != null;
     }
 }

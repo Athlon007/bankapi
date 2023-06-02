@@ -25,20 +25,26 @@ public class JwtTokenFilter extends OncePerRequestFilter {
     public void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws IOException, ServletException {
         String token = getToken(request);
 
-        // Skip for login endpoint and POST /users, so that we can create a user.
-        if (
-                (request.getRequestURI().equals("/auth/login"))
-                || (request.getRequestURI().equals("/auth/refresh")
-                || (request.getRequestURI().equals("/users") && request.getMethod().equals("POST")))
-        ) {
-            filterChain.doFilter(request, response);
-            return;
-        }
+        // Before each check, clear the old authentication.
+        jwtTokenProvider.clearAuthentication();
+
 
         try {
             Authentication authentication = jwtTokenProvider.getAuthentication(token);
             SecurityContextHolder.getContext().setAuthentication(authentication);
         } catch (Exception e) {
+            // Skip for login endpoint and POST /users, so that we can create a user.
+            // We are doing the skip here, because admin can user POST /users to create a user, in order to create Employees and Admins.
+            // If we do it before the try-catch block, then admin credentials won't be checked.
+            if (
+                (request.getRequestURI().equals("/auth/login"))
+                        || (request.getRequestURI().equals("/auth/refresh")
+                        || (request.getRequestURI().equals("/users") && request.getMethod().equals("POST")))
+            ) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().write("{\n\"error_message\": \"Bearer token is missing, invalid or expired.\"\n}");
             response.getWriter().flush();

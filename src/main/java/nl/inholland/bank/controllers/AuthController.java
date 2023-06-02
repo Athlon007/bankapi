@@ -8,7 +8,6 @@ import nl.inholland.bank.models.dtos.AuthDTO.jwt;
 import nl.inholland.bank.services.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.authentication.DisabledException;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,10 +28,11 @@ public class AuthController {
     public ResponseEntity<Object> login(@Validated @RequestBody LoginRequest loginRequest) throws AuthenticationException {
         try {
             Token token = userService.login(loginRequest);
+            int id = userService.getUserIdByUsername(loginRequest.username());
             return ResponseEntity.status(200).body(new jwt(
                     token.jwt(),
                     userService.createRefreshToken(loginRequest.username()),
-                    loginRequest.username(),
+                    id,
                     token.expiresAt()
             ));
         } catch (AuthenticationException e) {

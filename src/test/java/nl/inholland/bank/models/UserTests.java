@@ -1,4 +1,4 @@
-package nl.inholland.bank;
+package nl.inholland.bank.models;
 
 import nl.inholland.bank.models.Account;
 import nl.inholland.bank.models.AccountType;
@@ -41,14 +41,14 @@ class UserTests {
     @Test
     void bsnMustAlwaysBe8Or9Digits() {
         Exception exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            user.setBsn("1234567890");
+            user.setBsn("0750600");
         });
 
         Assertions.assertEquals("BSN must be 8 or 9 digits long", exception.getMessage());
 
         // Check if setting correct one does NOT throw an exception
-        user.setBsn("12345678");
-        Assertions.assertEquals("12345678", user.getBsn());
+        user.setBsn("075060097");
+        Assertions.assertEquals("075060097", user.getBsn());
     }
 
     @Test
@@ -277,5 +277,80 @@ class UserTests {
 
         user.setBsn("10464554");
         Assertions.assertEquals("10464554", user.getBsn());
+    }
+
+    @Test
+    void firstNameCannotBeNullOrEmpty() {
+        Exception exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            user.setFirstName(null);
+        });
+
+        Assertions.assertEquals("First name cannot be empty", exception.getMessage());
+
+        exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            user.setFirstName("");
+        });
+
+        Assertions.assertEquals("First name cannot be empty", exception.getMessage());
+    }
+
+    @Test
+    void passwordMustBeAtLeast8CharsLong() {
+        Exception exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            user.setPassword("1234567");
+        });
+
+        Assertions.assertEquals("Password must be at least 8 characters long", exception.getMessage());
+    }
+
+    @Test
+    void gettingTotalBalanceReturnsADouble() {
+        Assertions.assertEquals(1000, user.getTotalBalance());
+
+        //Try adding a savings account
+        Account account = new Account();
+        account.setBalance(500);
+        account.setType(AccountType.SAVING);
+
+        user.setSavingAccount(account);
+
+        Assertions.assertEquals(1500, user.getTotalBalance());
+    }
+
+    @Test
+    void settingLimitsToNullThrowsIllegalArgumentException() {
+        Exception exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            user.setLimits(null);
+        });
+
+        Assertions.assertEquals("Limits cannot be null", exception.getMessage());
+    }
+
+    @Test
+    void passwordMayNotHaveRepeatingCharacters() {
+        Exception exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            user.setPassword("aaaaaaaa");
+        });
+
+        Assertions.assertEquals("Password cannot have repeating characters only", exception.getMessage());
+    }
+
+    @Test
+    void passwordMustHave1Digit1Capital1Lowercase1SpecialChar() {
+        Exception exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            user.setPassword("aaaaaaa1");
+        });
+
+        Assertions.assertEquals("Password must contain at least one digit, one lowercase character, one uppercase character and one special character", exception.getMessage());
+    }
+
+    @Test
+    void getAuthorityFromRole() {
+        Assertions.assertEquals("USER", user.getRole().getAuthority());
+    }
+
+    @Test
+    void getPasswordReturnsPassword() {
+        Assertions.assertEquals("Password1!", user.getPassword());
     }
 }

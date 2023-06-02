@@ -9,6 +9,7 @@ import nl.inholland.bank.utils.JwtTokenProvider;
 import org.hibernate.ObjectNotFoundException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.MethodNotAllowedException;
 
 import javax.naming.AuthenticationException;
 import java.time.LocalDate;
@@ -63,6 +64,12 @@ public class UserLimitsService {
             throw new AuthenticationException("You are not allowed to view this user's limits");
         }
 
+        // If user has no currents account or savings account, throw an exception.
+        // It does not make sense to request limits for a user with no accounts (ex. some employees).
+        if (user.getCurrentAccount() == null && user.getSavingAccount() == null) {
+            throw new MethodNotAllowedException("User has no accounts", null);
+        }
+
         return getUserLimitsNoAuth(userId);
     }
 
@@ -86,7 +93,16 @@ public class UserLimitsService {
         limits.setAbsoluteLimit(userLimitsRequest.absolute_limit());
 
         userLimitsRepository.save(limits);
-        return userLimitsRepository.findFirstByUserId(userId);
+
+        Limits limitsResponse = userLimitsRepository.findFirstByUserId(userId);
+        // Get all transactions from today for this user using findAllByTimestampIsAfter.
+        List<Transaction> todayTransactions = transactionRepository.findAllByTimestampIsAfterAndUserId(LocalDate.now().atStartOfDay(), userId);
+        double remainingDailyLimit = calculateRemainingDailyLimit(limits, todayTransactions);
+
+        // Calculate the remaining daily limit
+        limitsResponse.setRemainingDailyTransactionLimit(remainingDailyLimit);
+
+        return limitsResponse;
     }
 
     private Double calculateRemainingDailyLimit(Limits limits, List<Transaction> todaysTransactions) {

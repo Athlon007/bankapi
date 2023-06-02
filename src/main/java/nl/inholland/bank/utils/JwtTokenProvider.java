@@ -47,7 +47,7 @@ public class JwtTokenProvider {
                 .setExpiration(expiresAt)
                 .signWith(jwtKeyProvider.getPrivateKey())
                 .compact();
-        int expires = (int) (issuedAt.getTime() / 1000L);
+        long expires = expiresAt.getTime();
         return new Token(jwt, expires);
     }
 
@@ -123,5 +123,9 @@ public class JwtTokenProvider {
         return (Role) authentication.getAuthorities().stream().findFirst().orElseThrow(
                 () -> new RuntimeException("No role found in authentication.")
         );
+    }
+
+    public void clearAuthentication() {
+        this.authentication = null;
     }
 }

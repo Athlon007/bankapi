@@ -21,6 +21,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
@@ -44,17 +45,17 @@ public class UserService {
     }
 
     public User addUser(UserRequest userRequest) throws AuthenticationException {
+        // If current token bearer is not an admin, and userRequest is type of UserForAdminRequest, throw exception.
+        if (getBearerUserRole() != Role.ADMIN && userRequest instanceof UserForAdminRequest) {
+            throw new AuthenticationException("You are not authorized to create accounts with roles. Remove 'role' from request body.");
+        }
+
         if (userRepository.findUserByUsername(userRequest.getUsername()).isPresent()) {
             throw new IllegalArgumentException("Username already exists.");
         }
 
         if (!isPasswordValid(userRequest.getPassword())) {
             throw new IllegalArgumentException("Password does not meet requirements.");
-        }
-
-        // If current token bearer is not an admin, and userRequest is type of UserForAdminRequest, throw exception.
-        if (getBearerUserRole() != Role.ADMIN && userRequest instanceof UserForAdminRequest) {
-            throw new AuthenticationException("You are not authorized to create accounts with roles. Remove 'role' from request body.");
         }
 
         User user = mapUserRequestToUser(userRequest);
@@ -83,7 +84,7 @@ public class UserService {
         return userRepository.findUserByUsername(user.getUsername()).orElseThrow(() -> new ObjectNotFoundException(user.getId(), "User"));
     }
 
-    public List<User> getAllUsers(Optional<Integer> page, Optional<Integer> limit, Optional<String> name) {
+    public List<User> getAllUsers(Optional<Integer> page, Optional<Integer> limit, Optional<String> name, Optional<Boolean> hasNoAccount, Optional<Boolean> isActive) {
         // If user has role ADMIN, return all users.
         // Otherwise, return only users that have accounts.
 
@@ -99,15 +100,9 @@ public class UserService {
         List<User> users = null;
 
         if (userRole == Role.ADMIN || userRole == Role.EMPLOYEE) {
-            users = name.map(
-                    s -> userRepository.findAllByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(s, s, pageable).getContent())
-                    .orElseGet(() -> userRepository.findAll(pageable).getContent()
-                    );
+            users = userRepository.findUsers(pageable, name, hasNoAccount, isActive).getContent();
         } else {
-            users = name.map(
-                            s -> userRepository.findAllByCurrentAccountIsNotNullAndActiveIsTrueAndFirstNameContainingIgnoreCaseOrCurrentAccountIsNotNullAndActiveIsTrueAndLastNameContainingIgnoreCase(name.get(), name.get(), pageable).getContent())
-                    .orElseGet(() -> userRepository.findAllByCurrentAccountIsNotNullAndActiveIsTrue(pageable).getContent()
-                    );
+            users = userRepository.findUsers(pageable, name, Optional.of(false), Optional.of(true)).getContent();
         }
 
         for (User user : users) {
@@ -115,22 +110,6 @@ public class UserService {
         }
 
         return users;
-    }
-
-    public List<User> getAllUsersWithNoAccounts(Optional<Integer> page, Optional<Integer> limit, Optional<String> name) {
-        // Users cannot see other users without accounts anyway.
-        // Might as well return empty array.
-        if (getBearerUserRole() == Role.USER) {
-            return List.of();
-        }
-
-        Pageable pageable = PageRequest.of(page.orElse(0), limit.orElse(defaultGetAllUsersLimit));
-
-        // We're only checking if current account is null,
-        // because user cannot have saving account without current account anyway.
-        return name.map(
-                s -> userRepository.findAllByCurrentAccountIsNullAndFirstNameContainingIgnoreCaseOrCurrentAccountIsNullAndLastNameContainingIgnoreCase(name.get(), name.get(), pageable))
-                .orElseGet(() -> userRepository.findAllByCurrentAccountIsNull(pageable)).getContent();
     }
 
     public User getUserById(int id) {
@@ -171,7 +150,7 @@ public class UserService {
 
         Token token = jwtTokenProvider.createToken(username, user.getRole());
 
-        return new jwt(token.jwt(), jwtTokenProvider.createRefreshToken(username), username, token.expiresAt());
+        return new jwt(token.jwt(), jwtTokenProvider.createRefreshToken(username), user.getId(), token.expiresAt());
     }
 
     private User mapUserRequestToUser(UserRequest userRequest) {
@@ -182,10 +161,13 @@ public class UserService {
         user.setBsn(userRequest.getBsn());
         user.setPhoneNumber(userRequest.getPhone_number());
         // Convert string of format "yyyy-MM-dd" to LocalDate
-        if (userRequest.getBirth_date() == null) {
+        if (userRequest.getBirth_date() == null || userRequest.getBirth_date().isEmpty()) {
             throw new IllegalArgumentException("Birth date is required.");
         }
-        LocalDate dateOfBirth = LocalDate.parse(userRequest.getBirth_date());
+        if (!userRequest.getBirth_date().matches("\\d{4}-\\d{2}-\\d{2}")) {
+            throw new IllegalArgumentException("Birth date must be in format yyyy-MM-dd");
+        }
+        LocalDate dateOfBirth = LocalDate.parse(userRequest.getBirth_date(), DateTimeFormatter.ofPattern("yyyy-MM-dd"));
         user.setDateOfBirth(dateOfBirth);
         user.setUsername(userRequest.getUsername());
         user.setPassword(bCryptPasswordEncoder.encode(userRequest.getPassword()));
@@ -248,6 +230,14 @@ public class UserService {
 
         User user = userRepository.findById(id).orElseThrow(()-> new ObjectNotFoundException(id, "User not found"));
 
+        if (userRepository.findUserByUsername(userRequest.getUsername()).isPresent() && !user.getUsername().equals(userRequest.getUsername())) {
+            throw new IllegalArgumentException("Username already exists.");
+        }
+
+        if (userRepository.existsByEmail(userRequest.getEmail()) && !user.getEmail().equals(userRequest.getEmail())) {
+            throw new IllegalArgumentException("Email already exists.");
+        }
+
         String currentUserName = getBearerUsername();
         Role currentUserRole = getBearerUserRole();
 
@@ -269,6 +259,9 @@ public class UserService {
         if (userRequest.getBirth_date() == null) {
             throw new IllegalArgumentException("Birth date is required.");
         }
+        if (!userRequest.getBirth_date().matches("\\d{4}-\\d{2}-\\d{2}")) {
+            throw new IllegalArgumentException("Birth date must be in format yyyy-MM-dd");
+        }
         user.setDateOfBirth(LocalDate.parse(userRequest.getBirth_date()));
         user.setUsername(userRequest.getUsername());
         if (!isPasswordValid(userRequest.getPassword())) {
@@ -289,6 +282,10 @@ public class UserService {
 
     public void deleteUser(int id) throws AuthenticationException, OperationNotAllowedException {
         User user = userRepository.findById(id).orElseThrow(()-> new ObjectNotFoundException(id, "User not found"));
+
+        if (getBearerUserRole() != Role.ADMIN && user.getRole() == Role.ADMIN) {
+            throw new AuthenticationException("You are not authorized to delete a user.");
+        }
 
         // Check if user has savings or checking accounts.
         // Users with any of these accounts cannot be deleted, but they can be deactivated.
@@ -340,5 +337,9 @@ public class UserService {
             throw new IllegalArgumentException("Invalid account type.");
         }
         userRepository.save(user);
+    }
+
+    public int getUserIdByUsername(String username) {
+        return userRepository.findUserByUsername(username).orElseThrow(()-> new ObjectNotFoundException((Object) username, "User not found")).getId();
     }
 }
