@@ -82,8 +82,8 @@ public class UserController {
                     request.getEmail(),
                     request.getUsername(),
                     request.getPassword(),
-                    request.getFirst_name(),
-                    request.getLast_name(),
+                    request.getFirstname(),
+                    request.getLastname(),
                     request.getBsn(),
                     request.getPhone_number(),
                     request.getBirth_date()
@@ -103,8 +103,8 @@ public class UserController {
                     request.getEmail(),
                     request.getUsername(),
                     request.getPassword(),
-                    request.getFirst_name(),
-                    request.getLast_name(),
+                    request.getFirstname(),
+                    request.getLastname(),
                     request.getBsn(),
                     request.getPhone_number(),
                     request.getBirth_date()
