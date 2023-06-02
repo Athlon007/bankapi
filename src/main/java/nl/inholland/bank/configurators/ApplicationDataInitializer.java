@@ -41,8 +41,8 @@ public class ApplicationDataInitializer implements ApplicationRunner {
                 "admin@example.com",
                 "admin",
                 "Password1!",
-                "Namey",
-                "McNameface",
+                "InHolland",
+                "Bank",
                 "232262536",
                 "0612345678",
                 "2000-01-01",
@@ -80,7 +80,7 @@ public class ApplicationDataInitializer implements ApplicationRunner {
         // ----------------
 
         AccountRequest accountRequest = new AccountRequest(
-                "NL71INHO6310134205",
+                "NL01INHO0000000001",
                 "EURO",
                 "CURRENT",
                 1);

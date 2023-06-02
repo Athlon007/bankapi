@@ -211,12 +211,13 @@ paths:
       security:
         - bearerAuth: []
       description: >
-        Updates the information of the provdied user ID.<br><br>
+        Updates the information of the provided user ID.<br><br>
         **Users** can only update their own user profile.<br>
         **Employees** can update other employees or users. They cannot update admins.<br>
         **Admin** can update any user.<br><br>
         In all cases, it returns UserResponse schema.<br><br>
-        **Note:** Clients and Employees cannot update user role.
+        **Note:** Clients and Employees cannot update user role.<br>
+        **Note:** If password is left empty, it will not be updated.
       operationId: updateUser
       parameters:
         - name: id
