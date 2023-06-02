@@ -19,8 +19,8 @@ public class UserDTOsTests {
         assert userRequest.getEmail().equals("email");
         assert userRequest.getUsername().equals("username");
         assert userRequest.getPassword().equals("password");
-        assert userRequest.getFirst_name().equals("firstname");
-        assert userRequest.getLast_name().equals("lastname");
+        assert userRequest.getFirstname().equals("firstname");
+        assert userRequest.getLastname().equals("lastname");
         assert userRequest.getPhone_number().equals("phone");
         assert userRequest.getBirth_date().equals("2000");
 
@@ -28,8 +28,8 @@ public class UserDTOsTests {
         userRequest.setEmail("email2");
         userRequest.setUsername("username2");
         userRequest.setPassword("password2");
-        userRequest.setFirst_name("firstname2");
-        userRequest.setLast_name("lastname2");
+        userRequest.setFirstname("firstname2");
+        userRequest.setLastname("lastname2");
         userRequest.setPhone_number("phone2");
         userRequest.setBirth_date("2002");
     }
@@ -40,8 +40,8 @@ public class UserDTOsTests {
         assert userRequest.getEmail().equals("email");
         assert userRequest.getUsername().equals("username");
         assert userRequest.getPassword().equals("password");
-        assert userRequest.getFirst_name().equals("firstname");
-        assert userRequest.getLast_name().equals("lastname");
+        assert userRequest.getFirstname().equals("firstname");
+        assert userRequest.getLastname().equals("lastname");
         assert userRequest.getPhone_number().equals("phone");
         assert userRequest.getBirth_date().equals("2000");
         assert userRequest.getRole().equals("role");
@@ -50,8 +50,8 @@ public class UserDTOsTests {
         userRequest.setEmail("email2");
         userRequest.setUsername("username2");
         userRequest.setPassword("password2");
-        userRequest.setFirst_name("firstname2");
-        userRequest.setLast_name("lastname2");
+        userRequest.setFirstname("firstname2");
+        userRequest.setLastname("lastname2");
         userRequest.setPhone_number("phone2");
         userRequest.setBirth_date("2002");
     }
