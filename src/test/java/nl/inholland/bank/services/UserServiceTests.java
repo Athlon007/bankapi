@@ -7,6 +7,7 @@ import nl.inholland.bank.models.dtos.AuthDTO.RefreshTokenRequest;
 import nl.inholland.bank.models.dtos.AuthDTO.jwt;
 import nl.inholland.bank.models.dtos.UserDTO.UserForAdminRequest;
 import nl.inholland.bank.models.dtos.UserDTO.UserRequest;
+import nl.inholland.bank.models.exceptions.OperationNotAllowedException;
 import nl.inholland.bank.repositories.AccountRepository;
 import nl.inholland.bank.repositories.UserRepository;
 import nl.inholland.bank.utils.JwtTokenProvider;
@@ -560,7 +561,7 @@ class UserServiceTests {
         Mockito.when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
         Mockito.when(userLimitsService.getUserLimitsNoAuth(user.getId())).thenReturn(limits);
 
-        userService.deleteUser(user.getId());
+        Assertions.assertDoesNotThrow(() -> userService.deleteUser(user.getId()));
     }
 
     @Test
@@ -584,7 +585,7 @@ class UserServiceTests {
         user.setCurrentAccount(currentAccount);
         user.setSavingAccount(savingAccount);
 
-        userService.deleteUser(user.getId());
+        Assertions.assertDoesNotThrow(() -> userService.deleteUser(user.getId()));
     }
 
     @Test
@@ -595,5 +596,41 @@ class UserServiceTests {
 
         Exception e = Assertions.assertThrows(AuthenticationException.class, () -> userService.deleteUser(user.getId()));
         Assertions.assertEquals("You are not authorized to delete this user.", e.getMessage());
+    }
+
+    @Test
+    void assigningAccountToUserShouldSucceed() throws AuthenticationException {
+        Mockito.when(mockJwtTokenProvider.getRole()).thenReturn(Role.ADMIN);
+        Mockito.when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        Mockito.when(userLimitsService.getUserLimitsNoAuth(user.getId())).thenReturn(limits);
+        Mockito.when(accountRepository.findById(currentAccount.getId())).thenReturn(Optional.of(currentAccount));
+
+        Assertions.assertDoesNotThrow(() -> userService.assignAccountToUser(user, currentAccount));
+    }
+
+    @Test
+    void assigningAccountThatBelongsToOtherUserThrowsOperationNotAllowedException() {
+        currentAccount.setUser(user2);
+
+        Exception e = Assertions.assertThrows(OperationNotAllowedException.class, () -> userService.assignAccountToUser(user, currentAccount));
+        Assertions.assertEquals("This account is already assigned to another user.", e.getMessage());
+    }
+
+    @Test
+    void assigningSavingAccountShouldSucceed() {
+        userService.assignAccountToUser(user, currentAccount);
+        Assertions.assertDoesNotThrow(() -> userService.assignAccountToUser(user, savingAccount));
+    }
+
+    @Test
+    void assigningAccountOfInvalidTypeThrowsIllegalArgumentException() {
+        Exception e = Assertions.assertThrows(IllegalArgumentException.class, () -> userService.assignAccountToUser(user, new Account()));
+        Assertions.assertEquals("Invalid account type.", e.getMessage());
+    }
+
+    @Test
+    void getUserIdByUsernameShouldReturnUserId() {
+        Mockito.when(userRepository.findUserByUsername(user.getUsername())).thenReturn(Optional.of(user));
+        Assertions.assertEquals(user.getId(), userService.getUserIdByUsername(user.getUsername()));
     }
 }
