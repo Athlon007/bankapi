@@ -4,8 +4,6 @@ import jakarta.persistence.criteria.Predicate;
 import nl.inholland.bank.models.User;
 import org.springframework.data.jpa.domain.Specification;
 
-import java.beans.Expression;
-
 public class UserSpecifications {
     public static Specification<User> nameContains(String names) {
         // Join first name and last name and put to lower.

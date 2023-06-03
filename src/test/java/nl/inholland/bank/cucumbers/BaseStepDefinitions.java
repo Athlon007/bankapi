@@ -1,12 +1,10 @@
 package nl.inholland.bank.cucumbers;
 
 import io.cucumber.spring.CucumberContextConfiguration;
-import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseEntity;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @CucumberContextConfiguration
@@ -25,13 +23,6 @@ public class BaseStepDefinitions {
 
     public static final String EMPLOYEE_USERNAME = "employee";
     public static final String EMPLOYEE_PASSWORD = "Password2!";
-
-    @BeforeEach
-    public void beforeEach() {
-        StorageForTestsInstance.getInstance().setJwt(null);
-        StorageForTestsInstance.getInstance().setResponse(null);
-    }
-
   
     public static final int USER_ID = 3;
 }

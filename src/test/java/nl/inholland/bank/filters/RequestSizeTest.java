@@ -8,6 +8,8 @@ import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
+import java.io.IOException;
+
 public class RequestSizeTest {
     @Value("${bankapi.application.request.maxsize}")
     private int maxSize;
@@ -23,5 +25,16 @@ public class RequestSizeTest {
             LargeRequestFilter filter = new LargeRequestFilter();
             filter.doFilter(request, response, chain);
         });
+    }
+
+    @Test
+    void requestSmallerThanMaxSizeGetsAccepted() throws ServletException, IOException {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setContent(new byte[maxSize]);
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        MockFilterChain chain = new MockFilterChain();
+
+        LargeRequestFilter filter = new LargeRequestFilter();
+        filter.doFilter(request, response, chain);
     }
 }

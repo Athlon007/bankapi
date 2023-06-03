@@ -39,46 +39,39 @@ public class UserController {
             @RequestParam(name = "has_no_accounts") Optional<Boolean> hasNoAccounts,
             @RequestParam Optional<Boolean> active
     ) {
-        try {
-            List<User> users = userService.getAllUsers(page, limit, name, hasNoAccounts, active);
+        List<User> users = userService.getAllUsers(page, limit, name, hasNoAccounts, active);
 
-            if (userService.getBearerUserRole() == Role.USER) {
-                List<UserForClientResponse> userForClientResponses = new ArrayList<>();
-                for (User user : users) {
-                    userForClientResponses.add(mapUserToUserForClientResponse(user));
-                }
-
-                return ResponseEntity.status(200).body(userForClientResponses);
-            }
+        if (userService.getBearerUserRole() == Role.EMPLOYEE || userService.getBearerUserRole() == Role.ADMIN) {
             List<UserResponse> userResponses = new ArrayList<>();
             for (User user : users) {
                 userResponses.add(mapUserToUserResponse(user));
             }
 
             return ResponseEntity.status(200).body(userResponses);
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-            return ResponseEntity.badRequest().body(new ExceptionResponse("Unable to get users"));
         }
+
+        List<UserForClientResponse> userForClientResponses = new ArrayList<>();
+        for (User user : users) {
+            userForClientResponses.add(mapUserToUserForClientResponse(user));
+        }
+
+        return ResponseEntity.status(200).body(userForClientResponses);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity getUserById(@PathVariable int id) {
-        try {
-            User user = userService.getUserById(id);
-            if (userService.getBearerUserRole() == Role.USER && !userService.getBearerUsername().equals(user.getUsername())) {
-                return ResponseEntity.status(200).body(mapUserToUserForClientResponse(user));
-            }
-            return ResponseEntity.status(200).body(mapUserToUserResponse(user));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new ExceptionResponse("Unable to get user"));
+        User user = userService.getUserById(id);
+        if (userService.getBearerUserRole() == Role.USER && !userService.getBearerUsername().equals(user.getUsername())) {
+            return ResponseEntity.status(200).body(mapUserToUserForClientResponse(user));
         }
+        return ResponseEntity.status(200).body(mapUserToUserResponse(user));
     }
 
     @PostMapping
     public ResponseEntity addUser(@RequestBody UserForAdminRequest request) throws AuthenticationException, IllegalArgumentException {
         // Check if request exists.
-        if (request == null) {
+        if (!isUserForAdminRequestValid(request)) {
+            System.out.println("Request is empty");
             return ResponseEntity.badRequest().body(new ExceptionResponse("Request is empty"));
         }
 
@@ -89,8 +82,8 @@ public class UserController {
                     request.getEmail(),
                     request.getUsername(),
                     request.getPassword(),
-                    request.getFirst_name(),
-                    request.getLast_name(),
+                    request.getFirstname(),
+                    request.getLastname(),
                     request.getBsn(),
                     request.getPhone_number(),
                     request.getBirth_date()
@@ -110,8 +103,8 @@ public class UserController {
                     request.getEmail(),
                     request.getUsername(),
                     request.getPassword(),
-                    request.getFirst_name(),
-                    request.getLast_name(),
+                    request.getFirstname(),
+                    request.getLastname(),
                     request.getBsn(),
                     request.getPhone_number(),
                     request.getBirth_date()
@@ -155,7 +148,7 @@ public class UserController {
     }
 
     private UserResponse mapUserToUserResponse(User user) {
-        AccountResponse currentAccountResponse;
+        AccountResponse currentAccountResponse = null;
         if (user.getCurrentAccount() != null) {
             currentAccountResponse = new AccountResponse(
                     user.getCurrentAccount().getId(),
@@ -165,11 +158,9 @@ public class UserController {
                     user.getCurrentAccount().isActive(),
                     user.getCurrentAccount().getBalance()
             );
-        } else {
-            currentAccountResponse = null;
         }
 
-        AccountResponse savingAccountResponse;
+        AccountResponse savingAccountResponse = null;
         if (user.getSavingAccount() != null) {
             savingAccountResponse = new AccountResponse(
                     user.getSavingAccount().getId(),
@@ -179,14 +170,13 @@ public class UserController {
                     user.getSavingAccount().isActive(),
                     user.getSavingAccount().getBalance()
             );
-        } else {
-            savingAccountResponse = null;
         }
 
         String dateOfBirth = user.getDateOfBirth().toString();
 
         return new UserResponse(
                 user.getId(),
+                user.getUsername(),
                 user.getEmail(),
                 user.getFirstName(),
                 user.getLastName(),
@@ -208,5 +198,9 @@ public class UserController {
                 user.getLastName(),
                 user.getCurrentAccount() == null ? null : user.getCurrentAccount().getIBAN().toString()
         );
+    }
+
+    private boolean isUserForAdminRequestValid(UserRequest request) {
+        return request.getEmail() != null && request.getUsername() != null && request.getPassword() != null;
     }
 }

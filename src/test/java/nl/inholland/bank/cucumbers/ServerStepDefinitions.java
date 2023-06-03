@@ -3,6 +3,8 @@ package nl.inholland.bank.cucumbers;
 import com.jayway.jsonpath.JsonPath;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.After;
+import io.cucumber.java.Before;
+import io.cucumber.java.BeforeAll;
 import io.cucumber.java.Scenario;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
@@ -18,15 +20,19 @@ import org.springframework.util.Assert;
 import java.util.List;
 
 public class ServerStepDefinitions extends BaseStepDefinitions {
+
+    @Before
+    public static void beforeEach() {
+        StorageForTestsInstance.getInstance().setJwt(null);
+        StorageForTestsInstance.getInstance().setResponse(null);
+    }
+
     @Given("The endpoint for {string} is available for method {string}")
     public void theEndpointForIsAvailableForMethod(String endpoint, String method) {
         if (StorageForTestsInstance.getInstance().getJwt() != null) {
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.setBearerAuth(StorageForTestsInstance.getInstance().getJwt().access_token());
         }
-
-        // print headers
-        System.out.println(headers);
 
         StorageForTestsInstance.getInstance().setResponse(restTemplate.exchange(
                 "/" + endpoint,
@@ -35,9 +41,8 @@ public class ServerStepDefinitions extends BaseStepDefinitions {
                 String.class
         ));
 
-        System.out.println(StorageForTestsInstance.getInstance().getResponse().getHeaders().get("Allow").get(0).replaceAll("]", "").split(","));
-
         List<String> options = List.of(StorageForTestsInstance.getInstance().getResponse().getHeaders().get("Allow").get(0).replaceAll("]", "").split(","));
+        System.out.println("Options: "+ options);
         Assertions.assertTrue(options.contains(method.toUpperCase()));
     }
     @And("I get HTTP status {int}")

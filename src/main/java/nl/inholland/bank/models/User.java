@@ -1,10 +1,12 @@
 package nl.inholland.bank.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import lombok.ToString;
 import nl.inholland.bank.models.exceptions.OperationNotAllowedException;
 import org.springframework.lang.NonNullFields;
 
@@ -40,6 +42,8 @@ public class User {
     @NonNull
     private String username;
     @NonNull
+    @ToString.Exclude
+    @JsonIgnore // Better safe than sorry
     private String password;
     @NonNull
     private Role role;
@@ -176,7 +180,7 @@ public class User {
         // - Must contain at least one lowercase character
         // - Must contain at least one uppercase character
         // - Must contain at least one special character
-        if (!password.matches("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*()_+-={}:;'\",./<>?]).{8,}$")) {
+        if (!password.matches("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*()_+={}:;'\",.<>?]).{8,}$")) {
             throw new IllegalArgumentException("Password must contain at least one digit, one lowercase character, one uppercase character and one special character");
         }
 
@@ -198,7 +202,7 @@ public class User {
             throw new OperationNotAllowedException("User already has a current account");
         }
 
-        if (currentAccount.getType() != AccountType.CURRENT) {
+        if (currentAccount.getType() == null || currentAccount.getType() != AccountType.CURRENT) {
             throw new IllegalArgumentException("Account type must be CURRENT");
         }
 
@@ -211,15 +215,18 @@ public class User {
         if (savingAccount == null && this.savingAccount.getBalance() > 0) {
             throw new OperationNotAllowedException("Cannot remove saving account with balance");
         }
-        else if (savingAccount != null) {
-            if (savingAccount.getType() != AccountType.SAVING) {
-                throw new IllegalArgumentException("Account type must be SAVING");
-            }
 
-            // We cannot set saving account, if user does not have a current account.
-            if (this.currentAccount == null) {
-                throw new OperationNotAllowedException("Cannot set saving account without current account");
-            }
+        if (savingAccount.getType() == null || savingAccount.getType() != AccountType.SAVING) {
+            throw new IllegalArgumentException("Account type must be SAVING");
+        }
+
+        // We cannot set saving account, if user does not have a current account.
+        if (this.currentAccount == null) {
+            throw new OperationNotAllowedException("Cannot set saving account without current account");
+        }
+
+        if (!this.currentAccount.isActive()) {
+            throw new OperationNotAllowedException("Cannot set saving account when current account is inactive");
         }
 
         this.savingAccount = savingAccount;
