@@ -59,7 +59,10 @@ public class TransactionService {
 
     public Transaction withdrawMoney(WithdrawDepositRequest withdrawDepositRequest) throws AccountNotFoundException, InsufficientResourcesException, AuthenticationException, UserNotTheOwnerOfAccountException {
         Account accountSender = accountService.getAccountByIban(withdrawDepositRequest.IBAN());
-        User user = userService.getUserById(withdrawDepositRequest.userId());
+        User user = null;
+        if (userRepository.findUserByUsername(userService.getBearerUsername()).isPresent()) {
+            user = userRepository.findUserByUsername(userService.getBearerUsername()).get();
+        }
         String performerUserName = userService.getBearerUsername();
 
         // This checks if the user is the owner of the account from the request body
@@ -94,7 +97,10 @@ public class TransactionService {
 
     public Transaction depositMoney(WithdrawDepositRequest depositRequest) throws AccountNotFoundException, AuthenticationException, UserNotTheOwnerOfAccountException, InsufficientResourcesException {
         Account accountReceiver = accountService.getAccountByIban(depositRequest.IBAN());
-        User user = userService.getUserById(depositRequest.userId());
+        User user = null;
+        if (userRepository.findUserByUsername(userService.getBearerUsername()).isPresent()) {
+            user = userRepository.findUserByUsername(userService.getBearerUsername()).get();
+        }
         String performerUserName = userService.getBearerUsername();
 
         if (!isTransactionAuthorizedForUserAccount(user, accountReceiver)) {
@@ -131,10 +137,6 @@ public class TransactionService {
         if (user.getLimits().getTransactionLimit() < amount) {
             throw new InsufficientResourcesException("You have exceeded your transaction limit");
         }
-    }
-
-    public boolean checkAccountExist(Account account) {
-        return account != null;
     }
 
     /**

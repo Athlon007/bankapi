@@ -74,11 +74,7 @@ public class AccountController {
             throw new AuthenticationException("Unauthorized");
         } else {
             try {
-                System.out.println(accountRequest);
-
                 Account account = accountService.addAccount(accountRequest);
-
-                System.out.println(account);
 
                 AccountResponse accountResponse = new AccountResponse(
                         account.getId(),
@@ -98,7 +94,7 @@ public class AccountController {
 
     @PutMapping("/{userId}/{id}")
     public ResponseEntity activateAccount(@PathVariable int userId, @PathVariable int id,
-                                          @RequestBody Boolean isActive) throws AuthenticationException {
+                                          @RequestBody AccountActiveRequest accountActiveRequest) throws AuthenticationException {
         if (userService.getBearerUserRole() != Role.EMPLOYEE && userService.getBearerUserRole() != Role.ADMIN) {
             throw new AuthenticationException("Unauthorized");
         } else {
@@ -110,7 +106,7 @@ public class AccountController {
                     return ResponseEntity.status(401).body("Unauthorized");
                 }
 
-                accountService.activateOrDeactivateTheAccount(account, isActive);
+                accountService.activateOrDeactivateTheAccount(account, accountActiveRequest);
 
                 AccountResponse accountResponse = new AccountResponse(
                         account.getId(),
