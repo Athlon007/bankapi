@@ -93,13 +93,6 @@ public class JwtTokenProvider {
 
             // Expire old refresh token.
             refreshTokenBlacklistService.blacklist(refreshToken);
-
-            // Return only if token is still valid.
-            if (claims.getBody().getExpiration().after(new Date())) {
-                return claims.getBody().getSubject();
-            } else {
-                throw new AuthenticationException("Refresh token is expired.");
-            }
         } catch (Exception e) {
             throw e;
         }
