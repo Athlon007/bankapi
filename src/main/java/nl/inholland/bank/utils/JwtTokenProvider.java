@@ -93,6 +93,8 @@ public class JwtTokenProvider {
 
             // Expire old refresh token.
             refreshTokenBlacklistService.blacklist(refreshToken);
+
+            return claims.getBody().getSubject();
         } catch (Exception e) {
             throw e;
         }
