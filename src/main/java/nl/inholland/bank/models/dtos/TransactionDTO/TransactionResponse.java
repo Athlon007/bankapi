@@ -7,5 +7,5 @@ import org.iban4j.Iban;
 import java.time.LocalDateTime;
 
 public record TransactionResponse(long id, String username, @JsonInclude(JsonInclude.Include.NON_NULL) String sender_iban, @JsonInclude(JsonInclude.Include.NON_NULL)
-String receiver_iban, double amount, LocalDateTime timestamp, String description, TransactionType transactionType) {
+String receiver_iban, double amount, LocalDateTime timestamp, String description, TransactionType transactionType, @JsonInclude(JsonInclude.Include.NON_NULL) Double balance) {
 }

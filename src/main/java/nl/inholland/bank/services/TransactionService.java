@@ -139,10 +139,6 @@ public class TransactionService {
         }
     }
 
-    public boolean checkAccountExist(Account account) {
-        return account != null;
-    }
-
     /**
      * Processes the transaction and checks for requirements.
      *
