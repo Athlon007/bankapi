@@ -54,6 +54,7 @@ public class UserDTOsTests {
         userRequest.setLastname("lastname2");
         userRequest.setPhone_number("phone2");
         userRequest.setBirth_date("2002");
+        userRequest.setRole("role2");
     }
 
     @Test

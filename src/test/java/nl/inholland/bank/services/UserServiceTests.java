@@ -1,10 +1,7 @@
 package nl.inholland.bank.services;
 
 import nl.inholland.bank.configuration.ApiTestConfiguration;
-import nl.inholland.bank.models.Limits;
-import nl.inholland.bank.models.Role;
-import nl.inholland.bank.models.Token;
-import nl.inholland.bank.models.User;
+import nl.inholland.bank.models.*;
 import nl.inholland.bank.models.dtos.AuthDTO.LoginRequest;
 import nl.inholland.bank.models.dtos.AuthDTO.RefreshTokenRequest;
 import nl.inholland.bank.models.dtos.AuthDTO.jwt;
@@ -13,35 +10,26 @@ import nl.inholland.bank.models.dtos.UserDTO.UserRequest;
 import nl.inholland.bank.repositories.AccountRepository;
 import nl.inholland.bank.repositories.UserRepository;
 import nl.inholland.bank.utils.JwtTokenProvider;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.util.Assert;
 
 import javax.naming.AuthenticationException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-
-import static org.hamcrest.Matchers.any;
 
 @ExtendWith(SpringExtension.class)
 @Import(ApiTestConfiguration.class)
@@ -69,6 +57,8 @@ class UserServiceTests {
     private LoginRequest loginRequest;
     private Token token;
     private RefreshTokenRequest refreshTokenRequest;
+    private Account currentAccount;
+    private Account savingAccount;
 
     private int defaultDailyTransactionLimit = 100;
     private int defaultTransactionLimit = 1000;
@@ -103,6 +93,24 @@ class UserServiceTests {
         user2.setPassword("Password1!");
         user2.setRole(Role.USER);
         user2.setBsn("123456782");
+
+        currentAccount = new Account();
+        currentAccount.setType(AccountType.CURRENT);
+        currentAccount.setBalance(1000);
+        currentAccount.setIBAN("NL01INHO0000000001");
+        currentAccount.setUser(user);
+        currentAccount.setId(1);
+        currentAccount.setCurrencyType(CurrencyType.EURO);
+        currentAccount.setActive(true);
+
+        savingAccount = new Account();
+        savingAccount.setType(AccountType.SAVING);
+        savingAccount.setBalance(1000);
+        savingAccount.setIBAN("NL01INHO0000000002");
+        savingAccount.setUser(user);
+        savingAccount.setId(1);
+        savingAccount.setCurrencyType(CurrencyType.EURO);
+        savingAccount.setActive(true);
 
 
         limits = new Limits();
@@ -436,5 +444,156 @@ class UserServiceTests {
 
         Exception e = Assertions.assertThrows(IllegalArgumentException.class, () -> userService.updateUser(user.getId(), userRequest));
         Assertions.assertEquals("Email already exists.", e.getMessage());
+    }
+
+    @Test
+    void updatingUserAsUserThatIsNotHimselfThrowsAuthenticationException() throws AuthenticationException {
+        Mockito.when(mockJwtTokenProvider.getRole()).thenReturn(Role.USER);
+        Mockito.when(mockJwtTokenProvider.getUsername()).thenReturn("otherperson");
+        Mockito.when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        Mockito.when(userRepository.save(user)).thenReturn(user);
+        Mockito.when(userLimitsService.getUserLimitsNoAuth(user.getId())).thenReturn(limits);
+        Mockito.when(bCryptPasswordEncoder.encode(user.getPassword())).thenReturn("fu942hjf89!$(@*9jfj489HJ*F9498");
+
+        Exception e = Assertions.assertThrows(AuthenticationException.class, () -> userService.updateUser(user.getId(), userRequest));
+        Assertions.assertEquals("You are not authorized to update this user.", e.getMessage());
+    }
+
+    @Test
+    void updatingAdminAsEmployeeThrowsAuthenticationException() throws AuthenticationException {
+        Mockito.when(mockJwtTokenProvider.getRole()).thenReturn(Role.EMPLOYEE);
+        Mockito.when(mockJwtTokenProvider.getUsername()).thenReturn("otherperson");
+        Mockito.when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        Mockito.when(userRepository.save(user)).thenReturn(user);
+        Mockito.when(userLimitsService.getUserLimitsNoAuth(user.getId())).thenReturn(limits);
+        Mockito.when(bCryptPasswordEncoder.encode(user.getPassword())).thenReturn("fu942hjf89!$(@*9jfj489HJ*F9498");
+
+        user.setRole(Role.ADMIN);
+
+        Exception e = Assertions.assertThrows(AuthenticationException.class, () -> userService.updateUser(user.getId(), userRequest));
+        Assertions.assertEquals("You are not authorized to update this user.", e.getMessage());
+    }
+
+    @Test
+    void updatingUserNoPasswordShouldReturnUpdatedUser() throws AuthenticationException {
+        Mockito.when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        Mockito.when(userRepository.save(user)).thenReturn(user);
+        Mockito.when(userLimitsService.getUserLimitsNoAuth(user.getId())).thenReturn(limits);
+        Mockito.when(bCryptPasswordEncoder.encode(user.getPassword())).thenReturn("fu942hjf89!$(@*9jfj489HJ*F9498");
+
+        userRequest.setPassword(null);
+
+        User updatedUser = userService.updateUser(user.getId(), userRequest);
+        Assertions.assertEquals(user, updatedUser);
+    }
+
+    @Test
+    void updatingUserWithoutBirthdateShouldThrowIllegalArgumentException() throws AuthenticationException {
+        Mockito.when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        Mockito.when(userRepository.save(user)).thenReturn(user);
+        Mockito.when(userLimitsService.getUserLimitsNoAuth(user.getId())).thenReturn(limits);
+        Mockito.when(bCryptPasswordEncoder.encode(user.getPassword())).thenReturn("fu942hjf89!$(@*9jfj489HJ*F9498");
+
+        userRequest.setBirth_date(null);
+
+        Exception e = Assertions.assertThrows(IllegalArgumentException.class, () -> userService.updateUser(user.getId(), userRequest));
+        Assertions.assertEquals("Birth date is required.", e.getMessage());
+    }
+
+    @Test
+    void updatingUserWithWrongDateFormatShouldThrowIllegalArgumentException() throws AuthenticationException {
+        Mockito.when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        Mockito.when(userRepository.save(user)).thenReturn(user);
+        Mockito.when(userLimitsService.getUserLimitsNoAuth(user.getId())).thenReturn(limits);
+        Mockito.when(bCryptPasswordEncoder.encode(user.getPassword())).thenReturn("fu942hjf89!$(@*9jfj489HJ*F9498");
+
+        userRequest.setBirth_date("00-212-334");
+
+        Exception e = Assertions.assertThrows(IllegalArgumentException.class, () -> userService.updateUser(user.getId(), userRequest));
+        Assertions.assertEquals("Birth date must be in format yyyy-MM-dd", e.getMessage());
+    }
+
+    @Test
+    void updatingUserWithInvalidPasswordThrowsIllegalArgumentException() throws AuthenticationException {
+        Mockito.when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        Mockito.when(userRepository.save(user)).thenReturn(user);
+        Mockito.when(userLimitsService.getUserLimitsNoAuth(user.getId())).thenReturn(limits);
+        Mockito.when(bCryptPasswordEncoder.encode(user.getPassword())).thenReturn("fu942hjf89!$(@*9jfj489HJ*F9498");
+
+        userRequest.setPassword("123");
+
+        Exception e = Assertions.assertThrows(IllegalArgumentException.class, () -> userService.updateUser(user.getId(), userRequest));
+        Assertions.assertEquals("Password is not valid.", e.getMessage());
+    }
+
+    @Test
+    void updatingUserRoleAsAdminShouldReturnUpdatedUser() throws AuthenticationException {
+        Mockito.when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        Mockito.when(userRepository.save(user)).thenReturn(user);
+        Mockito.when(userLimitsService.getUserLimitsNoAuth(user.getId())).thenReturn(limits);
+        Mockito.when(bCryptPasswordEncoder.encode(user.getPassword())).thenReturn("fu942hjf89!$(@*9jfj489HJ*F9498");
+        Mockito.when(mockJwtTokenProvider.getRole()).thenReturn(Role.ADMIN);
+
+        userForAdminRequest.setRole("admin");
+
+        User updatedUser = userService.updateUser(user.getId(), userForAdminRequest);
+        Assertions.assertEquals(user, updatedUser);
+    }
+
+    @Test
+    void updatingUserRoleAsNonAdminThrowsAuthenticationException() throws AuthenticationException {
+        Mockito.when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        Mockito.when(userRepository.save(user)).thenReturn(user);
+        Mockito.when(userLimitsService.getUserLimitsNoAuth(user.getId())).thenReturn(limits);
+        Mockito.when(bCryptPasswordEncoder.encode(user.getPassword())).thenReturn("fu942hjf89!$(@*9jfj489HJ*F9498");
+        Mockito.when(mockJwtTokenProvider.getRole()).thenReturn(Role.USER);
+
+        userForAdminRequest.setRole("admin");
+
+        Exception e = Assertions.assertThrows(AuthenticationException.class, () -> userService.updateUser(user.getId(), userForAdminRequest));
+        Assertions.assertEquals("You are not authorized to change the role of a user.", e.getMessage());
+    }
+
+    @Test
+    void deletingUserAsAdminShouldSucceed() throws AuthenticationException {
+        Mockito.when(mockJwtTokenProvider.getRole()).thenReturn(Role.ADMIN);
+        Mockito.when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        Mockito.when(userLimitsService.getUserLimitsNoAuth(user.getId())).thenReturn(limits);
+
+        userService.deleteUser(user.getId());
+    }
+
+    @Test
+    void deletingAdminAsNonAdminThrowsAuthenticationException() {
+        Mockito.when(mockJwtTokenProvider.getRole()).thenReturn(Role.USER);
+        Mockito.when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        Mockito.when(userLimitsService.getUserLimitsNoAuth(user.getId())).thenReturn(limits);
+
+        user.setRole(Role.ADMIN);
+
+        Exception e = Assertions.assertThrows(AuthenticationException.class, () -> userService.deleteUser(user.getId()));
+        Assertions.assertEquals("You are not authorized to delete admins as non-admin user.", e.getMessage());
+    }
+
+    @Test
+    void deactivatingUserWithAccountShouldSucceed() throws AuthenticationException {
+        Mockito.when(mockJwtTokenProvider.getRole()).thenReturn(Role.ADMIN);
+        Mockito.when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        Mockito.when(userLimitsService.getUserLimitsNoAuth(user.getId())).thenReturn(limits);
+
+        user.setCurrentAccount(currentAccount);
+        user.setSavingAccount(savingAccount);
+
+        userService.deleteUser(user.getId());
+    }
+
+    @Test
+    void deletingOtherUserAsUserThrowsAuthenticationException() {
+        Mockito.when(mockJwtTokenProvider.getRole()).thenReturn(Role.USER);
+        Mockito.when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        Mockito.when(userLimitsService.getUserLimitsNoAuth(user.getId())).thenReturn(limits);
+
+        Exception e = Assertions.assertThrows(AuthenticationException.class, () -> userService.deleteUser(user.getId()));
+        Assertions.assertEquals("You are not authorized to delete this user.", e.getMessage());
     }
 }
