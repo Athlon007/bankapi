@@ -93,5 +93,7 @@ public class ApplicationDataInitializer implements ApplicationRunner {
                 "CURRENT",
                 3);
         accountService.addAccount(accountRequest2);
+
+        System.out.println("=== Application Initialized ===");
     }
 }

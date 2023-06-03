@@ -115,9 +115,7 @@ public class JwtTokenProvider {
             return null;
         }
 
-        return (Role) authentication.getAuthorities().stream().findFirst().orElseThrow(
-                () -> new RuntimeException("No role found in authentication.")
-        );
+        return (Role) authentication.getAuthorities().stream().findFirst().get();
     }
 
     public void clearAuthentication() {

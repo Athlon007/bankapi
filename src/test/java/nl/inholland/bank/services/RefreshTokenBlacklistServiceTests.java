@@ -15,7 +15,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 @ExtendWith(SpringExtension.class)
 @Import(ApiTestConfiguration.class)
 @AutoConfigureMockMvc(addFilters = false)
-public class RefreshTokenBlacklistServiceTests {
+class RefreshTokenBlacklistServiceTests {
     private RefreshTokenBlacklistService refreshTokenBlacklistService;
 
     @MockBean
