@@ -62,6 +62,7 @@ class UserServiceTests {
     private JwtTokenProvider mockJwtTokenProvider;
 
     private User user;
+    private User user2;
     private UserRequest userRequest;
     private UserForAdminRequest userForAdminRequest;
     private Limits limits;
@@ -90,6 +91,19 @@ class UserServiceTests {
         user.setPassword("Password1!");
         user.setRole(Role.USER);
         user.setBsn("123456782");
+
+        user2 = new User();
+        user2.setId(2);
+        user2.setUsername("user2");
+        user2.setEmail("email2@ex.com");
+        user2.setFirstName("second");
+        user2.setLastName("last");
+        user2.setPhoneNumber("0612345678");
+        user2.setDateOfBirth(LocalDate.of(2000, 9, 8));
+        user2.setPassword("Password1!");
+        user2.setRole(Role.USER);
+        user2.setBsn("123456782");
+
 
         limits = new Limits();
         limits.setTransactionLimit(1000);
@@ -376,5 +390,51 @@ class UserServiceTests {
     @Test
     void providingTooShortPaswordReturnFalse() {
         Assertions.assertFalse(userService.isPasswordValid("Pass1!"));
+    }
+
+    @Test
+    void updatingUserShouldReturnUpdatedUser() throws AuthenticationException {
+        Mockito.when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        Mockito.when(userRepository.save(user)).thenReturn(user);
+        Mockito.when(userLimitsService.getUserLimitsNoAuth(user.getId())).thenReturn(limits);
+        Mockito.when(bCryptPasswordEncoder.encode(user.getPassword())).thenReturn("fu942hjf89!$(@*9jfj489HJ*F9498");
+
+        User updatedUser = userService.updateUser(user.getId(), userRequest);
+        Assertions.assertEquals(user, updatedUser);
+    }
+
+    @Test
+    void updatingUserWithRoleAsNormalUserThrowsAuthenticationException() {
+        Mockito.when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        Mockito.when(userRepository.save(user)).thenReturn(user);
+        Mockito.when(userLimitsService.getUserLimitsNoAuth(user.getId())).thenReturn(limits);
+        Mockito.when(bCryptPasswordEncoder.encode(user.getPassword())).thenReturn("fu942hjf89!$(@*9jfj489HJ*F9498");
+        Mockito.when(mockJwtTokenProvider.getRole()).thenReturn(Role.USER);
+
+        Exception e = Assertions.assertThrows(AuthenticationException.class, () -> userService.updateUser(user.getId(), userForAdminRequest));
+        Assertions.assertEquals("You are not authorized to change the role of a user.", e.getMessage());
+    }
+
+    @Test
+    void updatingUserUsernameWithAlreadyExistingUsernameThrowsIllegalArgumentException() {
+        Mockito.when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        Mockito.when(userRepository.findUserByUsername("user2")).thenReturn(Optional.of(user2));
+        userRequest.setUsername("user2");
+
+        Exception e = Assertions.assertThrows(IllegalArgumentException.class, () -> userService.updateUser(user.getId(), userRequest));
+        Assertions.assertEquals("Username already exists.", e.getMessage());
+    }
+
+    @Test
+    void updatingUserEmailWithAlreadyExistingUsernameThrowsIllegalArgumentException() {
+        userRequest.setEmail("email2@ex.com");
+
+        Mockito.when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        Mockito.when(userRepository.findUserByUsername("user2")).thenReturn(Optional.of(user2));
+
+        Mockito.when(userRepository.existsByEmail("email2@ex.com")).thenReturn(true);
+
+        Exception e = Assertions.assertThrows(IllegalArgumentException.class, () -> userService.updateUser(user.getId(), userRequest));
+        Assertions.assertEquals("Email already exists.", e.getMessage());
     }
 }
