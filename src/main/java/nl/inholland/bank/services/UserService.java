@@ -170,6 +170,7 @@ public class UserService {
         LocalDate dateOfBirth = LocalDate.parse(userRequest.getBirth_date(), DateTimeFormatter.ofPattern("yyyy-MM-dd"));
         user.setDateOfBirth(dateOfBirth);
         user.setUsername(userRequest.getUsername());
+        user.setPassword(userRequest.getPassword());
         user.setPassword(bCryptPasswordEncoder.encode(userRequest.getPassword()));
         user.setRole(Role.USER);
         if (userRequest instanceof UserForAdminRequest userForAdminRequest) {
