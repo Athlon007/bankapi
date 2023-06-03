@@ -36,7 +36,7 @@ public class AccountTests {
                         Role.EMPLOYEE),
                 0,
                 CurrencyType.EURO,
-                "NL01INHO0000000001",
+                IBANGenerator.generateIBAN().toString(),
                 AccountType.CURRENT);
         transactionService = Mockito.mock(TransactionService.class);
 
@@ -103,7 +103,7 @@ public class AccountTests {
             AccountService accountService = Mockito.mock(AccountService.class);
             accountService.createAccount(
                     null,
-                    "NL01INHO0000000001",
+
                     AccountType.CURRENT,
                     CurrencyType.EURO
             );

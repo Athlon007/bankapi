@@ -37,8 +37,8 @@ public class AccountStepDefinitions extends BaseStepDefinitions{
         ));
     }
 
-    @Given("I call the application accounts end point with IBAN {string}, currencyType {string}, accountType {string}, userId {int}")
-    public void iCallTheApplicationAccountsEndPointWithIBANCurrencyTypeAccountTypeUserId(String IBAN, String currencyType, String accountType, int userId) {
+    @Given("I call the application accounts end point with currencyType {string}, accountType {string}, userId {int}")
+    public void iCallTheApplicationAccountsEndPointWithIBANCurrencyTypeAccountTypeUserId(String currencyType, String accountType, int userId) {
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         if (StorageForTestsInstance.getInstance().getJwt() != null) {
@@ -46,7 +46,6 @@ public class AccountStepDefinitions extends BaseStepDefinitions{
         }
 
         AccountRequest accountRequest = new AccountRequest(
-                IBAN,
                 currencyType,
                 accountType,
                 userId
@@ -60,15 +59,14 @@ public class AccountStepDefinitions extends BaseStepDefinitions{
         ));
     }
 
-    @And("I get an account's IBAN {string} and currencyType {string} and accountType {string} and id {int}")
-    public void iGetAnAccountSIBANAndCurrencyTypeAndAccountTypeAndId(String IBAN, String currencyType, String accountType, int id) throws JsonProcessingException {
+    @And("I get account's currencyType {string} and accountType {string} and id {int}")
+    public void iGetAnAccountSIBANAndCurrencyTypeAndAccountTypeAndId(String currencyType, String accountType, int id) throws JsonProcessingException {
         // get the account response
         AccountResponse accountResponse = objectMapper.readValue(
                 StorageForTestsInstance.getInstance().getResponse().getBody().toString(),
                 AccountResponse.class
         );
 
-        Assert.isTrue(accountResponse.IBAN().equals(IBAN), "IBAN is " + IBAN);
         Assert.isTrue(accountResponse.currency_type().equals(currencyType), "currencyType is " + currencyType);
         Assert.isTrue(accountResponse.account_type().equals(accountType), "accountType is " + accountType);
         Assert.isTrue(accountResponse.id() == id, "id is " + id);

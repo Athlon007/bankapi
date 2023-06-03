@@ -4,6 +4,7 @@ import nl.inholland.bank.models.*;
 import nl.inholland.bank.models.dtos.AccountDTO.AccountRequest;
 import nl.inholland.bank.repositories.AccountRepository;
 import org.hibernate.ObjectNotFoundException;
+import org.iban4j.Iban;
 import org.springframework.stereotype.Service;
 
 import javax.naming.AuthenticationException;
@@ -22,10 +23,10 @@ public class AccountService {
         this.userService = userService;
     }
 
-    public Account createAccount(User user, String IBAN, AccountType accountType, CurrencyType currencyType) {
+    public Account createAccount(User user, AccountType accountType, CurrencyType currencyType) {
         Account account = new Account();
         account.setUser(user);
-        account.setIBAN(IBAN);
+        account.setIBAN(IBANGenerator.generateIBAN().toString());
         account.setType(accountType);
         account.setCurrencyType(currencyType);
         account.setBalance(0);
@@ -52,10 +53,6 @@ public class AccountService {
         User user = null;
         user = userService.getUserById(accountRequest.userId());
 
-        if (!IBANGenerator.isValidIBAN(accountRequest.IBAN())) {
-            throw new IllegalArgumentException("IBAN is not valid");
-        }
-
         AccountType accountType = mapAccountTypeToString(accountRequest.accountType());
         if (accountType == AccountType.CURRENT) {
             if (doesUserHaveAccountType(user, AccountType.CURRENT)) {
@@ -72,7 +69,6 @@ public class AccountService {
 
         Account account = createAccount(
                 user,
-                accountRequest.IBAN(),
                 accountType,
                 mapCurrencyTypeToString(accountRequest.currencyType())
         );

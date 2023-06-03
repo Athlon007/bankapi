@@ -6,6 +6,7 @@ import nl.inholland.bank.models.User;
 import nl.inholland.bank.models.dtos.AccountDTO.AccountActiveRequest;
 import nl.inholland.bank.models.dtos.AccountDTO.AccountRequest;
 import nl.inholland.bank.models.dtos.AccountDTO.AccountResponse;
+import nl.inholland.bank.models.dtos.ExceptionResponse;
 import nl.inholland.bank.services.AccountService;
 import nl.inholland.bank.services.UserService;
 import org.springframework.http.ResponseEntity;
@@ -51,7 +52,7 @@ public class AccountController {
                 for (Account account : accounts) {
                     AccountResponse accountResponse = new AccountResponse(
                             account.getId(),
-                            account.getIBAN(),
+                            account.getIBAN().toString(),
                             account.getCurrencyType().toString(),
                             account.getType().toString(),
                             account.isActive(),
@@ -62,7 +63,7 @@ public class AccountController {
                 return ResponseEntity.status(200).body(accountResponses);
             }
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body(new ExceptionResponse(e.getMessage()));
         }
     }
 
@@ -81,7 +82,7 @@ public class AccountController {
 
                 AccountResponse accountResponse = new AccountResponse(
                         account.getId(),
-                        account.getIBAN(),
+                        account.getIBAN().toString(),
                         account.getCurrencyType().toString(),
                         account.getType().toString(),
                         account.isActive(),
@@ -90,7 +91,7 @@ public class AccountController {
 
                 return ResponseEntity.status(201).body(accountResponse);
             } catch (Exception e) {
-                return ResponseEntity.badRequest().body(e.getMessage());
+                return ResponseEntity.badRequest().body(new ExceptionResponse(e.getMessage()));
             }
         }
     }
@@ -113,7 +114,7 @@ public class AccountController {
 
                 AccountResponse accountResponse = new AccountResponse(
                         account.getId(),
-                        account.getIBAN(),
+                        account.getIBAN().toString(),
                         account.getCurrencyType().toString(),
                         account.getType().toString(),
                         account.isActive(),
@@ -122,7 +123,7 @@ public class AccountController {
 
                 return ResponseEntity.status(200).body(accountResponse);
             } catch (Exception e) {
-                return ResponseEntity.badRequest().body(e.getMessage());
+                return ResponseEntity.badRequest().body(new ExceptionResponse(e.getMessage()));
             }
         }
     }
