@@ -366,4 +366,41 @@ class UserTests {
 
         Assertions.assertEquals("Cannot set saving account when current account is inactive", exception.getMessage());
     }
+
+    @Test
+    void gettingAndSettingId() {
+        user.setId(1);
+        Assertions.assertEquals(1, user.getId());
+    }
+
+    @Test
+    void gettingAndSettingFirstName() {
+        user.setFirstName("John");
+        Assertions.assertEquals("John", user.getFirstName());
+    }
+
+    @Test
+    void gettingAndSettingPhoneNumber() {
+        user.setPhoneNumber("0612345678");
+        Assertions.assertEquals("0612345678", user.getPhoneNumber());
+    }
+
+    @Test
+    void gettingAndSettingDateOfBirth() {
+        user.setDateOfBirth(LocalDate.of(1999, 1, 1));
+        Assertions.assertEquals(LocalDate.of(1999, 1, 1), user.getDateOfBirth());
+    }
+
+    @Test
+    void gettingAndSettingActive() {
+        user.setActive(true);
+        Assertions.assertTrue(user.isActive());
+    }
+
+    @Test
+    void gettingAndSettingUserLimits() {
+        Limits limits = new Limits();
+        user.setLimits(limits);
+        Assertions.assertEquals(limits, user.getLimits());
+    }
 }
