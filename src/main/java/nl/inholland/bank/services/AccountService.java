@@ -1,6 +1,7 @@
 package nl.inholland.bank.services;
 
 import nl.inholland.bank.models.*;
+import nl.inholland.bank.models.dtos.AccountDTO.AccountActiveRequest;
 import nl.inholland.bank.models.dtos.AccountDTO.AccountRequest;
 import nl.inholland.bank.repositories.AccountRepository;
 import org.hibernate.ObjectNotFoundException;
@@ -122,8 +123,8 @@ public class AccountService {
         return accountRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Account not found"));
     }
 
-    public void activateOrDeactivateTheAccount(Account account, boolean isActive) {
-        account.setActive(isActive);
+    public void activateOrDeactivateTheAccount(Account account, AccountActiveRequest accountActiveRequest) {
+        account.setActive(accountActiveRequest.isActive());
         accountRepository.save(account);
     }
 
