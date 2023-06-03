@@ -80,7 +80,6 @@ public class ApplicationDataInitializer implements ApplicationRunner {
         // ----------------
 
         AccountRequest accountRequest = new AccountRequest(
-                "NL01INHO0000000001",
                 "EURO",
                 "CURRENT",
                 1);
@@ -90,32 +89,9 @@ public class ApplicationDataInitializer implements ApplicationRunner {
         // Test for transfering money
         // Account for employee
         AccountRequest accountRequest2 = new AccountRequest(
-                "NL60INHO9935031775",
                 "EURO",
                 "CURRENT",
                 3);
         accountService.addAccount(accountRequest2);
-
-
-        //Transaction Withdraw and Deposit
-        WithdrawDepositRequest withdrawDepositRequest = new WithdrawDepositRequest(
-                "NL60INHO9935031775",
-                300,
-                CurrencyType.EURO,
-                3);
-
-        try {
-            transactionService.depositMoney(withdrawDepositRequest);
-        } catch (UserNotTheOwnerOfAccountException e) {
-            throw new RuntimeException(e);
-        }
-
-       Account accountSender = accountService.getAccountByIban(withdrawDepositRequest.IBAN());
-
-        try {
-            transactionService.withdrawMoney(withdrawDepositRequest);
-        } catch (UserNotTheOwnerOfAccountException e) {
-            throw new RuntimeException(e);
-        }
     }
 }
