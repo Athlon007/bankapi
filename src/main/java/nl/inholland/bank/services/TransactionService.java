@@ -144,6 +144,16 @@ public class TransactionService {
         // Check if accounts exists and get the corresponding accounts of the given IBANs
         Account accountSender = accountService.getAccountByIBAN(request.sender_iban());
         Account accountReceiver = accountService.getAccountByIBAN(request.receiver_iban());
+
+        if (accountSender == null)
+        {
+            throw new AccountNotFoundException("Account with IBAN (" + request.sender_iban() + ") not found.");
+        }
+        if (accountReceiver == null)
+        {
+            throw new AccountNotFoundException("Account with IBAN (" + request.receiver_iban() + ") not found.");
+        }
+
         double amount = request.amount();
 
         // Perform all requirements checks

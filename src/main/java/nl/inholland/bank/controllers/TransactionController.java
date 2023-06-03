@@ -63,23 +63,15 @@ public class TransactionController {
     }
 
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Object> transferMoney(@RequestBody TransactionRequest request)
-    {
-        try {
-            // Process transaction
-            Transaction transaction = transactionService.processTransaction(request);
+    public ResponseEntity<Object> transferMoney(@RequestBody TransactionRequest request) throws InsufficientResourcesException, UserNotTheOwnerOfAccountException, AccountNotFoundException {
+        // Process transaction
+        Transaction transaction = transactionService.processTransaction(request);
 
-            // Build the response
-            TransactionResponse response = buildTransactionResponse(transaction);
+        // Build the response
+        TransactionResponse response = buildTransactionResponse(transaction);
 
-            // Return the response
-            return ResponseEntity.status(201).body(response);
-        } catch (AccountNotFoundException | UserNotTheOwnerOfAccountException e) {
-            return ResponseEntity.status(400).body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(
-                    new ExceptionResponse(e.getMessage()));
-        }
+        // Return the response
+        return ResponseEntity.status(201).body(response);
     }
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
@@ -94,30 +86,22 @@ public class TransactionController {
             @RequestParam Optional<String> ibanReceiver,
             @RequestParam Optional<Integer> userSenderID,
             @RequestParam Optional<Integer> userReceiverID
-            )
-    {
-        try {
-            // Group values
-            TransactionSearchRequest request = new TransactionSearchRequest(
-                    minAmount, maxAmount, startDate, endDate, ibanSender, ibanReceiver, userSenderID, userReceiverID
-            );
+            ) throws AuthenticationException {
+        // Group values
+        TransactionSearchRequest request = new TransactionSearchRequest(
+                minAmount, maxAmount, startDate, endDate, ibanSender, ibanReceiver, userSenderID, userReceiverID
+        );
 
-            // Retrieve transactions
-            List<Transaction> transactions = transactionService.getTransactions(page, limit, request);
+        // Retrieve transactions
+        List<Transaction> transactions = transactionService.getTransactions(page, limit, request);
 
-            // Convert transactions to transactionResponses
-            List<TransactionResponse> transactionResponses = new ArrayList<>();
-            for (Transaction transaction : transactions) {
-                transactionResponses.add(buildTransactionResponse(transaction));
-            }
-
-            return ResponseEntity.status(200).body(transactionResponses);
-        } catch (AuthenticationException  | ObjectNotFoundException e) {
-            return ResponseEntity.status(400).body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(
-                    new ExceptionResponse("Unable to retrieve transactions. " + e.getMessage()));
+        // Convert transactions to transactionResponses
+        List<TransactionResponse> transactionResponses = new ArrayList<>();
+        for (Transaction transaction : transactions) {
+            transactionResponses.add(buildTransactionResponse(transaction));
         }
+
+        return ResponseEntity.status(200).body(transactionResponses);
     }
     @PostMapping("/deposit")
     public ResponseEntity<Object> depositMoney(
