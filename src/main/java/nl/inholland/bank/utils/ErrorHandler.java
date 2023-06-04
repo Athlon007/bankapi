@@ -22,9 +22,9 @@ import java.time.format.DateTimeFormatter;
 
 @RestControllerAdvice
 public class ErrorHandler {
-   private final String LOG_FILE_TEMPLATE = "log/error-%s.log";
+   public static final String LOG_FILE_TEMPLATE = "log/error-%s.log";
 
-    private void writeToFile(Exception e) {
+    public void writeToFile(Exception e) {
         // Create directory if it doesn't exist.
         String logDir = System.getProperty("user.dir") + "/log";
         new java.io.File(logDir).mkdir();

@@ -1,5 +1,6 @@
 package nl.inholland.bank.models.dtos.UserDTO;
 
+
 public class UserForAdminRequest extends UserRequest {
     private String role;
 
@@ -10,5 +11,8 @@ public class UserForAdminRequest extends UserRequest {
 
     public String getRole() {
         return role;
+    }
+    public void setRole(String role) {
+        this.role = role;
     }
 }

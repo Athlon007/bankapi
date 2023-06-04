@@ -41,7 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(UserController.class)
 @Import(ApiTestConfiguration.class)
 @AutoConfigureMockMvc(addFilters = false)
-public class UserControllerTests {
+class UserControllerTests {
     @Autowired
     private MockMvc mockMvc;
 
