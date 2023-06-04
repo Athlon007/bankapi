@@ -81,7 +81,7 @@ class UserControllerTests {
         Account currentAccount = new Account();
         currentAccount.setType(AccountType.CURRENT);
         currentAccount.setBalance(1000);
-        currentAccount.setIBAN("NL01INHO0000000001");
+        currentAccount.setIBAN("NL62INHO2395766879");
         currentAccount.setUser(mockUser);
         currentAccount.setId(1);
         currentAccount.setCurrencyType(CurrencyType.EURO);
@@ -91,7 +91,7 @@ class UserControllerTests {
         Account savingAccount = new Account();
         savingAccount.setType(AccountType.SAVING);
         savingAccount.setBalance(1000);
-        savingAccount.setIBAN("NL01INHO0000000002");
+        savingAccount.setIBAN("NL04INHO2539494278");
         savingAccount.setUser(mockUser);
         savingAccount.setId(1);
         savingAccount.setCurrencyType(CurrencyType.EURO);
