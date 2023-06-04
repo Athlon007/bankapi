@@ -50,6 +50,9 @@ class TransactionServiceTest {
         Account accountReceiver = new Account();
         Transaction transaction = new Transaction();
 
+        accountSender.setBalance(1000.0);
+        accountReceiver.setBalance(1000.0);
+
         // Set up mock behaviors
         when(userRepository.findUserByUsername(userService.getBearerUsername())).thenReturn(java.util.Optional.of(user));
         when(accountService.getAccountByIBAN(request.sender_iban())).thenReturn(accountSender);
