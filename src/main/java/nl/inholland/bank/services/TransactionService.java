@@ -26,15 +26,17 @@ public class TransactionService {
     private final UserRepository userRepository;
     private final UserService userService;
     private final AccountService accountService;
+    private final UserLimitsService userLimitsService;
 
     private static final LocalDateTime EARLIEST_TIME = LocalDateTime.of(1, 1, 1, 0, 0, 0);
 
     public TransactionService(TransactionRepository transactionRepository, UserRepository userRepository, UserService userService,
-                              AccountService accountService) {
+                              AccountService accountService, UserLimitsService userLimitsService) {
         this.transactionRepository = transactionRepository;
         this.userRepository = userRepository;
         this.userService = userService;
         this.accountService = accountService;
+        this.userLimitsService = userLimitsService;
     }
 
     public Transaction createTransaction(User user, Account accountSender, Account accountReceiver, CurrencyType currencyType, double amount, String description, TransactionType transactionType) {
@@ -133,8 +135,7 @@ public class TransactionService {
      * @throws InsufficientResourcesException If not enough money is present on the sender account.
      * @throws UserNotTheOwnerOfAccountException If the user is not the owner of the transaction.
      */
-    public Transaction processTransaction(TransactionRequest request) throws AccountNotFoundException, InsufficientResourcesException, UserNotTheOwnerOfAccountException
-    {
+    public Transaction processTransaction(TransactionRequest request) throws AccountNotFoundException, InsufficientResourcesException, UserNotTheOwnerOfAccountException, javax.naming.AuthenticationException {
         // Get performing user
         User user = null;
         if (userRepository.findUserByUsername(userService.getBearerUsername()).isPresent()) {
@@ -163,7 +164,7 @@ public class TransactionService {
         checkSameAccount(accountSender, accountReceiver);
         checkSavingAccountOwnership(user, accountSender, accountReceiver);
         checkSufficientBalance(accountSender, amount);
-        checkUserDailyLimitAndTransactionLimit(accountSender.getUser(), amount);
+        checkUserLimits(accountSender, amount);
 
         // If all requirements have been met, create transaction
         return transferMoney(user, accountSender, accountReceiver, accountSender.getCurrencyType(), amount, request.description());
@@ -245,6 +246,24 @@ public class TransactionService {
     }
 
     /**
+     * Checks the account holder's limits.
+     * @param accountSender The account to check.
+     * @param amount The amount of the transaction.
+     * @throws javax.naming.AuthenticationException Exception if user is not authenticated.
+     */
+    private void checkUserLimits(Account accountSender, double amount) throws javax.naming.AuthenticationException {
+        Limits limits = this.userLimitsService.getUserLimits(accountSender.getUser().getId());
+
+        if (amount > limits.getTransactionLimit()) {
+            throw new IllegalArgumentException("Amount exceeds the transaction limit.");
+        } else if (accountSender.getBalance() - amount < limits.getAbsoluteLimit()) {
+            throw new IllegalArgumentException("Transaction exceeds the absolute limit.");
+        } else if (amount > limits.getRemainingDailyTransactionLimit()) {
+            throw new IllegalArgumentException("Amount exceeds remaining daily transaction limit.");
+        }
+    }
+
+    /**
      * Creates a new transaction and updates the balances of the sender and receiver.
      * @param user The user performing the transaction.
      * @param accountSender The account where the money originates from.
@@ -301,8 +320,13 @@ public class TransactionService {
         double maxAmount = request.maxAmount().orElse(Double.MAX_VALUE);
         LocalDateTime startDateTime = request.startDate().orElse(EARLIEST_TIME);
         LocalDateTime endDateTime = request.endDate().orElse(LocalDateTime.now());
+        int transactionID = request.transactionID().orElse(0);
         String ibanSender = request.ibanSender().orElse("");
         String ibanReceiver = request.ibanReceiver().orElse("");
+        TransactionType transactionType = null;
+        if (request.transactionType().isPresent()) {
+            transactionType = mapTransactionTypeToString(request.transactionType().get());
+        }
 
         // Get users by ID
         User userSender = null;
@@ -334,8 +358,19 @@ public class TransactionService {
         }
 
         return transactionRepository.findTransactions(
-                minAmount, maxAmount, startDateTime, endDateTime,
-                ibanSender, ibanReceiver, user, userSender, userReceiver,
+                minAmount, maxAmount, startDateTime, endDateTime, transactionID,
+                ibanSender, ibanReceiver, user, userSender, userReceiver, transactionType,
                 pageable).getContent();
+    }
+
+    public TransactionType mapTransactionTypeToString(String transactionType){
+        switch (transactionType.toUpperCase()){
+            case "DEPOSIT":
+                return TransactionType.DEPOSIT;
+            case "WITHDRAWAL":
+                return TransactionType.WITHDRAWAL;
+            default:
+                return TransactionType.TRANSACTION;
+        }
     }
 }

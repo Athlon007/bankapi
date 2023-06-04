@@ -1,6 +1,7 @@
 package nl.inholland.bank.models.specifications;
 
 import nl.inholland.bank.models.Transaction;
+import nl.inholland.bank.models.TransactionType;
 import nl.inholland.bank.models.User;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -44,5 +45,14 @@ public class TransactionSpecifications {
     public static Specification<Transaction> withReceiverUser(User receiverUser) {
         return (root, query, builder) ->
                 builder.equal(root.get("accountReceiver").get("user"), receiverUser);
+    }
+
+    public static Specification<Transaction> withTransactionID(int transactionID) {
+        return (root, query, criteriaBuilder) ->
+                criteriaBuilder.equal(root.get("id"), transactionID);
+    }
+
+    public static Specification<Transaction> withTransactionType(TransactionType transactionType) {
+        return (root, query, builder) -> builder.equal(root.get("transactionType"), transactionType);
     }
 }

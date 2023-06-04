@@ -62,6 +62,10 @@ public class Transaction {
         this.amount = amount;
     }
 
+    public double getAmount() {
+        return Math.round(amount * 100.0) / 100.0;
+    }
+
     public void setCurrencyType(CurrencyType currencyType) {
         if (currencyType == null) {
             throw new IllegalArgumentException("Currency type cannot be null.");
