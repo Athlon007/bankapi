@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.naming.AuthenticationException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Controller
 @RequestMapping("/accounts")
@@ -37,15 +38,15 @@ public class AccountController {
             User user = userService.getUserById(userId);
 
             // Employee/Admin and the owner of the account can see the account
-            if (userService.getBearerUserRole() == null && userService.getBearerUserRole() != Role.EMPLOYEE && userService.getBearerUserRole() != Role.ADMIN) {
-                return ResponseEntity.status(401).body("Unauthorized");
+            if (userService.getBearerUserRole() != Role.EMPLOYEE && userService.getBearerUserRole() != Role.ADMIN && !Objects.equals(userService.getBearerUsername(), user.getUsername())) {
+                return ResponseEntity.badRequest().body(new ExceptionResponse("Unauthorized request"));
             }
 
             List<Account> accounts = accountService.getAccountsByUserId(user);
 
             if (accounts.isEmpty()) {
-                // Return a custom response when there are no accounts
-                return ResponseEntity.status(404).body("No accounts found");
+                return ResponseEntity.badRequest().body(new ExceptionResponse("No account found"));
+
             } else {
                 List<AccountResponse> accountResponses = new ArrayList<>();
                 // Return the list of accounts

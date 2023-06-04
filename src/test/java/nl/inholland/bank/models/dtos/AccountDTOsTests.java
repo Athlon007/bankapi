@@ -17,7 +17,7 @@ public class AccountDTOsTests {
     @Test
     void accountRequestShouldWork(){
         AccountRequest accountRequest = new AccountRequest( "EURO", "SAVING",1);
-        assert accountRequest.equals("EURO");
+        assert accountRequest.currencyType().equals("EURO");
         assert accountRequest.accountType().equals("SAVING");
         assert accountRequest.userId() == 1;
     }
