@@ -6,7 +6,6 @@ import nl.inholland.bank.models.dtos.TransactionDTO.TransactionRequest;
 import nl.inholland.bank.models.dtos.TransactionDTO.TransactionResponse;
 import nl.inholland.bank.models.dtos.TransactionDTO.TransactionSearchRequest;
 import nl.inholland.bank.models.dtos.TransactionDTO.WithdrawDepositRequest;
-import nl.inholland.bank.models.exceptions.AccountIsNotActiveException;
 import nl.inholland.bank.models.exceptions.UserNotTheOwnerOfAccountException;
 import nl.inholland.bank.services.TransactionService;
 import nl.inholland.bank.services.UserService;
@@ -139,7 +138,7 @@ public class TransactionController {
             response = new TransactionResponse(
                     transaction.getId(),
                     userService.getBearerUsername(),
-                    transaction.getAccountSender().getIBAN().toString(),
+                    transaction.getAccountSender().getIBAN(),
                     null,
                     transaction.getAmount(),
                     transaction.getTimestamp(),
@@ -153,7 +152,7 @@ public class TransactionController {
                     transaction.getId(),
                     userService.getBearerUsername(),
                     null,
-                    transaction.getAccountReceiver().getIBAN().toString(),
+                    transaction.getAccountReceiver().getIBAN(),
                     transaction.getAmount(),
                     transaction.getTimestamp(),
                     "Successfully deposited: " + transaction.getAmount() + " " + transaction.getCurrencyType() + " into your account",
@@ -165,8 +164,8 @@ public class TransactionController {
             response = new TransactionResponse(
                     transaction.getId(),
                     userService.getBearerUsername(),
-                    transaction.getAccountSender().getIBAN().toString(),
-                    transaction.getAccountReceiver().getIBAN().toString(),
+                    transaction.getAccountSender().getIBAN(),
+                    transaction.getAccountReceiver().getIBAN(),
                     transaction.getAmount(),
                     transaction.getTimestamp(),
                     "Successfully transferred: " + transaction.getAmount() + " "
