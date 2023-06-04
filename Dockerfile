@@ -9,6 +9,6 @@ RUN ls target
 
 FROM openjdk:19-jdk-slim
 EXPOSE 8443
-COPY --from=build target/bank-0.0.1-SNAPSHOT.jar app.jar
+#COPY --from=build target/bank-0.0.1-SNAPSHOT.jar app.jar
 RUN ./mvnw spring-boot:run
 
