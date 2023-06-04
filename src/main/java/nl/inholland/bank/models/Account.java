@@ -39,6 +39,10 @@ public class Account {
             throw new IllegalArgumentException("Balance cannot be negative");
         }
 
+        if (Double.isNaN(balance)) {
+            throw new IllegalArgumentException("Balance cannot be NaN");
+        }
+
         this.balance = balance;
     }
 
@@ -53,6 +57,10 @@ public class Account {
     public void setIBAN(String IBAN) {
         if (IBAN == null) {
             throw new IllegalArgumentException("IBAN cannot be null");
+        }
+
+        if (!IBANGenerator.isValidIBAN(IBAN)) {
+            throw new IllegalArgumentException("IBAN is not valid");
         }
 
         this.IBAN = IBAN;
