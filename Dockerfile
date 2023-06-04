@@ -2,6 +2,7 @@ FROM ubuntu:latest AS build
 RUN apt-get update
 RUN apt-get install openjdk-19-jdk -y
 COPY . .
+RUN ./mvnw -N io.takari:maven:wrapper
 RUN ./mvnw compile
 RUN ./mvnw spring-boot:run
 
