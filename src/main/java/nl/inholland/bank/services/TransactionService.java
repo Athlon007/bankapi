@@ -84,7 +84,7 @@ public class TransactionService {
      * @throws UserNotTheOwnerOfAccountException if the user is not the owner of the account
      */
     public Transaction withdrawMoney(WithdrawDepositRequest withdrawDepositRequest) throws AccountNotFoundException, InsufficientResourcesException, AuthenticationException, UserNotTheOwnerOfAccountException {
-        Account accountSender = accountService.getAccountByIban(withdrawDepositRequest.IBAN());
+        Account accountSender = accountService.getAccountByIBAN(withdrawDepositRequest.IBAN());
         User user = getUserByUsername();
         checkAccountPreconditionsForWithdrawOrDeposit(accountSender, user);
         checkUserDailyLimitAndTransactionLimit(user, withdrawDepositRequest.amount());
@@ -108,7 +108,7 @@ public class TransactionService {
      * @throws InsufficientResourcesException    if the account does not have enough balance
      */
     public Transaction depositMoney(WithdrawDepositRequest depositRequest) throws AccountNotFoundException, AuthenticationException, UserNotTheOwnerOfAccountException, InsufficientResourcesException {
-        Account accountReceiver = accountService.getAccountByIban(depositRequest.IBAN());
+        Account accountReceiver = accountService.getAccountByIBAN(depositRequest.IBAN());
         User user = getUserByUsername();
         checkAccountPreconditionsForWithdrawOrDeposit(accountReceiver, user);
         checkUserDailyLimitAndTransactionLimit(user, depositRequest.amount());
