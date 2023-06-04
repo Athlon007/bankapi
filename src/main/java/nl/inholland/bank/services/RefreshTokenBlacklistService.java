@@ -18,6 +18,7 @@ public class RefreshTokenBlacklistService {
 
     public void blacklist(String token) {
         System.out.println("Blacklisting token: " + token);
-        refreshTokenBlacklistRepository.save(new BlacklistedRefreshToken(token));
+        if (!isBlacklisted(token))
+            refreshTokenBlacklistRepository.save(new BlacklistedRefreshToken(token));
     }
 }

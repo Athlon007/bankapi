@@ -1,46 +1,90 @@
 package nl.inholland.bank.cucumbers;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
-import org.junit.jupiter.api.Assertions;
+import io.jsonwebtoken.lang.Assert;
+import nl.inholland.bank.models.dtos.AccountDTO.AccountRequest;
+import nl.inholland.bank.models.dtos.AccountDTO.AccountResponse;
 import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 
 import java.util.List;
 
-public class AccountStepDefinitions extends BaseStepDefinitions {
-    private int userId;
+public class AccountStepDefinitions extends BaseStepDefinitions{
 
-    @Given("The endpoint {string} is available for the {string} method")
-    public void theEndpointIsAvailableForTheMethod(String endpoint, String method) {
-        response = restTemplate.exchange(
-                "/" + endpoint,
-                HttpMethod.OPTIONS,
-                new HttpEntity<>(null, new HttpHeaders()),
-                String.class
-        );
+    public static final String ACCOUNTS_ENDPOINT = "/accounts";
 
-        List<String> options = List.of(response.getHeaders().get("Allow").get(0).replaceAll("]", "").split(","));
-        Assertions.assertTrue(options.contains(method.toUpperCase()));
-    }
+    private ObjectMapper objectMapper = new ObjectMapper();
 
-    @When("I retrieve all accounts for user with ID {integer}")
-    public void iRetrieveAllAccountsForUserWithID(int userId) {
-        this.userId = USER_ID; // Store the user ID for later use
-        String endpoint = "/accounts/" + userId;
-        response = restTemplate.exchange(
-                endpoint,
+    @When("I call the application accounts endpoint with user id {int}")
+    public void iCallTheApplicationAccountsEndpointWithUserId(int userId) {
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        if (StorageForTestsInstance.getInstance().getJwt() != null) {
+            headers.setBearerAuth(StorageForTestsInstance.getInstance().getJwt().access_token());
+        }
+
+        StorageForTestsInstance.getInstance().setResponse(restTemplate.exchange(
+                ACCOUNTS_ENDPOINT + "/" + userId,
                 HttpMethod.GET,
-                new HttpEntity<>(null, new HttpHeaders()),
+                new HttpEntity<>(null, headers),
                 String.class
-        );
+        ));
     }
 
-    @And("I get HTTP status {int}")
-    public void iGetHTTPStatus(int code) {
-        Assertions.assertEquals(code, response.getStatusCode().value());
+    @Given("I call the application accounts end point with currencyType {string}, accountType {string}, userId {int}")
+    public void iCallTheApplicationAccountsEndPointWithIBANCurrencyTypeAccountTypeUserId(String currencyType, String accountType, int userId) {
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        if (StorageForTestsInstance.getInstance().getJwt() != null) {
+            headers.setBearerAuth(StorageForTestsInstance.getInstance().getJwt().access_token());
+        }
+
+        AccountRequest accountRequest = new AccountRequest(
+                currencyType,
+                accountType,
+                userId
+        );
+
+        StorageForTestsInstance.getInstance().setResponse(restTemplate.exchange(
+                ACCOUNTS_ENDPOINT,
+                HttpMethod.POST,
+                new HttpEntity<>(accountRequest, headers),
+                String.class
+        ));
+    }
+
+    @And("I get account's currencyType {string} and accountType {string} and id {int}")
+    public void iGetAnAccountSIBANAndCurrencyTypeAndAccountTypeAndId(String currencyType, String accountType, int id) throws JsonProcessingException {
+        // get the account response
+        AccountResponse accountResponse = objectMapper.readValue(
+                StorageForTestsInstance.getInstance().getResponse().getBody().toString(),
+                AccountResponse.class
+        );
+
+        Assert.isTrue(accountResponse.currency_type().equals(currencyType), "currencyType is " + currencyType);
+        Assert.isTrue(accountResponse.account_type().equals(accountType), "accountType is " + accountType);
+        Assert.isTrue(accountResponse.id() == id, "id is " + id);
+    }
+
+    @When("I call the application accounts end point with user id {int}")
+    public void iCallTheApplicationAccountsEndPointWithUserId(int userId) {
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        if (StorageForTestsInstance.getInstance().getJwt() != null) {
+            headers.setBearerAuth(StorageForTestsInstance.getInstance().getJwt().access_token());
+        }
+
+        StorageForTestsInstance.getInstance().setResponse(restTemplate.exchange(
+                ACCOUNTS_ENDPOINT + "/" + userId,
+                HttpMethod.GET,
+                new HttpEntity<>(null, headers),
+                String.class
+        ));
     }
 }

@@ -1,5 +1,4 @@
 Feature: POST requests for User API
-# NOTE: Those must be run one-by-one instead all together. We don't reset database between tests.
 
   Scenario: Registering a new user as guest
     When I call the application register endpoint with username "johhny", first name "John", last name "Doe", email "mail@example.com", password "Password123!", bsn "318419403", phone number "0612345678" and birth-date "2000-09-08"

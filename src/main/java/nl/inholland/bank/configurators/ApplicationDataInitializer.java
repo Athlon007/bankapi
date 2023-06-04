@@ -41,8 +41,8 @@ public class ApplicationDataInitializer implements ApplicationRunner {
                 "admin@example.com",
                 "admin",
                 "Password1!",
-                "Namey",
-                "McNameface",
+                "InHolland",
+                "Bank",
                 "232262536",
                 "0612345678",
                 "2000-01-01",
@@ -80,7 +80,6 @@ public class ApplicationDataInitializer implements ApplicationRunner {
         // ----------------
 
         AccountRequest accountRequest = new AccountRequest(
-                "NL71INHO6310134205",
                 "EURO",
                 "CURRENT",
                 1);
@@ -90,32 +89,11 @@ public class ApplicationDataInitializer implements ApplicationRunner {
         // Test for transfering money
         // Account for employee
         AccountRequest accountRequest2 = new AccountRequest(
-                "NL60INHO9935031775",
                 "EURO",
                 "CURRENT",
                 3);
         accountService.addAccount(accountRequest2);
 
-
-        //Transaction Withdraw and Deposit
-        WithdrawDepositRequest withdrawDepositRequest = new WithdrawDepositRequest(
-                "NL60INHO9935031775",
-                300,
-                CurrencyType.EURO,
-                3);
-
-        try {
-            transactionService.depositMoney(withdrawDepositRequest);
-        } catch (UserNotTheOwnerOfAccountException e) {
-            throw new RuntimeException(e);
-        }
-
-       Account accountSender = accountService.getAccountByIban(withdrawDepositRequest.IBAN());
-
-        try {
-            transactionService.withdrawMoney(withdrawDepositRequest);
-        } catch (UserNotTheOwnerOfAccountException e) {
-            throw new RuntimeException(e);
-        }
+        System.out.println("=== Application Initialized ===");
     }
 }

@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-public class UserLimitsTests {
+class UserLimitsTests {
     private Limits limits;
 
     @BeforeEach
@@ -56,5 +56,23 @@ public class UserLimitsTests {
         User user = new User();
         limits.setUser(user);
         Assertions.assertEquals(user, limits.getUser());
+    }
+
+    @Test
+    void getSetId() {
+        limits.setId(1);
+        Assertions.assertEquals(1, limits.getId());
+    }
+
+    @Test
+    void getSetTransactionLimit() {
+        limits.setTransactionLimit(1);
+        Assertions.assertEquals(1, limits.getTransactionLimit());
+    }
+
+    @Test
+    void getSetAbsoluteLimit() {
+        limits.setAbsoluteLimit(-1);
+        Assertions.assertEquals(-1, limits.getAbsoluteLimit());
     }
 }

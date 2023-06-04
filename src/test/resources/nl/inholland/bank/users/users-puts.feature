@@ -1,4 +1,5 @@
 Feature: PUT requests to User endpoint
+# NOTE: Those must be run one-by-one instead all together. We don't reset database between tests.
 
   Scenario: Updating user as admin should return 200 and updated UserResponse object
     Given I have a valid login credentials

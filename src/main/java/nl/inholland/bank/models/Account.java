@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.iban4j.Iban;
 
 @Entity
 @Data
@@ -50,8 +51,8 @@ public class Account {
     }
 
     public void setIBAN(String IBAN) {
-        if (IBAN == null || IBAN.isEmpty()) {
-            throw new IllegalArgumentException("IBAN cannot be null or empty");
+        if (IBAN == null) {
+            throw new IllegalArgumentException("IBAN cannot be null");
         }
 
         this.IBAN = IBAN;

@@ -108,14 +108,11 @@ public class UserLimitsService {
     private Double calculateRemainingDailyLimit(Limits limits, List<Transaction> todaysTransactions) {
         // Calculate total value of transactions today.
         // Also ignore transactions from/to SAVINGS accounts.
-        System.out.println(todaysTransactions);
         double todayTotal = todaysTransactions.stream()
                 .filter(transaction ->
-                        (transaction.getAccountSender() != null
-                            && !transaction.getAccountSender().getType().equals(AccountType.SAVING))
-                        || ( transaction.getAccountReceiver() != null
-                            && !transaction.getAccountReceiver().getType().equals(AccountType.SAVING))
-                        && !(transaction.getAccountSender() == null && transaction.getAccountReceiver() != null)) // Deposits
+                        (transaction.getAccountSender() != null && !transaction.getAccountSender().getType().equals(AccountType.SAVING))
+                        || ( transaction.getAccountReceiver() != null && !transaction.getAccountReceiver().getType().equals(AccountType.SAVING))
+                        && (transaction.getAccountSender() != null)) // Deposits
                 .mapToDouble(Transaction::getAmount)
                 .sum();
 

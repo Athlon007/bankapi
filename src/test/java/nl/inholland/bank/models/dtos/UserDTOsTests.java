@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 public class UserDTOsTests {
     @Test
     void settingUserResponse() {
-        UserResponse userResponse = new UserResponse(1, "email", "username", "lastname", "1234", "phone", "2000", 0d, "role", new AccountResponse(0, "bian", "eur", "a", false, 0), null, true);
+        UserResponse userResponse = new UserResponse(1, "username", "email", "username", "lastname", "1234", "phone", "2000", 0d, "role", new AccountResponse(0, "bian", "eur", "a", false, 0), null, true);
         assert userResponse.firstname().equals("username");
         assert userResponse.email().equals("email");
         assert userResponse.role().equals("role");
@@ -54,6 +54,7 @@ public class UserDTOsTests {
         userRequest.setLastname("lastname2");
         userRequest.setPhone_number("phone2");
         userRequest.setBirth_date("2002");
+        userRequest.setRole("role2");
     }
 
     @Test

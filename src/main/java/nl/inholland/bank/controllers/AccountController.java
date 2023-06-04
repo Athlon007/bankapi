@@ -3,14 +3,17 @@ package nl.inholland.bank.controllers;
 import nl.inholland.bank.models.Account;
 import nl.inholland.bank.models.Role;
 import nl.inholland.bank.models.User;
+import nl.inholland.bank.models.dtos.AccountDTO.AccountActiveRequest;
 import nl.inholland.bank.models.dtos.AccountDTO.AccountRequest;
 import nl.inholland.bank.models.dtos.AccountDTO.AccountResponse;
+import nl.inholland.bank.models.dtos.ExceptionResponse;
 import nl.inholland.bank.services.AccountService;
 import nl.inholland.bank.services.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import javax.naming.AuthenticationException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,15 +29,15 @@ public class AccountController {
         this.userService = userService;
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{userId}")
     public ResponseEntity getAllAccountsByUserId(
-            @PathVariable int id
+            @PathVariable int userId
     ) {
         try {
-            User user = userService.getUserById(id);
+            User user = userService.getUserById(userId);
 
             // Employee/Admin and the owner of the account can see the account
-            if (userService.getBearerUserRole() == null || userService.getBearerUserRole() != Role.EMPLOYEE) {
+            if (userService.getBearerUserRole() == null && userService.getBearerUserRole() != Role.EMPLOYEE && userService.getBearerUserRole() != Role.ADMIN) {
                 return ResponseEntity.status(401).body("Unauthorized");
             }
 
@@ -49,7 +52,7 @@ public class AccountController {
                 for (Account account : accounts) {
                     AccountResponse accountResponse = new AccountResponse(
                             account.getId(),
-                            account.getIBAN(),
+                            account.getIBAN().toString(),
                             account.getCurrencyType().toString(),
                             account.getType().toString(),
                             account.isActive(),
@@ -60,22 +63,22 @@ public class AccountController {
                 return ResponseEntity.status(200).body(accountResponses);
             }
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body(new ExceptionResponse(e.getMessage()));
         }
     }
 
 
     @PostMapping
-    public ResponseEntity addAccount(@RequestBody AccountRequest accountRequest) {
-        if (userService.getBearerUserRole() != Role.EMPLOYEE) {
-            return ResponseEntity.status(401).body("Unauthorized");
+    public ResponseEntity addAccount(@RequestBody AccountRequest accountRequest) throws AuthenticationException {
+        if (userService.getBearerUserRole() != Role.EMPLOYEE && userService.getBearerUserRole() != Role.ADMIN) {
+            throw new AuthenticationException("Unauthorized");
         } else {
-            try{
+            try {
                 Account account = accountService.addAccount(accountRequest);
 
                 AccountResponse accountResponse = new AccountResponse(
                         account.getId(),
-                        account.getIBAN(),
+                        account.getIBAN().toString(),
                         account.getCurrencyType().toString(),
                         account.getType().toString(),
                         account.isActive(),
@@ -83,9 +86,40 @@ public class AccountController {
                 );
 
                 return ResponseEntity.status(201).body(accountResponse);
+            } catch (Exception e) {
+                return ResponseEntity.badRequest().body(new ExceptionResponse(e.getMessage()));
             }
-            catch (Exception e){
-                return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PutMapping("/{userId}/{id}")
+    public ResponseEntity activateAccount(@PathVariable int userId, @PathVariable int id,
+                                          @RequestBody AccountActiveRequest accountActiveRequest) throws AuthenticationException {
+        if (userService.getBearerUserRole() != Role.EMPLOYEE && userService.getBearerUserRole() != Role.ADMIN) {
+            throw new AuthenticationException("Unauthorized");
+        } else {
+            try {
+                User user = userService.getUserById(userId);
+                Account account = accountService.getAccountById(id);
+
+                if (account.getUser().getId() != user.getId()) {
+                    return ResponseEntity.status(401).body("Unauthorized");
+                }
+
+                accountService.activateOrDeactivateTheAccount(account, accountActiveRequest);
+
+                AccountResponse accountResponse = new AccountResponse(
+                        account.getId(),
+                        account.getIBAN().toString(),
+                        account.getCurrencyType().toString(),
+                        account.getType().toString(),
+                        account.isActive(),
+                        account.getBalance()
+                );
+
+                return ResponseEntity.status(200).body(accountResponse);
+            } catch (Exception e) {
+                return ResponseEntity.badRequest().body(new ExceptionResponse(e.getMessage()));
             }
         }
     }

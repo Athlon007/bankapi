@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.DisabledException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -21,9 +22,9 @@ import java.time.format.DateTimeFormatter;
 
 @RestControllerAdvice
 public class ErrorHandler {
-   private final String LOG_FILE_TEMPLATE = "log/error-%s.log";
+   public static final String LOG_FILE_TEMPLATE = "log/error-%s.log";
 
-    private void writeToFile(Exception e) {
+    public void writeToFile(Exception e) {
         // Create directory if it doesn't exist.
         String logDir = System.getProperty("user.dir") + "/log";
         new java.io.File(logDir).mkdir();
@@ -101,6 +102,14 @@ public class ErrorHandler {
     public String handleMethodNotAllowedException(MethodNotAllowedException e) {
         // Method is not allowed.
         return "{\"error_message\": \"Method is not allowed.\"}";
+    }
+
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    @ResponseStatus(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
+    public String handleHttpMediaTypeNotSupportedException(HttpMediaTypeNotSupportedException e) {
+        // Media type is not supported.
+        String mediaType = e.getContentType().getType();
+        return "{\"error_message\": \"Media type of type: " + mediaType + "\"}";
     }
 
     @ExceptionHandler(Exception.class)

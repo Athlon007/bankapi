@@ -6,6 +6,7 @@ import nl.inholland.bank.models.dtos.TransactionDTO.TransactionRequest;
 import nl.inholland.bank.models.dtos.TransactionDTO.TransactionResponse;
 import nl.inholland.bank.models.dtos.TransactionDTO.TransactionSearchRequest;
 import nl.inholland.bank.models.dtos.TransactionDTO.WithdrawDepositRequest;
+import nl.inholland.bank.models.exceptions.AccountIsNotActiveException;
 import nl.inholland.bank.models.exceptions.UserNotTheOwnerOfAccountException;
 import nl.inholland.bank.services.TransactionService;
 import nl.inholland.bank.services.UserService;
@@ -138,12 +139,13 @@ public class TransactionController {
             response = new TransactionResponse(
                     transaction.getId(),
                     userService.getBearerUsername(),
-                    transaction.getAccountSender().getIBAN(),
+                    transaction.getAccountSender().getIBAN().toString(),
                     null,
                     transaction.getAmount(),
                     transaction.getTimestamp(),
                     "Successfully withdrawn: " + transaction.getAmount() + " " + transaction.getCurrencyType() + " from your account",
-                    TransactionType.WITHDRAWAL
+                    TransactionType.WITHDRAWAL,
+                    transaction.getAccountSender().getBalance()
             );
         }
         if (transaction.getTransactionType() == TransactionType.DEPOSIT) {
@@ -151,24 +153,26 @@ public class TransactionController {
                     transaction.getId(),
                     userService.getBearerUsername(),
                     null,
-                    transaction.getAccountReceiver().getIBAN(),
+                    transaction.getAccountReceiver().getIBAN().toString(),
                     transaction.getAmount(),
                     transaction.getTimestamp(),
                     "Successfully deposited: " + transaction.getAmount() + " " + transaction.getCurrencyType() + " into your account",
-                    TransactionType.DEPOSIT
+                    TransactionType.DEPOSIT,
+                    transaction.getAccountReceiver().getBalance()
             );
         }
         if (transaction.getTransactionType() == TransactionType.TRANSACTION) {
             response = new TransactionResponse(
                     transaction.getId(),
                     userService.getBearerUsername(),
-                    transaction.getAccountSender().getIBAN(),
-                    transaction.getAccountReceiver().getIBAN(),
+                    transaction.getAccountSender().getIBAN().toString(),
+                    transaction.getAccountReceiver().getIBAN().toString(),
                     transaction.getAmount(),
                     transaction.getTimestamp(),
                     "Successfully transferred: " + transaction.getAmount() + " "
                             + transaction.getCurrencyType() + " to " + transaction.getAccountReceiver().getIBAN(),
-                    TransactionType.TRANSACTION
+                    TransactionType.TRANSACTION,
+                    null
             );
         }
         return response;

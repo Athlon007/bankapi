@@ -41,7 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(UserController.class)
 @Import(ApiTestConfiguration.class)
 @AutoConfigureMockMvc(addFilters = false)
-public class UserControllerTests {
+class UserControllerTests {
     @Autowired
     private MockMvc mockMvc;
 
@@ -85,6 +85,7 @@ public class UserControllerTests {
         currentAccount.setUser(mockUser);
         currentAccount.setId(1);
         currentAccount.setCurrencyType(CurrencyType.EURO);
+        currentAccount.setActive(true);
         mockUser.setCurrentAccount(currentAccount);
 
         Account savingAccount = new Account();
