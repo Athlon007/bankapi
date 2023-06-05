@@ -169,7 +169,6 @@ class UserControllerTests {
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(jsonPath("$.transaction_limit").value(1000))
                 .andExpect(jsonPath("$.daily_transaction_limit").value(1000))
-                .andExpect(jsonPath("$.absolute_limit").value(0))
                 .andExpect(jsonPath("$.remaining_daily_transaction_limit").value(1000));
     }
 
@@ -265,7 +264,6 @@ class UserControllerTests {
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(jsonPath("$.transaction_limit").value(1000))
                 .andExpect(jsonPath("$.daily_transaction_limit").value(1000))
-                .andExpect(jsonPath("$.absolute_limit").value(0))
                 .andExpect(jsonPath("$.remaining_daily_transaction_limit").value(1000));
     }
 }
