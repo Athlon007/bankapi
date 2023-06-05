@@ -298,7 +298,7 @@ public class TransactionService {
 
         if (amount > limits.getTransactionLimit()) {
             throw new IllegalArgumentException("Amount exceeds the transaction limit.");
-        } else if (accountSender.getBalance() - amount < limits.getAbsoluteLimit()) {
+        } else if (accountSender.getBalance() - amount < accountSender.getAbsoluteLimit()) {
             throw new IllegalArgumentException("Transaction exceeds the absolute limit.");
         } else if (amount > limits.getRemainingDailyTransactionLimit()) {
             throw new IllegalArgumentException("Amount exceeds remaining daily transaction limit.");

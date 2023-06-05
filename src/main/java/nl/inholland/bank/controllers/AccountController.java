@@ -57,7 +57,8 @@ public class AccountController {
                             account.getCurrencyType().toString(),
                             account.getType().toString(),
                             account.isActive(),
-                            account.getBalance()
+                            account.getBalance(),
+                            account.getAbsoluteLimit()
                     );
                     accountResponses.add(accountResponse);
                 }
@@ -83,7 +84,8 @@ public class AccountController {
                         account.getCurrencyType().toString(),
                         account.getType().toString(),
                         account.isActive(),
-                        account.getBalance()
+                        account.getBalance(),
+                        account.getAbsoluteLimit()
                 );
 
                 return ResponseEntity.status(201).body(accountResponse);
@@ -115,7 +117,8 @@ public class AccountController {
                         account.getCurrencyType().toString(),
                         account.getType().toString(),
                         account.isActive(),
-                        account.getBalance()
+                        account.getBalance(),
+                        account.getAbsoluteLimit()
                 );
 
                 return ResponseEntity.status(200).body(accountResponse);

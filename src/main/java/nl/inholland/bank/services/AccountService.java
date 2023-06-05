@@ -28,6 +28,7 @@ public class AccountService {
         account.setCurrencyType(currencyType);
         account.setBalance(0);
         account.setActive(true);
+        account.setAbsoluteLimit(0);
 
         return account;
     }

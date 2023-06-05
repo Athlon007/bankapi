@@ -41,7 +41,7 @@ public class TransactionTests {
     public void setUp() throws AuthenticationException {
         transaction = new Transaction();
         account = new Account(new User(
-                "John", "Doe", "mail@test.com", "111222333", "0612345678", LocalDate.of(1990, 1, 1), "username", "Password1!", Role.EMPLOYEE), 100, CurrencyType.EURO, IBANGenerator.generateIBAN().toString(), AccountType.CURRENT);
+                "John", "Doe", "mail@test.com", "111222333", "0612345678", LocalDate.of(1990, 1, 1), "username", "Password1!", Role.EMPLOYEE), 100, CurrencyType.EURO, IBANGenerator.generateIBAN().toString(), AccountType.CURRENT, 0);
         transaction.setAmount(50);
         transaction.setTransactionType(TransactionType.DEPOSIT);
         transaction.setCurrencyType(CurrencyType.EURO);

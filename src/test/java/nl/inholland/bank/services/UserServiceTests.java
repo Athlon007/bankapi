@@ -117,7 +117,6 @@ class UserServiceTests {
         limits = new Limits();
         limits.setTransactionLimit(1000);
         limits.setDailyTransactionLimit(1000);
-        limits.setAbsoluteLimit(0);
         limits.setRemainingDailyTransactionLimit(1000);
 
         userRequest = new UserRequest("email@ex.com", "user", "Password1!", "Firstly", "Fister", "820510026", "0612345678", "2000-09-08");
@@ -129,7 +128,6 @@ class UserServiceTests {
         Limits defaultLimits = new Limits();
         defaultLimits.setDailyTransactionLimit(this.defaultDailyTransactionLimit);
         defaultLimits.setTransactionLimit(this.defaultTransactionLimit);
-        defaultLimits.setAbsoluteLimit(this.defaultAbsoluteLimit);
         defaultLimits.setRemainingDailyTransactionLimit(this.defaultDailyTransactionLimit);
 
         Mockito.when(userLimitsService.getDefaultLimits()).thenReturn(defaultLimits);
