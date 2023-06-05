@@ -40,7 +40,8 @@ public class AccountTests {
                 0,
                 CurrencyType.EURO,
                 IBANGenerator.generateIBAN().toString(),
-                AccountType.CURRENT);
+                AccountType.CURRENT,
+                0);
         transactionService = Mockito.mock(TransactionService.class);
 
         generatedIban = account.getIBAN();

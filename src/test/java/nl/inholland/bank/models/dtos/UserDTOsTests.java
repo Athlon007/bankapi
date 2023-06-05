@@ -68,18 +68,16 @@ public class UserDTOsTests {
 
     @Test
     void userLimitsRequestShouldWork() {
-        UserLimitsRequest userLimitsRequest = new UserLimitsRequest(1, 1, 1);
+        UserLimitsRequest userLimitsRequest = new UserLimitsRequest(1, 1);
         assert userLimitsRequest.transaction_limit() == 1;
         assert userLimitsRequest.daily_transaction_limit() == 1;
-        assert userLimitsRequest.absolute_limit() == 1;
     }
 
     @Test
     void userLimitResponseShouldWork() {
-        UserLimitsResponse userLimitResponse = new UserLimitsResponse(1, 1, 1, 1);
+        UserLimitsResponse userLimitResponse = new UserLimitsResponse(1, 1, 1);
         assert userLimitResponse.transaction_limit() == 1;
         assert userLimitResponse.daily_transaction_limit() == 1;
-        assert userLimitResponse.absolute_limit() == 1;
         assert userLimitResponse.remaining_daily_transaction_limit() == 1;
     }
 }

@@ -17,8 +17,6 @@ public class Limits {
     private Integer id;
     private double transactionLimit;
     private double dailyTransactionLimit;
-    /** The absolute limit is the minimum balance that a user can have.*/
-    private double absoluteLimit;
     @Transient
     // Calculated by the service
     private double remainingDailyTransactionLimit;
@@ -41,13 +39,6 @@ public class Limits {
             throw new IllegalArgumentException("Daily transaction limit cannot be lower than 0");
         }
         this.dailyTransactionLimit = dailyTransactionLimit;
-    }
-
-    public void setAbsoluteLimit(double absoluteLimit) {
-        if (absoluteLimit > 0) {
-            throw new IllegalArgumentException("Absolute limit cannot be higher than 0");
-        }
-        this.absoluteLimit = absoluteLimit;
     }
 
     public void setRemainingDailyTransactionLimit(double remainingDailyTransactionLimit) {

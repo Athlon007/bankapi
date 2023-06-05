@@ -127,7 +127,6 @@ public class UserController {
         UserLimitsResponse userLimitsResponse = new UserLimitsResponse(
                 limits.getTransactionLimit(),
                 limits.getDailyTransactionLimit(),
-                limits.getAbsoluteLimit(),
                 limits.getRemainingDailyTransactionLimit()
         );
         return ResponseEntity.status(200).body(userLimitsResponse);
@@ -141,7 +140,6 @@ public class UserController {
         UserLimitsResponse userLimitsResponse = new UserLimitsResponse(
                 limits.getTransactionLimit(),
                 limits.getDailyTransactionLimit(),
-                limits.getAbsoluteLimit(),
                 limits.getRemainingDailyTransactionLimit()
         );
         return ResponseEntity.status(200).body(userLimitsResponse);

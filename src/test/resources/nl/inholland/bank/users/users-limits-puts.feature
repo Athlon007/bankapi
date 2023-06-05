@@ -11,14 +11,14 @@ Feature: User Limits PUT requests
     Given I have a valid user login credentials
     And I call the application login endpoint
     And I receive a token
-    When I update user id 3 limits to transaction limit 1000, daily limit 100 and absolute limit 0
+    When I update user id 3 limits to transaction limit 1000, daily limit 100
     Then I get HTTP status 401
 
   Scenario: Employee updating other users limit results in valid response
     Given I have a valid employee login credentials
     And I call the application login endpoint
     And I receive a token
-    When I update user id 3 limits to transaction limit 1000, daily limit 400 and absolute limit 0
+    When I update user id 3 limits to transaction limit 1000, daily limit 400
     Then I get HTTP status 200
     And I get a response with the following body with transaction limit 1000, daily limit 400, absolute limit 0 and remaining daily limit 100
 
@@ -26,19 +26,12 @@ Feature: User Limits PUT requests
     Given I have a valid employee login credentials
     And I call the application login endpoint
     And I receive a token
-    When I update user id 3 limits to transaction limit -1000, daily limit 400 and absolute limit 0
+    When I update user id 3 limits to transaction limit -1000, daily limit 400
     Then I get HTTP status 400
 
   Scenario: Setting daily limit to negative number results in 400
     Given I have a valid employee login credentials
     And I call the application login endpoint
     And I receive a token
-    When I update user id 3 limits to transaction limit 1000, daily limit -400 and absolute limit 0
-    Then I get HTTP status 400
-
-  Scenario: Setting absolute limit to positive number results in 400
-    Given I have a valid employee login credentials
-    And I call the application login endpoint
-    And I receive a token
-    When I update user id 3 limits to transaction limit 1000, daily limit 400 and absolute limit 100
+    When I update user id 3 limits to transaction limit 1000, daily limit -400
     Then I get HTTP status 400

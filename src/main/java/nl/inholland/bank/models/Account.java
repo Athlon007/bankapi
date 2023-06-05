@@ -24,14 +24,16 @@ public class Account {
     private String IBAN;
     private AccountType type;
     private boolean isActive;
+    private double absoluteLimit;
 
-    public Account(User user, double balance, CurrencyType currencyType, String IBAN, AccountType type) {
+    public Account(User user, double balance, CurrencyType currencyType, String IBAN, AccountType type, double absoluteLimit) {
         this.user = user;
         this.balance = balance;
         this.currencyType = currencyType;
         this.IBAN = IBAN;
         this.type = type;
         this.isActive = true;
+        this.absoluteLimit = absoluteLimit;
     }
 
     public void setBalance(double balance) {
@@ -76,5 +78,12 @@ public class Account {
 
     public void setActive(boolean active) {
         this.isActive = active;
+    }
+
+    public void setAbsoluteLimit(double absoluteLimit) {
+        if (absoluteLimit > 0) {
+            throw new IllegalArgumentException("Absolute limit cannot be higher than 0");
+        }
+        this.absoluteLimit = absoluteLimit;
     }
 }
