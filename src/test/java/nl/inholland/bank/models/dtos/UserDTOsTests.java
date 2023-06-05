@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 public class UserDTOsTests {
     @Test
     void settingUserResponse() {
-        UserResponse userResponse = new UserResponse(1, "username", "email", "username", "lastname", "1234", "phone", "2000", 0d, "role", new AccountResponse(0, "bian", "eur", "a", false, 0), null, true);
+        UserResponse userResponse = new UserResponse(1, "username", "email", "username", "lastname", "1234", "phone", "2000", 0d, "role", new AccountResponse(0, "bian", "eur", "a", false, 0, 0), null, true);
         assert userResponse.firstname().equals("username");
         assert userResponse.email().equals("email");
         assert userResponse.role().equals("role");
