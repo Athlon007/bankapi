@@ -116,23 +116,33 @@ public class ApplicationDataInitializer implements ApplicationRunner {
                 3);
         accountService.addAccount(accountRequest2);
 
-        // Account for Bobby
-        AccountRequest accountBobbyRequest = new AccountRequest(
+        // Current Account for Bobby
+        AccountRequest accountCurrentBobbyRequest = new AccountRequest(
                 "EURO",
                 "CURRENT",
                 4);
-        Account bobbyAccount = accountService.addAccount(accountBobbyRequest);
+        accountService.addAccount(accountCurrentBobbyRequest);
 
-        // Account for Berta
-        AccountRequest accountBertaRequest = new AccountRequest(
+        // Saving Account for Bobby
+        AccountRequest accountSavingBobbyRequest = new AccountRequest(
+                "EURO",
+                "SAVING",
+                4);
+        accountService.addAccount(accountSavingBobbyRequest);
+
+        // Current Account for Berta
+        AccountRequest accountCurrentBertaRequest = new AccountRequest(
                 "EURO",
                 "CURRENT",
                 5);
-        Account bertaAccount = accountService.addAccount(accountBertaRequest);
+        accountService.addAccount(accountCurrentBertaRequest);
 
-        // Add money for the scenario accounts
-        transactionService.updateAccountBalance(bobbyAccount, 100.00, true);
-        transactionService.updateAccountBalance(bertaAccount, 300.00, true);
+        // Saving Account for Berta
+        AccountRequest accountSavingBertaRequest = new AccountRequest(
+                "EURO",
+                "SAVING",
+                5);
+        accountService.addAccount(accountSavingBertaRequest);
 
         System.out.println("=== Application Initialized ===");
     }
