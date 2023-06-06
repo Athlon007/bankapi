@@ -76,6 +76,30 @@ public class ApplicationDataInitializer implements ApplicationRunner {
                 "2000-01-01");
         userService.addUser(userRequest);
 
+        // Client Bobby
+        UserRequest userBobbyRequest = new UserRequest(
+                "bobby@example.com",
+                "bobby",
+                "Password4!",
+                "Bobby",
+                "Bob",
+                "456123789",
+                "0612345678",
+                "2000-01-01");
+        userService.addUser(userBobbyRequest);
+
+        // Client Berta
+        UserRequest userBertaRequest = new UserRequest(
+                "berta@example.com",
+                "berta",
+                "Password4!",
+                "Berta",
+                "Bob",
+                "789123654",
+                "0612345678",
+                "2000-01-01");
+        userService.addUser(userBertaRequest);
+
         // ----------------
         // --- ACCOUNTS ---
         // ----------------
@@ -84,13 +108,31 @@ public class ApplicationDataInitializer implements ApplicationRunner {
         // Therefore, we assign it to the bank.
         accountService.addAccountForBank(admin);
 
-        // Test for transfering money
+        // Test for transferring money
         // Account for employee
         AccountRequest accountRequest2 = new AccountRequest(
                 "EURO",
                 "CURRENT",
                 3);
         accountService.addAccount(accountRequest2);
+
+        // Account for Bobby
+        AccountRequest accountBobbyRequest = new AccountRequest(
+                "EURO",
+                "CURRENT",
+                4);
+        Account bobbyAccount = accountService.addAccount(accountBobbyRequest);
+
+        // Account for Berta
+        AccountRequest accountBertaRequest = new AccountRequest(
+                "EURO",
+                "CURRENT",
+                5);
+        Account bertaAccount = accountService.addAccount(accountBertaRequest);
+
+        // Add money for the scenario accounts
+        transactionService.updateAccountBalance(bobbyAccount, 100.00, true);
+        transactionService.updateAccountBalance(bertaAccount, 300.00, true);
 
         System.out.println("=== Application Initialized ===");
     }
