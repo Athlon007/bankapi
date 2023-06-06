@@ -87,9 +87,9 @@ public class TransactionService {
         Account accountSender = accountService.getAccountByIBAN(withdrawDepositRequest.IBAN());
         User user = getUserByUsername();
         checkAccountPreconditionsForWithdrawOrDeposit(accountSender, user);
-        checkUserDailyLimitAndTransactionLimit(user, withdrawDepositRequest.amount());
 
-        if (checkAccountBalance(accountSender, withdrawDepositRequest.amount())) {
+        if (accountSender.getBalance() >= withdrawDepositRequest.amount())
+        {
             updateAccountBalance(accountSender, withdrawDepositRequest.amount(), false);
         } else {
             throw new InsufficientResourcesException("Account does not have enough balance");
@@ -111,7 +111,6 @@ public class TransactionService {
         Account accountReceiver = accountService.getAccountByIBAN(depositRequest.IBAN());
         User user = getUserByUsername();
         checkAccountPreconditionsForWithdrawOrDeposit(accountReceiver, user);
-        checkUserDailyLimitAndTransactionLimit(user, depositRequest.amount());
         updateAccountBalance(accountReceiver, depositRequest.amount(), true);
         Transaction transaction = createTransaction(user, null, accountReceiver, depositRequest.currencyType(), depositRequest.amount(), "Deposit successful", TransactionType.DEPOSIT);
 
@@ -139,29 +138,6 @@ public class TransactionService {
         if (account.getType() == AccountType.SAVING) {
             throw new IllegalArgumentException("You cannot deposit/withdraw money to a savings account");
         }
-    }
-
-    /**
-     * @param user   the user
-     * @param amount the amount to be transferred
-     * @throws InsufficientResourcesException if the user does not have enough balance
-     */
-    public void checkUserDailyLimitAndTransactionLimit(User user, double amount) throws InsufficientResourcesException {
-        if (user.getLimits().getDailyTransactionLimit() < amount) {
-            throw new InsufficientResourcesException("You have exceeded your daily limit");
-        }
-        if (user.getLimits().getTransactionLimit() < amount) {
-            throw new InsufficientResourcesException("You have exceeded your transaction limit");
-        }
-    }
-
-    /**
-     * @param account The account to check the balance of.
-     * @param amount The amount to check the balance with.
-     * @return Returns a boolean if the account has sufficient balance.
-     */
-    public boolean checkAccountBalance(Account account, double amount) {
-        return account.getBalance() >= amount;
     }
 
     /**
@@ -281,7 +257,7 @@ public class TransactionService {
      * @throws InsufficientResourcesException Exception if there's not enough money present on the account.
      */
     private void checkSufficientBalance(Account account, double amount) throws InsufficientResourcesException {
-        if (!checkAccountBalance(account, amount)) {
+        if (account.getBalance() >= amount) {
             throw new InsufficientResourcesException("Insufficient funds to create the transaction.");
         }
     }
