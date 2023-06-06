@@ -18,7 +18,7 @@ import javax.naming.AuthenticationException;
 @ExtendWith(SpringExtension.class)
 @Import(ApiTestConfiguration.class)
 @AutoConfigureMockMvc(addFilters = false)
-public class ErrorHandlerTests {
+class ErrorHandlerTests {
     private ErrorHandler errorHandler;
 
     @BeforeEach
@@ -77,5 +77,9 @@ public class ErrorHandlerTests {
         errorHandler.handleDisabledException(new DisabledException("Test"));
     }
 
+    @Test
+    void handleHttpMediaTypeNotSupportedException() {
+        errorHandler.handleHttpMediaTypeNotSupportedException(new org.springframework.web.HttpMediaTypeNotSupportedException("Test"));
+    }
 
 }
