@@ -102,8 +102,6 @@ public class TransactionService {
         return transactionRepository.save(transaction);
     }
 
-
-
     /**
      * @param depositRequest the request body
      * @return the transaction object
@@ -180,7 +178,6 @@ public class TransactionService {
         checkAccountStatus(accountReceiver, "receiver");
         checkSameAccount(accountSender, accountReceiver);
         checkSavingAccountOwnership(user, accountSender, accountReceiver);
-        checkSufficientBalance(accountSender, amount);
         checkUserLimits(accountSender, amount);
 
         // If all requirements have been met, create transaction
@@ -255,19 +252,6 @@ public class TransactionService {
     }
 
     /**
-     * Checks if there's sufficient money available on the account.
-     *
-     * @param account The account to check.
-     * @param amount  The amount for the transaction.
-     * @throws InsufficientResourcesException Exception if there's not enough money present on the account.
-     */
-    private void checkSufficientBalance(Account account, double amount) throws InsufficientResourcesException {
-        if (account.getBalance() >= amount) {
-            throw new InsufficientResourcesException("Insufficient funds to create the transaction.");
-        }
-    }
-
-    /**
      * Checks the account holder's limits.
      *
      * @param accountSender The account to check.
@@ -279,10 +263,10 @@ public class TransactionService {
 
         if (amount > limits.getTransactionLimit()) {
             throw new IllegalArgumentException("Amount exceeds the transaction limit.");
-        } else if (accountSender.getBalance() - amount < accountSender.getAbsoluteLimit()) {
-            throw new IllegalArgumentException("Transaction exceeds the absolute limit.");
         } else if (amount > limits.getRemainingDailyTransactionLimit()) {
             throw new IllegalArgumentException("Amount exceeds remaining daily transaction limit.");
+        } else if (accountSender.getBalance() - amount < accountSender.getAbsoluteLimit()) {
+            throw new IllegalArgumentException("Insufficient funds, transaction exceeds the absolute limit.");
         }
     }
 
