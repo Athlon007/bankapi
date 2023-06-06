@@ -20,7 +20,7 @@ Feature: User Limits PUT requests
     And I receive a token
     When I update user id 3 limits to transaction limit 1000, daily limit 400
     Then I get HTTP status 200
-    And I get a response with the following body with transaction limit 1000, daily limit 400, absolute limit 0 and remaining daily limit 100
+    And I get a response with the following body with transaction limit 1000, daily limit 400, absolute limit 0 and remaining daily limit 400
 
   Scenario: Setting transaction limit to negative number results in 400
     Given I have a valid employee login credentials
