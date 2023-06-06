@@ -116,6 +116,10 @@ public class AccountService {
     }
 
     public void activateOrDeactivateTheAccount(Account account, AccountActiveRequest accountActiveRequest) {
+        if (account.getIBAN().equals(bankAccountIBAN)) {
+            throw new IllegalArgumentException("Bank account cannot be deactivated");
+        }
+
         account.setActive(accountActiveRequest.isActive());
         accountRepository.save(account);
     }
