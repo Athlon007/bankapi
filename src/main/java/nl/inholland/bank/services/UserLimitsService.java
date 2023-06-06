@@ -90,7 +90,6 @@ public class UserLimitsService {
         Limits limits = userLimitsRepository.findFirstByUserId(userId);
         limits.setTransactionLimit(userLimitsRequest.transaction_limit());
         limits.setDailyTransactionLimit(userLimitsRequest.daily_transaction_limit());
-        limits.setAbsoluteLimit(userLimitsRequest.absolute_limit());
 
         userLimitsRepository.save(limits);
 
@@ -123,7 +122,6 @@ public class UserLimitsService {
         Limits limits = new Limits();
         limits.setDailyTransactionLimit(this.defaultDailyTransactionLimit);
         limits.setTransactionLimit(this.defaultTransactionLimit);
-        limits.setAbsoluteLimit(this.defaultAbsoluteLimit);
         limits.setRemainingDailyTransactionLimit(this.defaultDailyTransactionLimit);
         return limits;
     }

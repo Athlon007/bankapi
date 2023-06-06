@@ -112,7 +112,6 @@ class UserLimitsServiceTests {
         limits = new Limits();
         limits.setTransactionLimit(1000);
         limits.setDailyTransactionLimit(1000);
-        limits.setAbsoluteLimit(0);
         limits.setRemainingDailyTransactionLimit(1000);
 
         sendTransaction = new Transaction();
@@ -147,7 +146,7 @@ class UserLimitsServiceTests {
         user.setCurrentAccount(userAccount);
         receiverUser.setCurrentAccount(receiverAccount);
 
-        userLimitsRequest = new UserLimitsRequest(1000, 1000, 0);
+        userLimitsRequest = new UserLimitsRequest(1000, 1000);
     }
 
     @Test

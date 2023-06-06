@@ -1,9 +1,11 @@
 package nl.inholland.bank.services;
 
 import nl.inholland.bank.models.*;
+import nl.inholland.bank.models.dtos.AccountDTO.AccountAbsoluteLimitRequest;
 import nl.inholland.bank.models.dtos.AccountDTO.AccountActiveRequest;
 import nl.inholland.bank.models.dtos.AccountDTO.AccountRequest;
 import nl.inholland.bank.repositories.AccountRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.security.auth.login.AccountNotFoundException;
@@ -14,6 +16,9 @@ public class AccountService {
     AccountRepository accountRepository;
 
     UserService userService;
+
+    @Value("${bankapi.bank.account}")
+    private String bankAccountIBAN;
 
     public AccountService(AccountRepository accountRepository, UserService userService) {
         this.accountRepository = accountRepository;
@@ -28,6 +33,7 @@ public class AccountService {
         account.setCurrencyType(currencyType);
         account.setBalance(0);
         account.setActive(true);
+        account.setAbsoluteLimit(0);
 
         return account;
     }
@@ -114,7 +120,34 @@ public class AccountService {
         accountRepository.save(account);
     }
 
+    public void updateAbsoluteLimit(Account account, AccountAbsoluteLimitRequest accountAbsoluteLimitRequest) {
+        account.setAbsoluteLimit(accountAbsoluteLimitRequest.absoluteLimit());
+        System.out.println(account.getAbsoluteLimit());
+        accountRepository.save(account);
+    }
 
+    public void addAccountForBank(User user) {
+        // Bank has a special account with IBAN: NL01INHO0000000001.
+        // It should be assigned only to the first admin user.
+        // This method is called only once, when the first admin user is created.
 
+        if (user.getRole() != Role.ADMIN) {
+            throw new IllegalArgumentException("Only admin user can have a bank account");
+        }
 
+        if (accountRepository.findByIBAN(bankAccountIBAN).isPresent()) {
+            throw new IllegalArgumentException("Bank account already exists");
+        }
+
+        Account account = createAccount(
+                user,
+                AccountType.CURRENT,
+                CurrencyType.EURO
+        );
+
+        account.setIBAN(bankAccountIBAN);
+
+        accountRepository.save(account);
+        userService.assignAccountToUser(user, account);
+    }
 }

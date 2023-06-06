@@ -3,6 +3,7 @@ package nl.inholland.bank.controllers;
 import nl.inholland.bank.models.Account;
 import nl.inholland.bank.models.Role;
 import nl.inholland.bank.models.User;
+import nl.inholland.bank.models.dtos.AccountDTO.AccountAbsoluteLimitRequest;
 import nl.inholland.bank.models.dtos.AccountDTO.AccountActiveRequest;
 import nl.inholland.bank.models.dtos.AccountDTO.AccountRequest;
 import nl.inholland.bank.models.dtos.AccountDTO.AccountResponse;
@@ -36,14 +37,11 @@ public class AccountController {
     ) {
         try {
             User user = userService.getUserById(userId);
-
             // Employee/Admin and the owner of the account can see the account
             if (userService.getBearerUserRole() != Role.EMPLOYEE && userService.getBearerUserRole() != Role.ADMIN && !Objects.equals(userService.getBearerUsername(), user.getUsername())) {
                 return ResponseEntity.badRequest().body(new ExceptionResponse("Unauthorized request"));
             }
-
             List<Account> accounts = accountService.getAccountsByUserId(user);
-
             if (accounts.isEmpty()) {
                 return ResponseEntity.badRequest().body(new ExceptionResponse("No account found"));
 
@@ -51,14 +49,7 @@ public class AccountController {
                 List<AccountResponse> accountResponses = new ArrayList<>();
                 // Return the list of accounts
                 for (Account account : accounts) {
-                    AccountResponse accountResponse = new AccountResponse(
-                            account.getId(),
-                            account.getIBAN().toString(),
-                            account.getCurrencyType().toString(),
-                            account.getType().toString(),
-                            account.isActive(),
-                            account.getBalance()
-                    );
+                    AccountResponse accountResponse = buildAccountResponse(account);
                     accountResponses.add(accountResponse);
                 }
                 return ResponseEntity.status(200).body(accountResponses);
@@ -68,7 +59,6 @@ public class AccountController {
         }
     }
 
-
     @PostMapping
     public ResponseEntity addAccount(@RequestBody AccountRequest accountRequest) throws AuthenticationException {
         if (userService.getBearerUserRole() != Role.EMPLOYEE && userService.getBearerUserRole() != Role.ADMIN) {
@@ -76,15 +66,7 @@ public class AccountController {
         } else {
             try {
                 Account account = accountService.addAccount(accountRequest);
-
-                AccountResponse accountResponse = new AccountResponse(
-                        account.getId(),
-                        account.getIBAN().toString(),
-                        account.getCurrencyType().toString(),
-                        account.getType().toString(),
-                        account.isActive(),
-                        account.getBalance()
-                );
+                AccountResponse accountResponse = buildAccountResponse(account);
 
                 return ResponseEntity.status(201).body(accountResponse);
             } catch (Exception e) {
@@ -102,26 +84,50 @@ public class AccountController {
             try {
                 User user = userService.getUserById(userId);
                 Account account = accountService.getAccountById(id);
-
                 if (account.getUser().getId() != user.getId()) {
                     return ResponseEntity.status(401).body("Unauthorized");
                 }
-
                 accountService.activateOrDeactivateTheAccount(account, accountActiveRequest);
-
-                AccountResponse accountResponse = new AccountResponse(
-                        account.getId(),
-                        account.getIBAN().toString(),
-                        account.getCurrencyType().toString(),
-                        account.getType().toString(),
-                        account.isActive(),
-                        account.getBalance()
-                );
+                AccountResponse accountResponse = buildAccountResponse(account);
 
                 return ResponseEntity.status(200).body(accountResponse);
             } catch (Exception e) {
                 return ResponseEntity.badRequest().body(new ExceptionResponse(e.getMessage()));
             }
         }
+    }
+
+    @PutMapping("/{userId}/{id}/limit")
+    public ResponseEntity updateAbsoluteLimit(@PathVariable int userId, @PathVariable int id,
+                                              @RequestBody AccountAbsoluteLimitRequest accountAbsoluteLimitRequest) throws AuthenticationException {
+        if (userService.getBearerUserRole() != Role.EMPLOYEE && userService.getBearerUserRole() != Role.ADMIN) {
+            throw new AuthenticationException("Unauthorized");
+        } else {
+            try {
+                User user = userService.getUserById(userId);
+                Account account = accountService.getAccountById(id);
+                if (account.getUser().getId() != user.getId()) {
+                    return ResponseEntity.status(401).body("Unauthorized");
+                }
+                accountService.updateAbsoluteLimit(account, accountAbsoluteLimitRequest);
+                AccountResponse accountResponse = buildAccountResponse(account);
+
+                return ResponseEntity.status(200).body(accountResponse);
+            } catch (Exception e) {
+                return ResponseEntity.badRequest().body(new ExceptionResponse(e.getMessage()));
+            }
+        }
+    }
+
+    public AccountResponse buildAccountResponse(Account account) {
+        return new AccountResponse(
+                account.getId(),
+                account.getIBAN(),
+                account.getCurrencyType().toString(),
+                account.getType().toString(),
+                account.isActive(),
+                account.getBalance(),
+                account.getAbsoluteLimit()
+        );
     }
 }

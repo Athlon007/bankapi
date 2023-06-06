@@ -7,8 +7,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.time.LocalDate;
 
-@SpringBootTest
-public class AccountTest {
+class AccountTest {
     private Account account;
 
     @BeforeEach
@@ -29,7 +28,8 @@ public class AccountTest {
                 1000,
                 CurrencyType.EURO,
                 "NL32INHO3125817743",
-                AccountType.CURRENT);
+                AccountType.CURRENT,
+                0);
     }
 
     @Test
@@ -42,17 +42,6 @@ public class AccountTest {
 
         // Assert
         Assertions.assertEquals(expectedID, actualID);
-    }
-
-    @Test
-    public void setBalance_NegativeBalance_ThrowsIllegalArgumentException() {
-        // Arrange
-        double negativeBalance = -1000;
-
-        // Act & Assert
-        Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            account.setBalance(negativeBalance);
-        });
     }
 
     @Test
@@ -181,5 +170,27 @@ public class AccountTest {
 
         // Assert
         Assertions.assertEquals(inactive, account.isActive());
+    }
+
+    @Test
+    void settingAbsoluteLimitAbove0ThrowsIllegalArgumentException() {
+        Exception exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            account.setAbsoluteLimit(1000);
+        });
+
+        Assertions.assertEquals("Absolute limit cannot be higher than 0", exception.getMessage());
+    }
+
+    @Test
+    void getSetAbsoluteLimit() {
+        account.setAbsoluteLimit(-1);
+        Assertions.assertEquals(-1, account.getAbsoluteLimit());
+    }
+
+    @Test
+    void getSetUser() {
+        User user = new User();
+        account.setUser(user);
+        Assertions.assertEquals(user, account.getUser());
     }
 }
