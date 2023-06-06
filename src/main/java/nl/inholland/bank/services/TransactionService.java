@@ -89,16 +89,20 @@ public class TransactionService {
         checkAccountPreconditionsForWithdrawOrDeposit(accountSender, user);
 
         double withdrawalAmount = accountSender.getBalance() + Math.abs(accountSender.getAbsoluteLimit());
-        if (withdrawalAmount >= withdrawDepositRequest.amount())
-        {
-            updateAccountBalance(accountSender, withdrawDepositRequest.amount(), false);
-        } else {
+        if (withdrawDepositRequest.amount() < 0) {
+            throw new IllegalArgumentException("Withdrawal amount cannot be negative");
+        }
+        if (withdrawDepositRequest.amount() > withdrawalAmount) {
             throw new InsufficientResourcesException("Account does not have enough balance");
         }
+
+        updateAccountBalance(accountSender, withdrawDepositRequest.amount(), false);
 
         Transaction transaction = createTransaction(user, accountSender, null, withdrawDepositRequest.currencyType(), withdrawDepositRequest.amount(), "Withdraw successful", TransactionType.WITHDRAWAL);
         return transactionRepository.save(transaction);
     }
+
+
 
     /**
      * @param depositRequest the request body
