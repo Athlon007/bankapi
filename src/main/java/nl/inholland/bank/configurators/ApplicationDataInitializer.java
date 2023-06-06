@@ -35,10 +35,12 @@ public class ApplicationDataInitializer implements ApplicationRunner {
     @Transactional
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        // TODO: Add data to the database
+        // ----------------
+        // ---   USERS  ---
+        // ----------------
 
         UserForAdminRequest adminRequest = new UserForAdminRequest(
-                "admin@example.com",
+                "office@inhollandbank.nl",
                 "admin",
                 "Password1!",
                 "InHolland",
@@ -73,18 +75,14 @@ public class ApplicationDataInitializer implements ApplicationRunner {
                 "0612345678",
                 "2000-01-01");
         userService.addUser(userRequest);
-        //System.out.println(userService.getAllUsers(Optional.empty(), Optional.empty(), Optional.empty()));
 
         // ----------------
         // --- ACCOUNTS ---
         // ----------------
 
-        AccountRequest accountRequest = new AccountRequest(
-                "EURO",
-                "CURRENT",
-                1);
-
-        accountService.addAccount(accountRequest);
+        // First admin account belongs to the bank.
+        // Therefore, we assign it to the bank.
+        accountService.addAccountForBank(admin);
 
         // Test for transfering money
         // Account for employee
