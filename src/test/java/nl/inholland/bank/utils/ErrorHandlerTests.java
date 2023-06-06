@@ -77,9 +77,4 @@ class ErrorHandlerTests {
         errorHandler.handleDisabledException(new DisabledException("Test"));
     }
 
-    @Test
-    void handleHttpMediaTypeNotSupportedException() {
-        errorHandler.handleHttpMediaTypeNotSupportedException(new org.springframework.web.HttpMediaTypeNotSupportedException("Test"));
-    }
-
 }

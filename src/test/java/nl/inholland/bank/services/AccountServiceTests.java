@@ -73,6 +73,14 @@ public class AccountServiceTests {
         account.setActive(true);
 
         user.setCurrentAccount(account);
+
+        try {
+            Field field = accountService.getClass().getDeclaredField("bankAccountIBAN");
+            field.setAccessible(true);
+            field.set(accountService, "NL01INHO0000000001");
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
     }
 
     @Test
@@ -285,15 +293,6 @@ public class AccountServiceTests {
         user.setId(1);
         user.setRole(Role.ADMIN);
 
-        // reflection set utility for bankapi.token.expiration
-        try {
-            Field field = accountService.getClass().getDeclaredField("bankAccountIBAN");
-            field.setAccessible(true);
-            field.set(accountService, "NL01INHO0000000001");
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            e.printStackTrace();
-        }
-
         Mockito.when(accountRepository.findByIBAN(account.getIBAN())).thenReturn(Optional.empty());
 
         Assertions.assertDoesNotThrow(() ->accountService.addAccountForBank(user));
@@ -304,15 +303,6 @@ public class AccountServiceTests {
         User user = new User();
         user.setId(1);
         user.setRole(Role.USER);
-
-        // reflection set utility for bankapi.token.expiration
-        try {
-            Field field = accountService.getClass().getDeclaredField("bankAccountIBAN");
-            field.setAccessible(true);
-            field.set(accountService, "NL01INHO0000000001");
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            e.printStackTrace();
-        }
 
         Mockito.when(accountRepository.findByIBAN(account.getIBAN())).thenReturn(Optional.empty());
 
@@ -325,15 +315,6 @@ public class AccountServiceTests {
         user.setId(1);
         user.setRole(Role.ADMIN);
 
-        // reflection set utility for bankapi.token.expiration
-        try {
-            Field field = accountService.getClass().getDeclaredField("bankAccountIBAN");
-            field.setAccessible(true);
-            field.set(accountService, "NL01INHO0000000001");
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            e.printStackTrace();
-        }
-
         Mockito.when(accountRepository.findByIBAN("NL01INHO0000000001")).thenReturn(Optional.of(account));
 
         Assertions.assertThrows(IllegalArgumentException.class, () -> accountService.addAccountForBank(user));
@@ -345,5 +326,14 @@ public class AccountServiceTests {
         Mockito.when(accountRepository.save(Mockito.any(Account.class))).thenReturn(account);
 
         Assertions.assertDoesNotThrow(() -> accountService.updateAbsoluteLimit(account, accountAbsoluteLimitRequest));
+    }
+
+    @Test
+    void bankAccountCannotBeDeactivatedException() {
+        AccountActiveRequest accountActiveRequest = new AccountActiveRequest(false);
+        account.setIBAN("NL01INHO0000000001");
+        Mockito.when(accountRepository.save(Mockito.any(Account.class))).thenReturn(account);
+
+        Assertions.assertThrows(IllegalArgumentException.class, () -> accountService.activateOrDeactivateTheAccount(account, accountActiveRequest));
     }
 }
