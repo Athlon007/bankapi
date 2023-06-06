@@ -83,7 +83,7 @@ public class ApplicationDataInitializer implements ApplicationRunner {
                 "Password4!",
                 "Bobby",
                 "Bob",
-                "456123789",
+                "621063629",
                 "0612345678",
                 "2000-01-01");
         userService.addUser(userBobbyRequest);
@@ -95,7 +95,7 @@ public class ApplicationDataInitializer implements ApplicationRunner {
                 "Password4!",
                 "Berta",
                 "Bob",
-                "789123654",
+                "486284803",
                 "0612345678",
                 "2000-01-01");
         userService.addUser(userBertaRequest);
