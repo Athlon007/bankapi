@@ -88,7 +88,8 @@ public class TransactionService {
         User user = getUserByUsername();
         checkAccountPreconditionsForWithdrawOrDeposit(accountSender, user);
 
-        if (accountSender.getBalance() >= withdrawDepositRequest.amount())
+        double withdrawalAmount = accountSender.getBalance() + Math.abs(accountSender.getAbsoluteLimit());
+        if (withdrawalAmount >= withdrawDepositRequest.amount())
         {
             updateAccountBalance(accountSender, withdrawDepositRequest.amount(), false);
         } else {

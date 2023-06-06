@@ -1,6 +1,7 @@
 package nl.inholland.bank.services;
 
 import nl.inholland.bank.models.*;
+import nl.inholland.bank.models.dtos.AccountDTO.AccountAbsoluteLimitRequest;
 import nl.inholland.bank.models.dtos.AccountDTO.AccountActiveRequest;
 import nl.inholland.bank.models.dtos.AccountDTO.AccountRequest;
 import nl.inholland.bank.repositories.AccountRepository;
@@ -115,7 +116,8 @@ public class AccountService {
         accountRepository.save(account);
     }
 
-
-
-
+    public void updateAbsoluteLimit(Account account, AccountAbsoluteLimitRequest accountAbsoluteLimitRequest) {
+        account.setAbsoluteLimit(accountAbsoluteLimitRequest.absoluteLimit());
+        accountRepository.save(account);
+    }
 }

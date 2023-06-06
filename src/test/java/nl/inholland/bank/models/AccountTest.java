@@ -46,17 +46,6 @@ public class AccountTest {
     }
 
     @Test
-    public void setBalance_NegativeBalance_ThrowsIllegalArgumentException() {
-        // Arrange
-        double negativeBalance = -1000;
-
-        // Act & Assert
-        Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            account.setBalance(negativeBalance);
-        });
-    }
-
-    @Test
     public void setBalance_PositiveBalance_SetsBalance() {
         // Arrange
         double positiveBalance = 1000;
