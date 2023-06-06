@@ -15,7 +15,7 @@ import java.security.Key;
 @ExtendWith(SpringExtension.class)
 @Import(ApiTestConfiguration.class)
 @AutoConfigureMockMvc(addFilters = false)
-public class JwtKeyProviderTests {
+class JwtKeyProviderTests {
     private JwtKeyProvider jwtKeyProvider;
 
     @BeforeEach

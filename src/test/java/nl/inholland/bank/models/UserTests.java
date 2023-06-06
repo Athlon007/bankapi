@@ -1,5 +1,6 @@
 package nl.inholland.bank.models;
 
+import nl.inholland.bank.configurators.ApplicationDataInitializer;
 import nl.inholland.bank.models.Account;
 import nl.inholland.bank.models.AccountType;
 import nl.inholland.bank.models.Role;
@@ -9,11 +10,11 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 
 import java.time.LocalDate;
 import java.util.List;
 
-@SpringBootTest
 class UserTests {
     private User user;
 
@@ -402,5 +403,11 @@ class UserTests {
         Limits limits = new Limits();
         user.setLimits(limits);
         Assertions.assertEquals(limits, user.getLimits());
+    }
+
+    @Test
+    void gettingAndSettingUsername() {
+        user.setUsername("JohnDoe");
+        Assertions.assertEquals("JohnDoe", user.getUsername());
     }
 }
