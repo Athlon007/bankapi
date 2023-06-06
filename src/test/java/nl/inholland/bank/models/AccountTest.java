@@ -7,8 +7,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.time.LocalDate;
 
-@SpringBootTest
-public class AccountTest {
+class AccountTest {
     private Account account;
 
     @BeforeEach
@@ -186,5 +185,12 @@ public class AccountTest {
     void getSetAbsoluteLimit() {
         account.setAbsoluteLimit(-1);
         Assertions.assertEquals(-1, account.getAbsoluteLimit());
+    }
+
+    @Test
+    void getSetUser() {
+        User user = new User();
+        account.setUser(user);
+        Assertions.assertEquals(user, account.getUser());
     }
 }
