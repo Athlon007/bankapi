@@ -62,7 +62,7 @@ public class JwtTokenProviderTests {
         try {
             Field field = jwtTokenProvider.getClass().getDeclaredField("validityInMilliseconds");
             field.setAccessible(true);
-            field.set(jwtTokenProvider, 800);
+            field.set(jwtTokenProvider, 2000);
         } catch (NoSuchFieldException | IllegalAccessException e) {
             e.printStackTrace();
         }
@@ -70,7 +70,7 @@ public class JwtTokenProviderTests {
         try {
             Field field = jwtTokenProvider.getClass().getDeclaredField("validityRefreshInMilliseconds");
             field.setAccessible(true);
-            field.set(jwtTokenProvider, 800);
+            field.set(jwtTokenProvider, 2000);
         } catch (NoSuchFieldException | IllegalAccessException e) {
             e.printStackTrace();
         }
@@ -156,7 +156,7 @@ public class JwtTokenProviderTests {
 
         Token token = jwtTokenProvider.createToken("username", Role.USER);
         try {
-            Thread.sleep(1000);
+            Thread.sleep(3000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -181,7 +181,7 @@ public class JwtTokenProviderTests {
     void refreshTokenWithExpiredTokenThrowsAuthenticationException() {
         String refreshToken = jwtTokenProvider.createRefreshToken("username");
         try {
-            Thread.sleep(1000);
+            Thread.sleep(3000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

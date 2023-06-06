@@ -98,7 +98,7 @@ class UserServiceTests {
         currentAccount = new Account();
         currentAccount.setType(AccountType.CURRENT);
         currentAccount.setBalance(1000);
-        currentAccount.setIBAN("NL01INHO0000000001");
+        currentAccount.setIBAN("NL62INHO2395766879");
         currentAccount.setUser(user);
         currentAccount.setId(1);
         currentAccount.setCurrencyType(CurrencyType.EURO);
@@ -107,7 +107,7 @@ class UserServiceTests {
         savingAccount = new Account();
         savingAccount.setType(AccountType.SAVING);
         savingAccount.setBalance(1000);
-        savingAccount.setIBAN("NL01INHO0000000002");
+        savingAccount.setIBAN("NL04INHO2539494278");
         savingAccount.setUser(user);
         savingAccount.setId(1);
         savingAccount.setCurrencyType(CurrencyType.EURO);
@@ -117,7 +117,6 @@ class UserServiceTests {
         limits = new Limits();
         limits.setTransactionLimit(1000);
         limits.setDailyTransactionLimit(1000);
-        limits.setAbsoluteLimit(0);
         limits.setRemainingDailyTransactionLimit(1000);
 
         userRequest = new UserRequest("email@ex.com", "user", "Password1!", "Firstly", "Fister", "820510026", "0612345678", "2000-09-08");
@@ -129,7 +128,6 @@ class UserServiceTests {
         Limits defaultLimits = new Limits();
         defaultLimits.setDailyTransactionLimit(this.defaultDailyTransactionLimit);
         defaultLimits.setTransactionLimit(this.defaultTransactionLimit);
-        defaultLimits.setAbsoluteLimit(this.defaultAbsoluteLimit);
         defaultLimits.setRemainingDailyTransactionLimit(this.defaultDailyTransactionLimit);
 
         Mockito.when(userLimitsService.getDefaultLimits()).thenReturn(defaultLimits);

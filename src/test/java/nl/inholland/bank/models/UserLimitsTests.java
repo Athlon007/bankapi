@@ -15,16 +15,6 @@ class UserLimitsTests {
         limits = new Limits();
         limits.setTransactionLimit(10000);
         limits.setDailyTransactionLimit(1000);
-        limits.setAbsoluteLimit(0);
-    }
-
-    @Test
-    void settingAbsoluteLimitAbove0ThrowsIllegalArgumentException() {
-        Exception exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            limits.setAbsoluteLimit(1000);
-        });
-
-        Assertions.assertEquals("Absolute limit cannot be higher than 0", exception.getMessage());
     }
 
     @Test
@@ -68,11 +58,5 @@ class UserLimitsTests {
     void getSetTransactionLimit() {
         limits.setTransactionLimit(1);
         Assertions.assertEquals(1, limits.getTransactionLimit());
-    }
-
-    @Test
-    void getSetAbsoluteLimit() {
-        limits.setAbsoluteLimit(-1);
-        Assertions.assertEquals(-1, limits.getAbsoluteLimit());
     }
 }

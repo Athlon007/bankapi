@@ -94,7 +94,7 @@ class UserLimitsServiceTests {
         userAccount = new Account();
         userAccount.setType(AccountType.CURRENT);
         userAccount.setBalance(1000);
-        userAccount.setIBAN("NL01INHO0000000001");
+        userAccount.setIBAN("NL62INHO2395766879");
         userAccount.setUser(user);
         userAccount.setId(1);
         userAccount.setCurrencyType(CurrencyType.EURO);
@@ -103,7 +103,7 @@ class UserLimitsServiceTests {
         receiverAccount = new Account();
         receiverAccount.setType(AccountType.CURRENT);
         receiverAccount.setBalance(1000);
-        receiverAccount.setIBAN("NL01INHO0000000002");
+        receiverAccount.setIBAN("NL04INHO2539494278");
         receiverAccount.setUser(user);
         receiverAccount.setId(2);
         receiverAccount.setCurrencyType(CurrencyType.EURO);
@@ -112,7 +112,6 @@ class UserLimitsServiceTests {
         limits = new Limits();
         limits.setTransactionLimit(1000);
         limits.setDailyTransactionLimit(1000);
-        limits.setAbsoluteLimit(0);
         limits.setRemainingDailyTransactionLimit(1000);
 
         sendTransaction = new Transaction();
@@ -147,7 +146,7 @@ class UserLimitsServiceTests {
         user.setCurrentAccount(userAccount);
         receiverUser.setCurrentAccount(receiverAccount);
 
-        userLimitsRequest = new UserLimitsRequest(1000, 1000, 0);
+        userLimitsRequest = new UserLimitsRequest(1000, 1000);
     }
 
     @Test
