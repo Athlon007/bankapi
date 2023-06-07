@@ -83,19 +83,11 @@ public class TransactionService {
      * @throws AuthenticationException if the user is not authenticated
      * @throws UserNotTheOwnerOfAccountException if the user is not the owner of the account
      */
-    public Transaction withdrawMoney(WithdrawDepositRequest withdrawDepositRequest) throws AccountNotFoundException, InsufficientResourcesException, AuthenticationException, UserNotTheOwnerOfAccountException {
+    public Transaction withdrawMoney(WithdrawDepositRequest withdrawDepositRequest) throws AccountNotFoundException, InsufficientResourcesException, AuthenticationException, UserNotTheOwnerOfAccountException, javax.naming.AuthenticationException {
         Account accountSender = accountService.getAccountByIBAN(withdrawDepositRequest.IBAN());
         User user = getUserByUsername();
         checkAccountPreconditionsForWithdrawOrDeposit(accountSender, user);
-
-        double withdrawalAmount = accountSender.getBalance() + Math.abs(accountSender.getAbsoluteLimit());
-        if (withdrawDepositRequest.amount() < 0) {
-            throw new IllegalArgumentException("Withdrawal amount cannot be negative");
-        }
-        if (withdrawDepositRequest.amount() > withdrawalAmount) {
-            throw new InsufficientResourcesException("Account does not have enough balance");
-        }
-
+        checkUserLimits(accountSender, withdrawDepositRequest.amount());
         updateAccountBalance(accountSender, withdrawDepositRequest.amount(), false);
 
         Transaction transaction = createTransaction(user, accountSender, null, withdrawDepositRequest.currencyType(), withdrawDepositRequest.amount(), "Withdraw successful", TransactionType.WITHDRAWAL);
