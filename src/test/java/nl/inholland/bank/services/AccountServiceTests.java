@@ -26,7 +26,7 @@ import java.util.Optional;
 @ExtendWith(SpringExtension.class)
 @Import(ApiTestConfiguration.class)
 @AutoConfigureMockMvc(addFilters = false)
-public class AccountServiceTests {
+class AccountServiceTests {
     private AccountService accountService;
 
     @MockBean

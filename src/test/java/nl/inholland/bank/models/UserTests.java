@@ -413,4 +413,10 @@ class UserTests {
 
         Assertions.assertEquals("Last name cannot be empty", exception.getMessage());
     }
+
+    @Test
+    void getSetLastName() {
+        user.setLastName("Doe");
+        Assertions.assertEquals("Doe", user.getLastName());
+    }
 }
