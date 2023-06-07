@@ -410,4 +410,13 @@ class UserTests {
         user.setUsername("JohnDoe");
         Assertions.assertEquals("JohnDoe", user.getUsername());
     }
+
+    @Test
+    void settingLastNameEmptyThrowsException() {
+        Exception exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            user.setLastName("");
+        });
+
+        Assertions.assertEquals("Last name cannot be empty", exception.getMessage());
+    }
 }
