@@ -2,6 +2,7 @@ package nl.inholland.bank.services;
 
 import nl.inholland.bank.configuration.ApiTestConfiguration;
 import nl.inholland.bank.models.*;
+import nl.inholland.bank.models.dtos.AccountDTO.AccountAbsoluteLimitRequest;
 import nl.inholland.bank.models.dtos.AccountDTO.AccountActiveRequest;
 import nl.inholland.bank.models.dtos.AccountDTO.AccountRequest;
 import nl.inholland.bank.repositories.AccountRepository;
@@ -16,6 +17,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import javax.security.auth.login.AccountNotFoundException;
+import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -71,6 +73,14 @@ public class AccountServiceTests {
         account.setActive(true);
 
         user.setCurrentAccount(account);
+
+        try {
+            Field field = accountService.getClass().getDeclaredField("bankAccountIBAN");
+            field.setAccessible(true);
+            field.set(accountService, "NL01INHO0000000001");
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
     }
 
     @Test
@@ -277,4 +287,53 @@ public class AccountServiceTests {
         Mockito.verify(accountRepository, Mockito.times(1)).save(account);
     }
 
+    @Test
+    void assigningBankAccountToAdminShouldWork() {
+        User user = new User();
+        user.setId(1);
+        user.setRole(Role.ADMIN);
+
+        Mockito.when(accountRepository.findByIBAN(account.getIBAN())).thenReturn(Optional.empty());
+
+        Assertions.assertDoesNotThrow(() ->accountService.addAccountForBank(user));
+    }
+
+    @Test
+    void assigningBankAccountToNonAdminThrowsIllegalArgument() {
+        User user = new User();
+        user.setId(1);
+        user.setRole(Role.USER);
+
+        Mockito.when(accountRepository.findByIBAN(account.getIBAN())).thenReturn(Optional.empty());
+
+        Assertions.assertThrows(IllegalArgumentException.class, () -> accountService.addAccountForBank(user));
+    }
+
+    @Test
+    void assigningBankAccountTwiceThrowsException() {
+        User user = new User();
+        user.setId(1);
+        user.setRole(Role.ADMIN);
+
+        Mockito.when(accountRepository.findByIBAN("NL01INHO0000000001")).thenReturn(Optional.of(account));
+
+        Assertions.assertThrows(IllegalArgumentException.class, () -> accountService.addAccountForBank(user));
+    }
+
+    @Test
+    void updateAbsoluteLimitsShouldWork() {
+        AccountAbsoluteLimitRequest accountAbsoluteLimitRequest = new AccountAbsoluteLimitRequest(-10);
+        Mockito.when(accountRepository.save(Mockito.any(Account.class))).thenReturn(account);
+
+        Assertions.assertDoesNotThrow(() -> accountService.updateAbsoluteLimit(account, accountAbsoluteLimitRequest));
+    }
+
+    @Test
+    void bankAccountCannotBeDeactivatedException() {
+        AccountActiveRequest accountActiveRequest = new AccountActiveRequest(false);
+        account.setIBAN("NL01INHO0000000001");
+        Mockito.when(accountRepository.save(Mockito.any(Account.class))).thenReturn(account);
+
+        Assertions.assertThrows(IllegalArgumentException.class, () -> accountService.activateOrDeactivateTheAccount(account, accountActiveRequest));
+    }
 }

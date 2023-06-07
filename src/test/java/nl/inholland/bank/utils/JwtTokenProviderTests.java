@@ -38,7 +38,7 @@ import java.util.Random;
 @ExtendWith(SpringExtension.class)
 @Import(ApiTestConfiguration.class)
 @AutoConfigureMockMvc(addFilters = false)
-public class JwtTokenProviderTests {
+class JwtTokenProviderTests {
     private JwtTokenProvider jwtTokenProvider;
 
     @MockBean

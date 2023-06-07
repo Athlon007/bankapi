@@ -4,7 +4,7 @@ import nl.inholland.bank.models.dtos.AccountDTO.AccountRequest;
 import nl.inholland.bank.models.dtos.AccountDTO.AccountResponse;
 import org.junit.jupiter.api.Test;
 
-public class AccountDTOsTests {
+class AccountDTOsTests {
 
     @Test
     void settingAccountResponse() {

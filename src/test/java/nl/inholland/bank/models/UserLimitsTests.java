@@ -6,7 +6,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
 class UserLimitsTests {
     private Limits limits;
 
@@ -58,5 +57,11 @@ class UserLimitsTests {
     void getSetTransactionLimit() {
         limits.setTransactionLimit(1);
         Assertions.assertEquals(1, limits.getTransactionLimit());
+    }
+
+    @Test
+    void getSetDailyTransactionLimit() {
+        limits.setDailyTransactionLimit(1);
+        Assertions.assertEquals(1, limits.getDailyTransactionLimit());
     }
 }
