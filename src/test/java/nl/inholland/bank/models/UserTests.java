@@ -14,6 +14,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 
 class UserTests {
     private User user;
@@ -418,5 +419,30 @@ class UserTests {
     void getSetLastName() {
         user.setLastName("Doe");
         Assertions.assertEquals("Doe", user.getLastName());
+    }
+
+    @Test
+    void compareUserToAnotherUserReturnsFalse() {
+        User user2 = new User();
+        user2.setId(2);
+        user2.setFirstName("Jane");
+        user2.setLastName("Doe");
+
+        Assertions.assertNotEquals(user, user2);
+    }
+
+    @Test
+    void compareUserToItselfReturnsTrue() {
+        Assertions.assertEquals(user, user);
+    }
+
+    @Test
+    void compareUserToOtherObjectReturnsFalse() {
+        Assertions.assertNotEquals(user, new Object());
+    }
+
+    @Test
+    void getHashCode() {
+        Assertions.assertEquals(31, user.hashCode());
     }
 }
