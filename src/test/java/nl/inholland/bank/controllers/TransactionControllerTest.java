@@ -5,6 +5,7 @@ import nl.inholland.bank.models.Account;
 import nl.inholland.bank.models.Role;
 import nl.inholland.bank.models.Transaction;
 import nl.inholland.bank.models.dtos.TransactionDTO.TransactionSearchRequest;
+import nl.inholland.bank.models.dtos.TransactionDTO.WithdrawDepositRequest;
 import nl.inholland.bank.services.TransactionService;
 import nl.inholland.bank.services.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -84,10 +85,6 @@ class TransactionControllerTest {
     }
 
     @Test
-    void withdrawMoney() {
-    }
-
-    @Test
     void transferMoney() {
     }
     @Test
@@ -116,7 +113,18 @@ class TransactionControllerTest {
                 .andExpect(jsonPath("$.accountReceiver.id").value(2))
                 .andExpect(jsonPath("$.accountSender.id").value(1));
     }
+    @Test
+    void withdrawMoney() throws Exception{
+        when(transactionService.withdrawMoney(new WithdrawDepositRequest())).thenReturn(mockTransaction.get(0));
 
+        mockMvc.perform(MockMvcRequestBuilders.post("/transactions/withdraw/1/100")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.amount").value(100))
+                .andExpect(jsonPath("$.accountReceiver.id").value(2))
+                .andExpect(jsonPath("$.accountSender.id").value(1));
+    }
     @Test
     void buildTransactionResponse() {
     }
