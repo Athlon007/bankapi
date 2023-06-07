@@ -105,17 +105,32 @@ public class UserLimitsService {
     }
 
     private Double calculateRemainingDailyLimit(Limits limits, List<Transaction> todaysTransactions) {
-        // Calculate total value of transactions today.
-        // Also ignore transactions from/to SAVINGS accounts.
-        double todayTotal = todaysTransactions.stream()
-                .filter(transaction ->
-                        (transaction.getAccountSender() != null && !transaction.getAccountSender().getType().equals(AccountType.SAVING))
-                        || ( transaction.getAccountReceiver() != null && !transaction.getAccountReceiver().getType().equals(AccountType.SAVING))
-                        && (transaction.getAccountSender() != null)) // Deposits
-                .mapToDouble(Transaction::getAmount)
-                .sum();
+        double totalToday = 0;
+        for (Transaction transaction : todaysTransactions) {
+            // Ignore transactions from SAVINGS accounts.
+            if (transaction.getAccountSender() != null && transaction.getAccountSender().getType().equals(AccountType.SAVING)) {
+                continue;
+            }
 
-        return limits.getDailyTransactionLimit() - todayTotal;
+            // Ignore transactions to SAVINGS accounts.
+            if (transaction.getAccountReceiver() != null && transaction.getAccountReceiver().getType().equals(AccountType.SAVING)) {
+                continue;
+            }
+
+            // Ignore deposits to CURRENT accounts.
+            if (transaction.getAccountSender() == null && transaction.getAccountReceiver() != null) {
+                continue;
+            }
+
+            // Ignore deposits to CURRENT accounts.
+            if (transaction.getAccountReceiver() != null && transaction.getAccountSender().getUser() != transaction.getAccountReceiver().getUser()) {
+                  continue;
+            }
+
+            totalToday += transaction.getAmount();
+        }
+
+        return limits.getDailyTransactionLimit() - totalToday;
     }
 
     public Limits getDefaultLimits() {
