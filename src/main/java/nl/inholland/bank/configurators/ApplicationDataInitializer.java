@@ -83,7 +83,7 @@ public class ApplicationDataInitializer implements ApplicationRunner {
                 "Password4!",
                 "Bobby",
                 "Bob",
-                "621063629",
+                "570372562",
                 "0612345678",
                 "2000-01-01");
         userService.addUser(userBobbyRequest);
@@ -92,10 +92,10 @@ public class ApplicationDataInitializer implements ApplicationRunner {
         UserRequest userBertaRequest = new UserRequest(
                 "berta@example.com",
                 "berta",
-                "Password4!",
+                "Password5!",
                 "Berta",
                 "Bob",
-                "486284803",
+                "333550808",
                 "0612345678",
                 "2000-01-01");
         userService.addUser(userBertaRequest);

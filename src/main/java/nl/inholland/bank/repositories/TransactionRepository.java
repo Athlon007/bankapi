@@ -42,8 +42,8 @@ public interface TransactionRepository extends CrudRepository<Transaction, Long>
         if (transactionID != 0) {
             // Find transaction by ID
             specification = specification.and(TransactionSpecifications.withTransactionID(transactionID));
-        } else {
-            // Find transaction by other conditions
+        } else if (StringUtils.isNotBlank(accountSenderIBAN) || StringUtils.isNotBlank(accountReceiverIBAN)) {
+            // Find transaction by IBAN(s)
             if (StringUtils.isNotBlank(accountSenderIBAN)) {
                 specification = specification.and(TransactionSpecifications.withAccountSenderIBAN(accountSenderIBAN));
             }
@@ -51,21 +51,19 @@ public interface TransactionRepository extends CrudRepository<Transaction, Long>
             if (StringUtils.isNotBlank(accountReceiverIBAN)) {
                 specification = specification.and(TransactionSpecifications.withAccountReceiverIBAN(accountReceiverIBAN));
             }
-
-            if (user != null) {
-                specification = specification.and(TransactionSpecifications.withUser(user));
+        } else if (senderUser != null || receiverUser != null) {
+            // Find transaction by userID(s)
+            if (senderUser != null) {
+                specification = specification.and(TransactionSpecifications.withSenderUser(senderUser));
             }
 
-            if (StringUtils.isBlank(accountSenderIBAN) && StringUtils.isBlank(accountReceiverIBAN)) {
-
-                if (senderUser != null) {
-                    specification = specification.and(TransactionSpecifications.withSenderUser(senderUser));
-                }
-
-                if (receiverUser != null) {
-                    specification = specification.and(TransactionSpecifications.withReceiverUser(receiverUser));
-                }
+            if (receiverUser != null) {
+                specification = specification.and(TransactionSpecifications.withReceiverUser(receiverUser));
             }
+        }
+
+        if (user != null) {
+            specification = specification.and(TransactionSpecifications.withUserId(user.getId()));
         }
 
         // Add the transaction type check
