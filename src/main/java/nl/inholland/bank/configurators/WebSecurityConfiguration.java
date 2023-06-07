@@ -22,6 +22,10 @@ public class WebSecurityConfiguration {
         httpSecurity.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
         httpSecurity.cors();
 
+        httpSecurity.requiresChannel()
+                .anyRequest()
+                .requiresSecure();
+
         return httpSecurity.build();
     }
 }

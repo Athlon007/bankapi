@@ -4,5 +4,5 @@ RUN apt-get install openjdk-19-jdk -y
 COPY . .
 RUN ./mvnw clean install -U
 
-EXPOSE 8080
+EXPOSE 8443
 ENTRYPOINT ["./mvnw","spring-boot:run"]
