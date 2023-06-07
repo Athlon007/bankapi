@@ -227,4 +227,47 @@ class UserLimitsServiceTests {
 
         Assertions.assertThrows(AuthenticationException.class, () -> userLimitsService.updateUserLimits(1, userLimitsRequest));
     }
+
+    @Test
+    void accountReceiverIsSaving() {
+        Account receiver = new Account();
+        receiver.setType(AccountType.SAVING);
+
+        sendTransaction.setAccountReceiver(receiver);
+
+        List<Transaction> transactions = List.of(
+               sendTransaction
+        );
+
+        Assertions.assertEquals(1000, userLimitsService.calculateRemainingDailyLimit(limits, transactions, 1));
+    }
+
+    @Test
+    void accountSenderIsSaving() {
+        Account receiver = new Account();
+        receiver.setType(AccountType.SAVING);
+
+        sendTransaction.setAccountSender(receiver);
+
+        List<Transaction> transactions = List.of(
+                sendTransaction
+        );
+
+        Assertions.assertEquals(1000, userLimitsService.calculateRemainingDailyLimit(limits, transactions, 1));
+    }
+
+    @Test
+    void ignoreDepositsToCurrentAccount() {
+
+        receiverAccount.setUser(receiverUser);
+
+        sendTransaction.setAccountSender(receiverAccount);
+        sendTransaction.setAccountReceiver(userAccount);
+
+        List<Transaction> transactions = List.of(
+                sendTransaction
+        );
+
+        Assertions.assertEquals(1000, userLimitsService.calculateRemainingDailyLimit(limits, transactions, 1));
+    }
 }

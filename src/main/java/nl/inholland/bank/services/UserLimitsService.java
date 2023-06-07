@@ -48,7 +48,7 @@ public class UserLimitsService {
 
         // Get all transactions from today for this user using findAllByTimestampIsAfter.
         List<Transaction> todayTransactions = transactionRepository.findAllByTimestampIsAfterAndUserId(LocalDate.now().atStartOfDay(), userId);
-        double remainingDailyLimit = calculateRemainingDailyLimit(limits, todayTransactions);
+        double remainingDailyLimit = calculateRemainingDailyLimit(limits, todayTransactions, userId);
 
         // Calculate the remaining daily limit
         limits.setRemainingDailyTransactionLimit(remainingDailyLimit);
@@ -96,7 +96,7 @@ public class UserLimitsService {
         Limits limitsResponse = userLimitsRepository.findFirstByUserId(userId);
         // Get all transactions from today for this user using findAllByTimestampIsAfter.
         List<Transaction> todayTransactions = transactionRepository.findAllByTimestampIsAfterAndUserId(LocalDate.now().atStartOfDay(), userId);
-        double remainingDailyLimit = calculateRemainingDailyLimit(limits, todayTransactions);
+        double remainingDailyLimit = calculateRemainingDailyLimit(limits, todayTransactions, userId);
 
         // Calculate the remaining daily limit
         limitsResponse.setRemainingDailyTransactionLimit(remainingDailyLimit);
@@ -104,7 +104,7 @@ public class UserLimitsService {
         return limitsResponse;
     }
 
-    private Double calculateRemainingDailyLimit(Limits limits, List<Transaction> todaysTransactions) {
+    public Double calculateRemainingDailyLimit(Limits limits, List<Transaction> todaysTransactions, int userId) {
         double totalToday = 0;
         for (Transaction transaction : todaysTransactions) {
             // Ignore transactions from SAVINGS accounts.
@@ -123,7 +123,7 @@ public class UserLimitsService {
             }
 
             // Ignore deposits to CURRENT accounts.
-            if (transaction.getAccountReceiver() != null && transaction.getAccountSender().getUser() != transaction.getAccountReceiver().getUser()) {
+            if (transaction.getAccountReceiver() != null && transaction.getAccountSender().getUser().getId() != userId) {
                   continue;
             }
 
