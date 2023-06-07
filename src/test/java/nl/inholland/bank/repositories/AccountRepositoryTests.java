@@ -14,7 +14,7 @@ import static org.mockito.Mockito.when;
 
 
 @ExtendWith(MockitoExtension.class)
-public class AccountRepositoryTests {
+class AccountRepositoryTests {
 
     @Mock
     private AccountRepository accountRepository;
