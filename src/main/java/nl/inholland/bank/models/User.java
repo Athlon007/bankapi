@@ -13,6 +13,7 @@ import org.springframework.lang.NonNullFields;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Data
@@ -248,5 +249,19 @@ public class User {
         }
 
         return sum;
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (!(object instanceof User user)) {
+            return false;
+        }
+
+        return user.getId() == this.getId();
+    }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(id);
     }
 }
