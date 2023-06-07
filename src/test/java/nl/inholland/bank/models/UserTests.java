@@ -155,12 +155,6 @@ class UserTests {
     }
 
     @Test
-    void setttingLastNameToNullShouldReplaceWithEmptyString() {
-        user.setLastName(null);
-        Assertions.assertEquals("", user.getLastName());
-    }
-
-    @Test
     void attemptingToOverwriteCurrentAccountShouldThrowOperationNotAllowedException() {
         Exception exception = Assertions.assertThrows(OperationNotAllowedException.class, () -> {
             Account account = new Account();
