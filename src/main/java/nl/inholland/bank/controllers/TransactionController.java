@@ -58,6 +58,8 @@ public class TransactionController {
             return ResponseEntity.status(404).body(new ExceptionResponse(e.getMessage()));
         } catch (AuthenticationException | UserNotTheOwnerOfAccountException e) {
             return ResponseEntity.status(403).body(new ExceptionResponse(e.getMessage()));
+        } catch (javax.naming.AuthenticationException e) {
+            throw new RuntimeException(e);
         }
     }
 
