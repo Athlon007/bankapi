@@ -105,7 +105,16 @@ class TransactionControllerTest {
     }
 
     @Test
-    void depositMoney() {
+    void depositMoney() throws Exeption{
+        when(transactionService.depositMoney(1, 100)).thenReturn(mockTransaction.get(0));
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/transactions/deposit/1/100")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.amount").value(100))
+                .andExpect(jsonPath("$.accountReceiver.id").value(2))
+                .andExpect(jsonPath("$.accountSender.id").value(1));
     }
 
     @Test
