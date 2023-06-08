@@ -37,4 +37,4 @@ This project is licensed under the MIT license.
 
 ## Info
 
-Created in 2023 for the InHolland University of Applied Sciences.
+Created in 2023 for the InHolland University of Applied Sciences. This project is part of the Information Technology course.
