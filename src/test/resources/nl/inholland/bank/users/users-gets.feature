@@ -122,3 +122,11 @@ Feature: GET requests on User end-point
     And I receive a token
     When I request user with id "banana"
     Then I get HTTP status 400
+
+  Scenario: Get User 'Bank' by his lastname
+    Given I have a valid login credentials
+    And I call the application login endpoint
+    And I receive a token
+    When I request user a user with name "Bank"
+    Then I get HTTP status 200
+    And I get 1 elements in the list

@@ -1,35 +1,24 @@
 package nl.inholland.bank.configurators;
 
 import jakarta.transaction.Transactional;
-import nl.inholland.bank.models.Account;
-import nl.inholland.bank.models.CurrencyType;
-import nl.inholland.bank.models.Transaction;
 import nl.inholland.bank.models.User;
 import nl.inholland.bank.models.dtos.AccountDTO.AccountRequest;
-import nl.inholland.bank.models.dtos.TransactionDTO.WithdrawDepositRequest;
 import nl.inholland.bank.models.dtos.UserDTO.UserForAdminRequest;
 import nl.inholland.bank.models.dtos.UserDTO.UserRequest;
-import nl.inholland.bank.models.exceptions.UserNotTheOwnerOfAccountException;
 import nl.inholland.bank.services.AccountService;
-import nl.inholland.bank.services.TransactionService;
 import nl.inholland.bank.services.UserService;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
-
-import java.util.Optional;
 
 @Component
 public class ApplicationDataInitializer implements ApplicationRunner {
     private final UserService userService;
     private final AccountService accountService;
 
-    private final TransactionService transactionService;
-
-    public ApplicationDataInitializer(UserService userService, AccountService accountService, TransactionService transactionService) {
+    public ApplicationDataInitializer(UserService userService, AccountService accountService) {
         this.userService = userService;
         this.accountService = accountService;
-        this.transactionService = transactionService;
     }
 
     @Transactional

@@ -11,9 +11,7 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(securedEnabled = true, prePostEnabled = true)
-//@CrossOrigin(origins = "http://localhost:5137")
-// Load multiple CrossOrigins from application.properties
+@EnableMethodSecurity(securedEnabled = true)
 @CrossOrigin
 public class WebSecurityConfiguration {
     @Bean

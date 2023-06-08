@@ -4,7 +4,9 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import nl.inholland.bank.models.Role;
-import nl.inholland.bank.models.Token;
+import nl.inholland.bank.models.User;
+import nl.inholland.bank.models.dtos.Token;
+import nl.inholland.bank.repositories.UserRepository;
 import nl.inholland.bank.services.RefreshTokenBlacklistService;
 import nl.inholland.bank.services.UserDetailsService;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,6 +17,7 @@ import org.springframework.stereotype.Component;
 
 import javax.naming.AuthenticationException;
 import java.util.Date;
+import java.util.Optional;
 
 @Component
 public class JwtTokenProvider {
@@ -23,16 +26,18 @@ public class JwtTokenProvider {
     @Value("${bankapi.token.refresh.expiration}")
     private long validityRefreshInMilliseconds;
 
-    private UserDetailsService userDetailsService;
-    private JwtKeyProvider jwtKeyProvider;
-    private RefreshTokenBlacklistService refreshTokenBlacklistService;
+    private final UserDetailsService userDetailsService;
+    private final JwtKeyProvider jwtKeyProvider;
+    private final RefreshTokenBlacklistService refreshTokenBlacklistService;
+    private final UserRepository userRepository;
 
     private Authentication authentication;
 
-    public JwtTokenProvider(UserDetailsService userDetailsService, JwtKeyProvider jwtKeyProvider, RefreshTokenBlacklistService refreshTokenBlacklistService) {
+    public JwtTokenProvider(UserDetailsService userDetailsService, JwtKeyProvider jwtKeyProvider, RefreshTokenBlacklistService refreshTokenBlacklistService, UserRepository userRepository) {
         this.userDetailsService = userDetailsService;
         this.jwtKeyProvider = jwtKeyProvider;
         this.refreshTokenBlacklistService = refreshTokenBlacklistService;
+        this.userRepository = userRepository;
     }
 
     public Token createToken(String username, Role role) {
@@ -110,12 +115,8 @@ public class JwtTokenProvider {
     }
 
     public Role getRole() {
-        // Get role from authentication.
-        if (authentication == null) {
-            return null;
-        }
-
-        return (Role) authentication.getAuthorities().stream().findFirst().get();
+        Optional<User> user = userRepository.findUserByUsername(getUsername());
+        return user.map(User::getRole).orElse(null);
     }
 
     public void clearAuthentication() {
