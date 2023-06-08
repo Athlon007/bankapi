@@ -8,10 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.repository.query.FluentQuery;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -29,7 +26,7 @@ import static org.mockito.Mockito.mock;
 @ExtendWith(SpringExtension.class)
 @Import(ApiTestConfiguration.class)
 @AutoConfigureMockMvc(addFilters = false)
-public class TransactionRepositoryTests {
+class TransactionRepositoryTests {
     private TransactionRepository transactionRepository = new TransactionRepository() {
         Transaction transaction = new Transaction() {
             {
@@ -145,7 +142,7 @@ public class TransactionRepositoryTests {
 
         @Override
         public Page<Transaction> findAll(Specification<Transaction> spec, Pageable pageable) {
-            return null;
+            return new PageImpl<>(List.of(transaction, withdrawal, deposit));
         }
 
         @Override
