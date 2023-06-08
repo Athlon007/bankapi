@@ -2,18 +2,21 @@ package nl.inholland.bank.repositories;
 
 import nl.inholland.bank.configuration.ApiTestConfiguration;
 import nl.inholland.bank.models.*;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.repository.query.FluentQuery;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -182,53 +185,23 @@ public class TransactionRepositoryTests {
     };
 
     @Test
-    void findAllByTimestampIsAfterAndUserId_ShouldReturnListOfTransactions() {
-        LocalDateTime start = LocalDateTime.now().minusDays(7);
-        int userId = 1;
+    void findAllTransactionsTest() {
+        double minAmount = 10.0;
+        double maxAmount = 100.0;
+        LocalDateTime startDate = LocalDateTime.now().minusDays(7);
+        LocalDateTime endDate = LocalDateTime.now();
+        int transactionID = 0;
+        String accountSenderIBAN = "";
+        String accountReceiverIBAN = "";
+        Pageable pageable = PageRequest.of(0, 10);
 
-        // Create a mock of the TransactionRepository
-        TransactionRepository transactionRepository = Mockito.mock(TransactionRepository.class);
-
-        // Create a list of transactions to be returned by the mock
-        List<Transaction> transactions = new ArrayList<>();
-        transactions.add(new Transaction());
-        transactions.add(new Transaction());
-        // Add more transactions if needed
-
-        // Specify the mock behavior
-        Mockito.when(transactionRepository.findAllByTimestampIsAfterAndUserId(start, userId))
-                .thenReturn(transactions);
-
-        // Call the method under test
-        List<Transaction> result = transactionRepository.findAllByTimestampIsAfterAndUserId(start, userId);
-
-        // Assert the result
-        assertNotNull(result);
+        Assertions.assertDoesNotThrow(() -> transactionRepository.findTransactions(minAmount, maxAmount,
+                startDate, endDate, transactionID, accountSenderIBAN, accountReceiverIBAN,
+                null, null, null, null, pageable));
     }
 
     @Test
-    void findAll_ShouldReturnPageOfTransactions() {
-        Pageable pageable = Mockito.mock(Pageable.class);
-
-        // Create a mock of the TransactionRepository
-        TransactionRepository transactionRepository = Mockito.mock(TransactionRepository.class);
-
-        // Create a mock page of transactions to be returned by the mock
-        Page page = mock(Page.class);
-
-        // Specify the mock behavior
-        Mockito.when(transactionRepository.findAll(pageable))
-                .thenReturn(page);
-
-        // Call the method under test
-        Page<Transaction> result = transactionRepository.findAll(pageable);
-
-        // Assert the result
-        assertNotNull(result);
-    }
-
-    @Test
-    void findTransactions_ShouldReturnPageOfTransactionsByTransactionID() {
+    void findAllTransactionsByTransactionIDTest() {
         double minAmount = 10.0;
         double maxAmount = 100.0;
         LocalDateTime startDate = LocalDateTime.now().minusDays(7);
@@ -237,72 +210,18 @@ public class TransactionRepositoryTests {
         String accountSenderIBAN = "";
         String accountReceiverIBAN = "";
         User user = new User();
-        TransactionType transactionType = TransactionType.TRANSACTION;
-        Pageable pageable = Mockito.mock(Pageable.class);
-
-        // Create a mock of the TransactionRepository
-        TransactionRepository transactionRepository = Mockito.mock(TransactionRepository.class);
-
-        // Create a mock page of transactions to be returned by the mock
-        Page<Transaction> page = Mockito.mock(Page.class);
-
-        // Specify the mock behavior
-        Mockito.when(transactionRepository.findTransactions(
-                        minAmount, maxAmount, startDate, endDate, transactionID,
-                        accountSenderIBAN, accountReceiverIBAN, user, null, null,
-                        transactionType, pageable))
-                .thenReturn(page);
-
-        // Call the method under test
-        Page<Transaction> result = transactionRepository.findTransactions(
-                minAmount, maxAmount, startDate, endDate, transactionID,
-                accountSenderIBAN, accountReceiverIBAN, user, null, null,
-                transactionType, pageable);
-
-        // Assert the result
-        assertNotNull(result);
-    }
-
-    @Test
-    void findTransactions_ShouldReturnPageOfTransactionsByUserID() {
-        double minAmount = 10.0;
-        double maxAmount = 100.0;
-        LocalDateTime startDate = LocalDateTime.now().minusDays(7);
-        LocalDateTime endDate = LocalDateTime.now();
-        int transactionID = 0;
-        String accountSenderIBAN = "";
-        String accountReceiverIBAN = "";
-        User user = new User();
         User senderUser = new User();
         User receiverUser = new User();
         TransactionType transactionType = TransactionType.TRANSACTION;
-        Pageable pageable = Mockito.mock(Pageable.class);
+        Pageable pageable = PageRequest.of(0, 10);
 
-        // Create a mock of the TransactionRepository
-        TransactionRepository transactionRepository = Mockito.mock(TransactionRepository.class);
-
-        // Create a mock page of transactions to be returned by the mock
-        Page<Transaction> page = Mockito.mock(Page.class);
-
-        // Specify the mock behavior
-        Mockito.when(transactionRepository.findTransactions(
-                        minAmount, maxAmount, startDate, endDate, transactionID,
-                        accountSenderIBAN, accountReceiverIBAN, user, senderUser, receiverUser,
-                        transactionType, pageable))
-                .thenReturn(page);
-
-        // Call the method under test
-        Page<Transaction> result = transactionRepository.findTransactions(
-                minAmount, maxAmount, startDate, endDate, transactionID,
-                accountSenderIBAN, accountReceiverIBAN, user, senderUser, receiverUser,
-                transactionType, pageable);
-
-        // Assert the result
-        assertNotNull(result);
+        Assertions.assertDoesNotThrow(() -> transactionRepository.findTransactions(minAmount, maxAmount,
+                startDate, endDate, transactionID, accountSenderIBAN, accountReceiverIBAN,
+                user, senderUser, receiverUser, transactionType, pageable));
     }
 
     @Test
-    void findTransactions_ShouldReturnPageOfTransactionsByIBAN() {
+    void findAllTransactionsTestByIBAN() {
         double minAmount = 10.0;
         double maxAmount = 100.0;
         LocalDateTime startDate = LocalDateTime.now().minusDays(7);
@@ -313,35 +232,31 @@ public class TransactionRepositoryTests {
         User user = new User();
         User senderUser = new User();
         User receiverUser = new User();
-        TransactionType transactionType = TransactionType.DEPOSIT;
-        Pageable pageable = Mockito.mock(Pageable.class);
+        TransactionType transactionType = TransactionType.TRANSACTION;
+        Pageable pageable = PageRequest.of(0, 10);
 
-        // Create a mock of the TransactionRepository
-        TransactionRepository transactionRepository = Mockito.mock(TransactionRepository.class);
+        Assertions.assertDoesNotThrow(() -> transactionRepository.findTransactions(minAmount, maxAmount,
+                startDate, endDate, transactionID, accountSenderIBAN, accountReceiverIBAN,
+                user, senderUser, receiverUser, transactionType, pageable));
+    }
 
-        // Create a mock page of transactions to be returned by the mock
-        Page<Transaction> page = Mockito.mock(Page.class);
+    @Test
+    void findAllTransactionsTestByUsers() {
+        double minAmount = 10.0;
+        double maxAmount = 100.0;
+        LocalDateTime startDate = LocalDateTime.now().minusDays(7);
+        LocalDateTime endDate = LocalDateTime.now();
+        int transactionID = 0;
+        String accountSenderIBAN = "";
+        String accountReceiverIBAN = "";
+        User user = new User();
+        User senderUser = new User();
+        User receiverUser = new User();
+        TransactionType transactionType = TransactionType.TRANSACTION;
+        Pageable pageable = PageRequest.of(0, 10);
 
-        // Specify the mock behavior
-        Mockito.when(transactionRepository.findTransactions(
-                        minAmount, maxAmount, startDate, endDate, transactionID,
-                        accountSenderIBAN, accountReceiverIBAN, user, senderUser, receiverUser,
-                        transactionType, pageable))
-                .thenReturn(page);
-
-        // Call the method under test
-        Page<Transaction> result = transactionRepository.findTransactions(
-                minAmount, maxAmount, startDate, endDate, transactionID,
-                accountSenderIBAN, accountReceiverIBAN, user, senderUser, receiverUser,
-                transactionType, pageable);
-
-        // Assert the result
-        assertNotNull(result);
-
-        // Verify that the correct specifications were used
-        Mockito.verify(transactionRepository).findTransactions(
-                minAmount, maxAmount, startDate, endDate, transactionID,
-                accountSenderIBAN, accountReceiverIBAN, user, senderUser, receiverUser,
-                transactionType, pageable);
+        Assertions.assertDoesNotThrow(() -> transactionRepository.findTransactions(minAmount, maxAmount,
+                startDate, endDate, transactionID, accountSenderIBAN, accountReceiverIBAN,
+                user, senderUser, receiverUser, transactionType, pageable));
     }
 }
