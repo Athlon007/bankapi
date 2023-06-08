@@ -4,7 +4,9 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.SignatureAlgorithm;
 import nl.inholland.bank.configuration.ApiTestConfiguration;
 import nl.inholland.bank.models.Role;
+import nl.inholland.bank.models.User;
 import nl.inholland.bank.models.dtos.Token;
+import nl.inholland.bank.repositories.UserRepository;
 import nl.inholland.bank.services.RefreshTokenBlacklistService;
 import nl.inholland.bank.services.UserDetailsService;
 import org.junit.jupiter.api.Assertions;
@@ -30,6 +32,7 @@ import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Optional;
 
 @ExtendWith(SpringExtension.class)
 @Import(ApiTestConfiguration.class)
@@ -46,11 +49,14 @@ class JwtTokenProviderTests {
     @MockBean
     private RefreshTokenBlacklistService refreshTokenBlacklistService;
 
+    @MockBean
+    private UserRepository userRepository;
+
     private UserDetails userDetails;
 
     @BeforeEach
     public void setUp() {
-        jwtTokenProvider = new JwtTokenProvider(userDetailsService, jwtKeyProvider, refreshTokenBlacklistService);
+        jwtTokenProvider = new JwtTokenProvider(userDetailsService, jwtKeyProvider, refreshTokenBlacklistService, userRepository);
         String key = "random_secret_key";
         Mockito.when(jwtKeyProvider.getPrivateKey()).thenReturn(getPasswordBasedKey(SignatureAlgorithm.HS256.getJcaName(), 256, key.toCharArray()));
 
@@ -200,9 +206,12 @@ class JwtTokenProviderTests {
     }
 
     @Test
-    void getRuleReturnsRole() {
+    void getRoleReturnsRole() {
         String token = jwtTokenProvider.createToken("username", Role.USER).jwt();
         Mockito.when(userDetailsService.loadUserByUsername("username")).thenReturn(userDetails);
+        User user = new User();
+        user.setRole(Role.USER);
+        Mockito.when(userRepository.findUserByUsername("username")).thenReturn(Optional.of(user));
         jwtTokenProvider.getAuthentication(token);
         Role role = jwtTokenProvider.getRole();
         Assertions.assertEquals(Role.USER, role);

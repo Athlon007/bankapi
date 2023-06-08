@@ -257,14 +257,7 @@ public class UserService {
      * @return Role of user that is currently logged in.
      */
     public Role getBearerUserRole() {
-        User user = userRepository.findUserByUsername(getBearerUsername())
-                .orElse(null);
-
-        if (user == null) {
-            return null;
-        }
-
-        return user.getRole();
+        return jwtTokenProvider.getRole();
     }
 
     /**
