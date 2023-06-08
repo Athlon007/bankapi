@@ -111,7 +111,7 @@ public class TransactionService {
         return transactionRepository.save(transaction);
     }
 
-    private User getUserByUsername() throws AccountNotFoundException {
+    User getUserByUsername() throws AccountNotFoundException {
         Optional<User> user = userRepository.findUserByUsername(userService.getBearerUsername());
         if (user.isPresent()) {
             return user.get();
@@ -185,7 +185,7 @@ public class TransactionService {
      * @param account The account of the user.
      * @throws UserNotTheOwnerOfAccountException Exception thrown when not authorized.
      */
-    private void checkUserAuthorization(User user, Account account) throws UserNotTheOwnerOfAccountException {
+    void checkUserAuthorization(User user, Account account) throws UserNotTheOwnerOfAccountException {
         if (!isUserAuthorizedForTransaction(user, account)) {
             throw new UserNotTheOwnerOfAccountException("You are not authorized to perform this transaction.");
         }
