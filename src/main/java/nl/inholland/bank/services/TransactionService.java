@@ -4,7 +4,7 @@ import nl.inholland.bank.models.*;
 import nl.inholland.bank.models.dtos.TransactionDTO.TransactionRequest;
 import nl.inholland.bank.models.dtos.TransactionDTO.TransactionSearchRequest;
 import nl.inholland.bank.models.dtos.TransactionDTO.WithdrawDepositRequest;
-import nl.inholland.bank.models.exceptions.UserNotTheOwnerOfAccountException;
+import nl.inholland.bank.models.exceptions.*;
 import nl.inholland.bank.repositories.TransactionRepository;
 import nl.inholland.bank.repositories.UserRepository;
 import org.springframework.data.domain.PageRequest;
@@ -122,11 +122,11 @@ public class TransactionService {
         }
 
         if (!account.isActive()) {
-            throw new IllegalArgumentException("You cannot deposit/withdraw money to an inactive account");
+            throw new InactiveAccountException("You cannot deposit/withdraw money to an inactive account");
         }
 
         if (account.getType() == AccountType.SAVING) {
-            throw new IllegalArgumentException("You cannot deposit/withdraw money to a savings account");
+            throw new OperationNotAllowedException("You cannot deposit/withdraw money to a savings account");
         }
     }
 
@@ -139,7 +139,10 @@ public class TransactionService {
      * @throws InsufficientResourcesException    If not enough money is present on the sender account.
      * @throws UserNotTheOwnerOfAccountException If the user is not the owner of the transaction.
      */
-    public Transaction processTransaction(TransactionRequest request) throws AccountNotFoundException, InsufficientResourcesException, UserNotTheOwnerOfAccountException, javax.naming.AuthenticationException {
+    public Transaction processTransaction(TransactionRequest request) throws AccountNotFoundException,
+            InsufficientResourcesException,
+            UserNotTheOwnerOfAccountException,
+            javax.naming.AuthenticationException {
         // Get performing user
         User user = null;
         if (userRepository.findUserByUsername(userService.getBearerUsername()).isPresent()) {
@@ -203,10 +206,11 @@ public class TransactionService {
      *
      * @param account     The account to check.
      * @param accountType The account type to message back (Only used for the message).
+     * @throws InactiveAccountException Exception if the account is currently inactive.
      */
-    private void checkAccountStatus(Account account, String accountType) {
+    private void checkAccountStatus(Account account, String accountType) throws InactiveAccountException {
         if (!account.isActive()) {
-            throw new IllegalArgumentException("The " + accountType + " account is currently inactive and can't transfer money.");
+            throw new InactiveAccountException("The " + accountType + " account is currently inactive and can't transfer money.");
         }
     }
 
@@ -215,10 +219,11 @@ public class TransactionService {
      *
      * @param accountSender   // The sender account to check.
      * @param accountReceiver // The receiver account to check.
+     * @throws SameAccountTransferException Exception if both accounts are equal to each other.
      */
-    private void checkSameAccount(Account accountSender, Account accountReceiver) {
+    private void checkSameAccount(Account accountSender, Account accountReceiver) throws SameAccountTransferException {
         if (Objects.equals(accountSender.getIBAN(), accountReceiver.getIBAN())) {
-            throw new IllegalArgumentException("You can't send money to the same account.");
+            throw new SameAccountTransferException("You can't send money to the same account.");
         }
     }
 
@@ -231,10 +236,11 @@ public class TransactionService {
      * @throws UserNotTheOwnerOfAccountException Exception if the user is not the owner of the account.
      */
     private void checkSavingAccountOwnership(User user, Account accountSender, Account accountReceiver) throws UserNotTheOwnerOfAccountException {
-        if (accountSender.getType() == AccountType.SAVING || accountReceiver.getType() == AccountType.SAVING) {
-            if (accountSender.getUser() != user || accountReceiver.getUser() != user) {
-                throw new UserNotTheOwnerOfAccountException("For a transaction from/to a saving account, both accounts need to belong to you.");
-            }
+        boolean isSavingAccountTransaction = accountSender.getType() == AccountType.SAVING || accountReceiver.getType() == AccountType.SAVING;
+        boolean isUserOwner = accountSender.getUser() == user && accountReceiver.getUser() == user;
+
+        if (isSavingAccountTransaction && !isUserOwner) {
+            throw new UserNotTheOwnerOfAccountException("For transactions from or to a saving account both the accounts need to belong to you.");
         }
     }
 
@@ -244,16 +250,20 @@ public class TransactionService {
      * @param accountSender The account to check.
      * @param amount        The amount of the transaction.
      * @throws javax.naming.AuthenticationException Exception if user is not authenticated.
+     * @throws TransactionLimitException Exception if transaction exceeds limit.
+     * @throws DailyTransactionLimitException Exception if transaction exceeds daily limit.
+     * @throws InsufficientFundsException Exception if insufficient funds.
      */
-    private void checkUserLimits(Account accountSender, double amount) throws javax.naming.AuthenticationException {
+    private void checkUserLimits(Account accountSender, double amount) throws TransactionLimitException,
+            DailyTransactionLimitException, InsufficientFundsException, javax.naming.AuthenticationException {
         Limits limits = this.userLimitsService.getUserLimits(accountSender.getUser().getId());
 
         if (amount > limits.getTransactionLimit()) {
-            throw new IllegalArgumentException("Amount exceeds the transaction limit.");
+            throw new TransactionLimitException("Amount exceeds the transaction limit.");
         } else if (amount > limits.getRemainingDailyTransactionLimit()) {
-            throw new IllegalArgumentException("Amount exceeds remaining daily transaction limit.");
+            throw new DailyTransactionLimitException("Amount exceeds remaining daily transaction limit.");
         } else if (accountSender.getBalance() - amount < accountSender.getAbsoluteLimit()) {
-            throw new IllegalArgumentException("Insufficient funds, transaction exceeds the absolute limit.");
+            throw new InsufficientFundsException("Insufficient funds, transaction exceeds the absolute limit.");
         }
     }
 

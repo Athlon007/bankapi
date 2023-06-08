@@ -2,18 +2,24 @@ package nl.inholland.bank.utils;
 
 import nl.inholland.bank.configuration.ApiTestConfiguration;
 import org.hibernate.ObjectNotFoundException;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mockito;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import javax.naming.AuthenticationException;
+import java.io.File;
+import java.io.FileWriter;
 
 @ExtendWith(SpringExtension.class)
 @Import(ApiTestConfiguration.class)
@@ -77,4 +83,8 @@ class ErrorHandlerTests {
         errorHandler.handleDisabledException(new DisabledException("Test"));
     }
 
+    @Test
+    void mediaTypeNotSupported() {
+        errorHandler.handleHttpMediaTypeNotSupportedException(new HttpMediaTypeNotSupportedException("Test"));
+    }
 }

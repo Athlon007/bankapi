@@ -14,6 +14,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 
 class UserTests {
     private User user;
@@ -152,12 +153,6 @@ class UserTests {
         });
 
         Assertions.assertEquals("Username cannot be null or empty", exception.getMessage());
-    }
-
-    @Test
-    void setttingLastNameToNullShouldReplaceWithEmptyString() {
-        user.setLastName(null);
-        Assertions.assertEquals("", user.getLastName());
     }
 
     @Test
@@ -409,5 +404,45 @@ class UserTests {
     void gettingAndSettingUsername() {
         user.setUsername("JohnDoe");
         Assertions.assertEquals("JohnDoe", user.getUsername());
+    }
+
+    @Test
+    void settingLastNameEmptyThrowsException() {
+        Exception exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            user.setLastName("");
+        });
+
+        Assertions.assertEquals("Last name cannot be empty", exception.getMessage());
+    }
+
+    @Test
+    void getSetLastName() {
+        user.setLastName("Doe");
+        Assertions.assertEquals("Doe", user.getLastName());
+    }
+
+    @Test
+    void compareUserToAnotherUserReturnsFalse() {
+        User user2 = new User();
+        user2.setId(2);
+        user2.setFirstName("Jane");
+        user2.setLastName("Doe");
+
+        Assertions.assertNotEquals(user, user2);
+    }
+
+    @Test
+    void compareUserToItselfReturnsTrue() {
+        Assertions.assertEquals(user, user);
+    }
+
+    @Test
+    void compareUserToOtherObjectReturnsFalse() {
+        Assertions.assertNotEquals(user, new Object());
+    }
+
+    @Test
+    void getHashCode() {
+        Assertions.assertEquals(31, user.hashCode());
     }
 }
