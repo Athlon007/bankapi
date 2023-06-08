@@ -14,9 +14,7 @@ import java.util.List;
 @Service
 public class AccountService {
     AccountRepository accountRepository;
-
     UserService userService;
-
     @Value("${bankapi.bank.account}")
     private String bankAccountIBAN;
 
@@ -54,10 +52,9 @@ public class AccountService {
 
 
     public Account addAccount(AccountRequest accountRequest) {
-        User user = null;
-        user = userService.getUserById(accountRequest.userId());
-
+        User user = userService.getUserById(accountRequest.userId());
         AccountType accountType = mapAccountTypeToString(accountRequest.accountType());
+
         if (accountType == AccountType.CURRENT) {
             if (doesUserHaveAccountType(user, AccountType.CURRENT)) {
                 throw new IllegalArgumentException("User already has a current account");
@@ -71,11 +68,7 @@ public class AccountService {
             }
         }
 
-        Account account = createAccount(
-                user,
-                accountType,
-                mapCurrencyTypeToString(accountRequest.currencyType())
-        );
+        Account account = createAccount(user, accountType, mapCurrencyTypeToString(accountRequest.currencyType()));
         Account responseAccount = accountRepository.save(account);
         userService.assignAccountToUser(user, responseAccount);
 

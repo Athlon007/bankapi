@@ -150,7 +150,7 @@ public class UserController {
         if (user.getCurrentAccount() != null) {
             currentAccountResponse = new AccountResponse(
                     user.getCurrentAccount().getId(),
-                    user.getCurrentAccount().getIBAN().toString(),
+                    user.getCurrentAccount().getIBAN(),
                     user.getCurrentAccount().getCurrencyType().toString(),
                     user.getCurrentAccount().getType().toString(),
                     user.getCurrentAccount().isActive(),
@@ -163,7 +163,7 @@ public class UserController {
         if (user.getSavingAccount() != null) {
             savingAccountResponse = new AccountResponse(
                     user.getSavingAccount().getId(),
-                    user.getSavingAccount().getIBAN().toString(),
+                    user.getSavingAccount().getIBAN(),
                     user.getSavingAccount().getType().toString(),
                     user.getSavingAccount().getCurrencyType().toString(),
                     user.getSavingAccount().isActive(),
@@ -196,7 +196,7 @@ public class UserController {
                 user.getId(),
                 user.getFirstName(),
                 user.getLastName(),
-                user.getCurrentAccount() == null ? null : user.getCurrentAccount().getIBAN().toString()
+                user.getCurrentAccount() == null ? null : user.getCurrentAccount().getIBAN()
         );
     }
 

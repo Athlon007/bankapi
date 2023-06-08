@@ -48,7 +48,7 @@ public class UserLimitsService {
 
         // Get all transactions from today for this user using findAllByTimestampIsAfter.
         List<Transaction> todayTransactions = transactionRepository.findAllByTimestampIsAfterAndUserId(LocalDate.now().atStartOfDay(), userId);
-        double remainingDailyLimit = calculateRemainingDailyLimit(limits, todayTransactions);
+        double remainingDailyLimit = calculateRemainingDailyLimit(limits, todayTransactions, userId);
 
         // Calculate the remaining daily limit
         limits.setRemainingDailyTransactionLimit(remainingDailyLimit);
@@ -96,7 +96,7 @@ public class UserLimitsService {
         Limits limitsResponse = userLimitsRepository.findFirstByUserId(userId);
         // Get all transactions from today for this user using findAllByTimestampIsAfter.
         List<Transaction> todayTransactions = transactionRepository.findAllByTimestampIsAfterAndUserId(LocalDate.now().atStartOfDay(), userId);
-        double remainingDailyLimit = calculateRemainingDailyLimit(limits, todayTransactions);
+        double remainingDailyLimit = calculateRemainingDailyLimit(limits, todayTransactions, userId);
 
         // Calculate the remaining daily limit
         limitsResponse.setRemainingDailyTransactionLimit(remainingDailyLimit);
@@ -104,18 +104,33 @@ public class UserLimitsService {
         return limitsResponse;
     }
 
-    private Double calculateRemainingDailyLimit(Limits limits, List<Transaction> todaysTransactions) {
-        // Calculate total value of transactions today.
-        // Also ignore transactions from/to SAVINGS accounts.
-        double todayTotal = todaysTransactions.stream()
-                .filter(transaction ->
-                        (transaction.getAccountSender() != null && !transaction.getAccountSender().getType().equals(AccountType.SAVING))
-                        || ( transaction.getAccountReceiver() != null && !transaction.getAccountReceiver().getType().equals(AccountType.SAVING))
-                        && (transaction.getAccountSender() != null)) // Deposits
-                .mapToDouble(Transaction::getAmount)
-                .sum();
+    public Double calculateRemainingDailyLimit(Limits limits, List<Transaction> todaysTransactions, int userId) {
+        double totalToday = 0;
+        for (Transaction transaction : todaysTransactions) {
+            // Ignore transactions from SAVINGS accounts.
+            if (transaction.getAccountSender() != null && transaction.getAccountSender().getType().equals(AccountType.SAVING)) {
+                continue;
+            }
 
-        return limits.getDailyTransactionLimit() - todayTotal;
+            // Ignore transactions to SAVINGS accounts.
+            if (transaction.getAccountReceiver() != null && transaction.getAccountReceiver().getType().equals(AccountType.SAVING)) {
+                continue;
+            }
+
+            // Ignore deposits to CURRENT accounts.
+            if (transaction.getAccountSender() == null && transaction.getAccountReceiver() != null) {
+                continue;
+            }
+
+            // Ignore deposits to CURRENT accounts.
+            if (transaction.getAccountReceiver() != null && transaction.getAccountSender().getUser().getId() != userId) {
+                  continue;
+            }
+
+            totalToday += transaction.getAmount();
+        }
+
+        return limits.getDailyTransactionLimit() - totalToday;
     }
 
     public Limits getDefaultLimits() {

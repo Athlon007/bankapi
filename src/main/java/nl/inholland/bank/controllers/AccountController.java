@@ -15,16 +15,16 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import javax.naming.AuthenticationException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/accounts")
 @CrossOrigin(origins = "*")
 public class AccountController {
-    private AccountService accountService;
-    private UserService userService;
+    private final AccountService accountService;
+    private final UserService userService;
 
     public AccountController(AccountService accountService, UserService userService) {
         this.accountService = accountService;
@@ -32,28 +32,25 @@ public class AccountController {
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity getAllAccountsByUserId(
-            @PathVariable int userId
-    ) {
+    public ResponseEntity getAllAccountsByUserId(@PathVariable int userId) {
         try {
             User user = userService.getUserById(userId);
-            // Employee/Admin and the owner of the account can see the account
-            if (userService.getBearerUserRole() != Role.EMPLOYEE && userService.getBearerUserRole() != Role.ADMIN && !Objects.equals(userService.getBearerUsername(), user.getUsername())) {
-                return ResponseEntity.badRequest().body(new ExceptionResponse("Unauthorized request"));
+            if (userService.getBearerUserRole() != Role.EMPLOYEE &&
+                    userService.getBearerUserRole() != Role.ADMIN
+                    && !Objects.equals(userService.getBearerUsername(), user.getUsername())) {
+                throw new AuthenticationException("Unauthorized request");
             }
+
             List<Account> accounts = accountService.getAccountsByUserId(user);
             if (accounts.isEmpty()) {
                 return ResponseEntity.badRequest().body(new ExceptionResponse("No account found"));
-
-            } else {
-                List<AccountResponse> accountResponses = new ArrayList<>();
-                // Return the list of accounts
-                for (Account account : accounts) {
-                    AccountResponse accountResponse = buildAccountResponse(account);
-                    accountResponses.add(accountResponse);
-                }
-                return ResponseEntity.status(200).body(accountResponses);
             }
+
+            List<AccountResponse> accountResponses = accounts.stream()
+                    .map(this::buildAccountResponse)
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.ok(accountResponses);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new ExceptionResponse(e.getMessage()));
         }
@@ -61,61 +58,64 @@ public class AccountController {
 
     @PostMapping
     public ResponseEntity addAccount(@RequestBody AccountRequest accountRequest) throws AuthenticationException {
-        if (userService.getBearerUserRole() != Role.EMPLOYEE && userService.getBearerUserRole() != Role.ADMIN) {
-            throw new AuthenticationException("Unauthorized");
-        } else {
-            try {
+        try{
+            if(userService.getBearerUserRole() != Role.EMPLOYEE && userService.getBearerUserRole() != Role.ADMIN){
+                throw new AuthenticationException("Unauthorized request");
+            }else {
                 Account account = accountService.addAccount(accountRequest);
                 AccountResponse accountResponse = buildAccountResponse(account);
 
                 return ResponseEntity.status(201).body(accountResponse);
-            } catch (Exception e) {
-                return ResponseEntity.badRequest().body(new ExceptionResponse(e.getMessage()));
             }
+
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ExceptionResponse(e.getMessage()));
         }
     }
 
     @PutMapping("/{userId}/{id}")
     public ResponseEntity activateAccount(@PathVariable int userId, @PathVariable int id,
-                                          @RequestBody AccountActiveRequest accountActiveRequest) throws AuthenticationException {
-        if (userService.getBearerUserRole() != Role.EMPLOYEE && userService.getBearerUserRole() != Role.ADMIN) {
-            throw new AuthenticationException("Unauthorized");
-        } else {
-            try {
-                User user = userService.getUserById(userId);
-                Account account = accountService.getAccountById(id);
-                if (account.getUser().getId() != user.getId()) {
-                    return ResponseEntity.status(401).body("Unauthorized");
-                }
-                accountService.activateOrDeactivateTheAccount(account, accountActiveRequest);
-                AccountResponse accountResponse = buildAccountResponse(account);
+                                          @RequestBody AccountActiveRequest accountActiveRequest) {
+        try {
+            User user = userService.getUserById(userId);
+            Account account = accountService.getAccountById(id);
+            // Check if the user is an employee or admin and the owner of the account
+            authenticateAndAuthorize(user, account);
 
-                return ResponseEntity.status(200).body(accountResponse);
-            } catch (Exception e) {
-                return ResponseEntity.badRequest().body(new ExceptionResponse(e.getMessage()));
-            }
+            accountService.activateOrDeactivateTheAccount(account, accountActiveRequest);
+            AccountResponse accountResponse = buildAccountResponse(account);
+
+            return ResponseEntity.ok(accountResponse);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ExceptionResponse(e.getMessage()));
         }
     }
 
     @PutMapping("/{userId}/{id}/limit")
     public ResponseEntity updateAbsoluteLimit(@PathVariable int userId, @PathVariable int id,
-                                              @RequestBody AccountAbsoluteLimitRequest accountAbsoluteLimitRequest) throws AuthenticationException {
-        if (userService.getBearerUserRole() != Role.EMPLOYEE && userService.getBearerUserRole() != Role.ADMIN) {
-            throw new AuthenticationException("Unauthorized");
-        } else {
-            try {
-                User user = userService.getUserById(userId);
-                Account account = accountService.getAccountById(id);
-                if (account.getUser().getId() != user.getId()) {
-                    return ResponseEntity.status(401).body("Unauthorized");
-                }
-                accountService.updateAbsoluteLimit(account, accountAbsoluteLimitRequest);
-                AccountResponse accountResponse = buildAccountResponse(account);
+                                              @RequestBody AccountAbsoluteLimitRequest accountAbsoluteLimitRequest) {
+        try {
+            User user = userService.getUserById(userId);
+            Account account = accountService.getAccountById(id);
+            // Check if the user is an employee or admin and the owner of the account
+            authenticateAndAuthorize(user, account);
 
-                return ResponseEntity.status(200).body(accountResponse);
-            } catch (Exception e) {
-                return ResponseEntity.badRequest().body(new ExceptionResponse(e.getMessage()));
-            }
+            accountService.updateAbsoluteLimit(account, accountAbsoluteLimitRequest);
+            AccountResponse accountResponse = buildAccountResponse(account);
+
+            return ResponseEntity.status(200).body(accountResponse);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ExceptionResponse(e.getMessage()));
+        }
+    }
+
+    private void authenticateAndAuthorize(User user, Account account) throws AuthenticationException {
+        if (userService.getBearerUserRole() != Role.EMPLOYEE && userService.getBearerUserRole() != Role.ADMIN) {
+            throw new AuthenticationException("Unauthorized request");
+        }
+
+        if (account.getUser().getId() != user.getId()) {
+            throw new AuthenticationException("Unauthorized request");
         }
     }
 
