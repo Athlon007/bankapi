@@ -32,10 +32,10 @@ public class TransactionService {
 
     /**
      * @param transactionRepository the transaction repository
-     * @param userRepository the user repository
-     * @param userService the user service
-     * @param accountService the account service
-     * @param userLimitsService the user limits service
+     * @param userRepository        the user repository
+     * @param userService           the user service
+     * @param accountService        the account service
+     * @param userLimitsService     the user limits service
      */
     public TransactionService(TransactionRepository transactionRepository, UserRepository userRepository, UserService userService,
                               AccountService accountService, UserLimitsService userLimitsService) {
@@ -47,12 +47,12 @@ public class TransactionService {
     }
 
     /**
-     * @param user the user that is authenticated
-     * @param accountSender the account that is sending the money
+     * @param user            the user that is authenticated
+     * @param accountSender   the account that is sending the money
      * @param accountReceiver the account that is receiving the money
-     * @param currencyType the currency type of the transaction
-     * @param amount the amount of the transaction
-     * @param description the description of the transaction
+     * @param currencyType    the currency type of the transaction
+     * @param amount          the amount of the transaction
+     * @param description     the description of the transaction
      * @param transactionType the type of the transaction
      * @return the transaction object
      */
@@ -70,16 +70,16 @@ public class TransactionService {
         return transaction;
     }
 
-    public boolean isTransactionAuthorizedForUserAccount(User user, Account account) {
+    private boolean isUserAuthorizedToAccessAccount(User user, Account account) {
         return user == account.getUser();
     }
 
     /**
      * @param withdrawDepositRequest request containing the IBAN of the account and the amount to be deposited
      * @return the transaction object
-     * @throws AccountNotFoundException if the account is not found
-     * @throws InsufficientResourcesException if the account does not have enough balance
-     * @throws AuthenticationException if the user is not authenticated
+     * @throws AccountNotFoundException          if the account is not found
+     * @throws InsufficientResourcesException    if the account does not have enough balance
+     * @throws AuthenticationException           if the user is not authenticated
      * @throws UserNotTheOwnerOfAccountException if the user is not the owner of the account
      */
     public Transaction withdrawMoney(WithdrawDepositRequest withdrawDepositRequest) throws AccountNotFoundException, InsufficientResourcesException, AuthenticationException, UserNotTheOwnerOfAccountException, javax.naming.AuthenticationException {
@@ -87,9 +87,9 @@ public class TransactionService {
         User user = getUserByUsername();
         checkAccountPreconditionsForWithdrawOrDeposit(accountSender, user);
         checkUserLimits(accountSender, withdrawDepositRequest.amount());
+        Transaction transaction = createTransaction(user, accountSender, null, withdrawDepositRequest.currencyType(), withdrawDepositRequest.amount(), "Withdraw successful", TransactionType.WITHDRAWAL);
         updateAccountBalance(accountSender, withdrawDepositRequest.amount(), false);
 
-        Transaction transaction = createTransaction(user, accountSender, null, withdrawDepositRequest.currencyType(), withdrawDepositRequest.amount(), "Withdraw successful", TransactionType.WITHDRAWAL);
         return transactionRepository.save(transaction);
     }
 
@@ -105,23 +105,19 @@ public class TransactionService {
         Account accountReceiver = accountService.getAccountByIBAN(depositRequest.IBAN());
         User user = getUserByUsername();
         checkAccountPreconditionsForWithdrawOrDeposit(accountReceiver, user);
-        updateAccountBalance(accountReceiver, depositRequest.amount(), true);
         Transaction transaction = createTransaction(user, null, accountReceiver, depositRequest.currencyType(), depositRequest.amount(), "Deposit successful", TransactionType.DEPOSIT);
+        updateAccountBalance(accountReceiver, depositRequest.amount(), true);
 
         return transactionRepository.save(transaction);
     }
 
     private User getUserByUsername() throws AccountNotFoundException {
-        Optional<User> user = userRepository.findUserByUsername(userService.getBearerUsername());
-        if (user.isPresent()) {
-            return user.get();
-        } else {
-            throw new AccountNotFoundException("Account not found or inactive");
-        }
+        return userRepository.findUserByUsername(userService.getBearerUsername())
+                .orElseThrow(() -> new AccountNotFoundException("User not found"));
     }
 
     private void checkAccountPreconditionsForWithdrawOrDeposit(Account account, User user) throws UserNotTheOwnerOfAccountException {
-        if (!isTransactionAuthorizedForUserAccount(user, account)) {
+        if (!isUserAuthorizedToAccessAccount(user, account)) {
             throw new UserNotTheOwnerOfAccountException("You are not the owner of this account");
         }
 
@@ -300,17 +296,14 @@ public class TransactionService {
     }
 
     /**
-     * @param account The account to update.
-     * @param amount The amount to update the balance with.
+     * @param account   The account to update.
+     * @param amount    The amount to update the balance with.
      * @param isDeposit If the amount is a deposit or withdraw (or not).
      */
     public void updateAccountBalance(Account account, double amount, boolean isDeposit) {
-        // If deposited, add amount to balance, else subtract amount from balance
-        if (isDeposit) {
-            account.setBalance(account.getBalance() + amount);
-        } else {
-            account.setBalance(account.getBalance() - amount);
-        }
+        double balance = account.getBalance();
+        double newBalance = isDeposit ? balance + amount : balance - amount;
+        account.setBalance(newBalance);
 
         accountService.updateAccount(account);
     }
@@ -379,13 +372,16 @@ public class TransactionService {
      * @return Returns a TransactionType.
      */
     public TransactionType mapTransactionTypeToString(String transactionType) {
-        switch (transactionType.toUpperCase()) {
-            case "DEPOSIT":
+        switch (transactionType.toUpperCase()){
+            case "DEPOSIT" -> {
                 return TransactionType.DEPOSIT;
-            case "WITHDRAWAL":
+            }
+            case "WITHDRAWAL" -> {
                 return TransactionType.WITHDRAWAL;
-            default:
+            }
+            default -> {
                 return TransactionType.TRANSACTION;
+            }
         }
     }
 }
