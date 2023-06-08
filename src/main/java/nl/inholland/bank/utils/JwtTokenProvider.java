@@ -4,7 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import nl.inholland.bank.models.Role;
-import nl.inholland.bank.models.Token;
+import nl.inholland.bank.models.dtos.Token;
 import nl.inholland.bank.services.RefreshTokenBlacklistService;
 import nl.inholland.bank.services.UserDetailsService;
 import org.springframework.beans.factory.annotation.Value;

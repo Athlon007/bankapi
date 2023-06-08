@@ -25,6 +25,7 @@ public class User {
     private int id;
     @NonNull
     private String firstName;
+    @NonNull
     private String lastName;
     @Column(unique = true)
     @NonNull
@@ -214,7 +215,7 @@ public class User {
             throw new OperationNotAllowedException("Cannot remove saving account with balance");
         }
 
-        if (savingAccount.getType() == null || savingAccount.getType() != AccountType.SAVING) {
+        if (savingAccount != null && (savingAccount.getType() == null || savingAccount.getType() != AccountType.SAVING)) {
             throw new IllegalArgumentException("Account type must be SAVING");
         }
 

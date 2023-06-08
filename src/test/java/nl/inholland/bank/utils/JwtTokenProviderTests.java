@@ -2,10 +2,9 @@ package nl.inholland.bank.utils;
 
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.SignatureAlgorithm;
-import jakarta.xml.bind.DatatypeConverter;
 import nl.inholland.bank.configuration.ApiTestConfiguration;
 import nl.inholland.bank.models.Role;
-import nl.inholland.bank.models.Token;
+import nl.inholland.bank.models.dtos.Token;
 import nl.inholland.bank.services.RefreshTokenBlacklistService;
 import nl.inholland.bank.services.UserDetailsService;
 import org.junit.jupiter.api.Assertions;
@@ -13,7 +12,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
@@ -30,10 +28,8 @@ import javax.naming.AuthenticationException;
 import java.lang.reflect.Field;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Random;
 
 @ExtendWith(SpringExtension.class)
 @Import(ApiTestConfiguration.class)

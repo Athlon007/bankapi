@@ -4,6 +4,7 @@ import nl.inholland.bank.models.*;
 import nl.inholland.bank.models.dtos.AuthDTO.LoginRequest;
 import nl.inholland.bank.models.dtos.AuthDTO.RefreshTokenRequest;
 import nl.inholland.bank.models.dtos.AuthDTO.jwt;
+import nl.inholland.bank.models.dtos.Token;
 import nl.inholland.bank.models.dtos.UserDTO.UserForAdminRequest;
 import nl.inholland.bank.models.dtos.UserDTO.UserRequest;
 import nl.inholland.bank.models.exceptions.OperationNotAllowedException;
@@ -25,6 +26,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Service class for User objects.
+ */
 @Service
 public class UserService {
     protected final UserRepository userRepository;
@@ -67,6 +71,10 @@ public class UserService {
 
         if (!isPasswordValid(userRequest.getPassword())) {
             throw new IllegalArgumentException("Password does not meet requirements.");
+        }
+
+        if (Boolean.TRUE.equals(userRepository.existsByEmail(userRequest.getEmail()))) {
+            throw new IllegalArgumentException("Email already exists.");
         }
 
         User user = mapUserRequestToUser(userRequest);
@@ -228,8 +236,12 @@ public class UserService {
      * @return Role object.
      */
     public Role mapStringToRole(String role) {
-        role = role.toUpperCase();
-        return Role.valueOf(role);
+        try {
+            role = role.toUpperCase();
+            return Role.valueOf(role);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid role: " + role);
+        }
     }
 
     /**
@@ -301,8 +313,8 @@ public class UserService {
         // Users can only update their own account.
         // Employees can update all accounts, except for admins.
         if (
-                getBearerUserRole() == Role.USER && !user.getUsername().equals(getBearerUsername())
-                || getBearerUserRole() == Role.EMPLOYEE && user.getRole() == Role.ADMIN
+                (getBearerUserRole() == Role.USER && !user.getUsername().equals(getBearerUsername()))
+                || (getBearerUserRole() == Role.EMPLOYEE && user.getRole() == Role.ADMIN)
         ) {
             throw new AuthenticationException("You are not authorized to update this user.");
         }
@@ -318,6 +330,7 @@ public class UserService {
             // If password is empty, keep the old password.
             user.setPassword(user.getPassword());
         } else {
+            // Otherwise update the password.
             if (!isPasswordValid(userRequest.getPassword())) {
                 throw new IllegalArgumentException("Password is not valid.");
             }

@@ -1,6 +1,6 @@
 package nl.inholland.bank.controllers;
 
-import nl.inholland.bank.models.Token;
+import nl.inholland.bank.models.dtos.Token;
 import nl.inholland.bank.models.dtos.ExceptionResponse;
 import nl.inholland.bank.models.dtos.AuthDTO.LoginRequest;
 import nl.inholland.bank.models.dtos.AuthDTO.RefreshTokenRequest;

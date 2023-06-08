@@ -3,7 +3,7 @@ package nl.inholland.bank.controllers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import nl.inholland.bank.configuration.ApiTestConfiguration;
 import nl.inholland.bank.models.Role;
-import nl.inholland.bank.models.Token;
+import nl.inholland.bank.models.dtos.Token;
 import nl.inholland.bank.models.User;
 import nl.inholland.bank.models.dtos.AuthDTO.LoginRequest;
 import nl.inholland.bank.models.dtos.AuthDTO.RefreshTokenRequest;
