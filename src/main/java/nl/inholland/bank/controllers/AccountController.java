@@ -79,7 +79,6 @@ public class AccountController {
         try {
             User user = userService.getUserById(userId);
             Account account = accountService.getAccountById(id);
-            // Check if the user is an employee or admin and the owner of the account
             authenticateAndAuthorize(user, account);
 
             accountService.activateOrDeactivateTheAccount(account, accountActiveRequest);
@@ -97,7 +96,6 @@ public class AccountController {
         try {
             User user = userService.getUserById(userId);
             Account account = accountService.getAccountById(id);
-            // Check if the user is an employee or admin and the owner of the account
             authenticateAndAuthorize(user, account);
 
             accountService.updateAbsoluteLimit(account, accountAbsoluteLimitRequest);

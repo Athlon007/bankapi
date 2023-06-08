@@ -108,19 +108,19 @@ public class AccountService {
         return accountRepository.findById(id).orElseThrow(() -> new AccountNotFoundException("Account not found"));
     }
 
-    public void activateOrDeactivateTheAccount(Account account, AccountActiveRequest accountActiveRequest) {
+    public Account activateOrDeactivateTheAccount(Account account, AccountActiveRequest accountActiveRequest) {
         if (account.getIBAN().equals(bankAccountIBAN)) {
             throw new IllegalArgumentException("Bank account cannot be deactivated");
         }
 
         account.setActive(accountActiveRequest.isActive());
-        accountRepository.save(account);
+        return accountRepository.save(account);
     }
 
-    public void updateAbsoluteLimit(Account account, AccountAbsoluteLimitRequest accountAbsoluteLimitRequest) {
+    public Account updateAbsoluteLimit(Account account, AccountAbsoluteLimitRequest accountAbsoluteLimitRequest) {
         account.setAbsoluteLimit(accountAbsoluteLimitRequest.absoluteLimit());
         System.out.println(account.getAbsoluteLimit());
-        accountRepository.save(account);
+        return accountRepository.save(account);
     }
 
     public void addAccountForBank(User user) {

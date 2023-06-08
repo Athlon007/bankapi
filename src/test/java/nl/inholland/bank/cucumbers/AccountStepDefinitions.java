@@ -7,13 +7,16 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import io.jsonwebtoken.lang.Assert;
+import nl.inholland.bank.models.dtos.AccountDTO.AccountAbsoluteLimitRequest;
 import nl.inholland.bank.models.dtos.AccountDTO.AccountRequest;
 import nl.inholland.bank.models.dtos.AccountDTO.AccountResponse;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class AccountStepDefinitions extends BaseStepDefinitions{
 
@@ -84,6 +87,26 @@ public class AccountStepDefinitions extends BaseStepDefinitions{
                 ACCOUNTS_ENDPOINT + "/" + userId,
                 HttpMethod.GET,
                 new HttpEntity<>(null, headers),
+                String.class
+        ));
+    }
+
+    @Given("I call the application accounts end point with absoluteLimit {double} with userId {int}, accountId {int}")
+    public void iCallTheApplicationAccountsEndPointWithAbsoluteLimitWithUserIdAccountId(double absoluteLimit, int userId, int accountId) {
+        AccountAbsoluteLimitRequest accountAbsoluteLimitRequest = new AccountAbsoluteLimitRequest(
+                absoluteLimit
+        );
+
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        if (StorageForTestsInstance.getInstance().getJwt() != null) {
+            headers.setBearerAuth(StorageForTestsInstance.getInstance().getJwt().access_token());
+        }
+
+        StorageForTestsInstance.getInstance().setResponse(restTemplate.exchange(
+                ACCOUNTS_ENDPOINT + "/" + userId + "/" + accountId + "/" + "limit",
+                HttpMethod.PUT,
+                new HttpEntity<>(accountAbsoluteLimitRequest, headers),
                 String.class
         ));
     }
