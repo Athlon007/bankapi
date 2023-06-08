@@ -2,7 +2,6 @@ package nl.inholland.bank.filters;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import nl.inholland.bank.models.dtos.ExceptionResponse;
 import nl.inholland.bank.utils.JwtTokenProvider;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;

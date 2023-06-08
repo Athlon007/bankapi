@@ -5,6 +5,7 @@ import nl.inholland.bank.models.*;
 import nl.inholland.bank.models.dtos.AuthDTO.LoginRequest;
 import nl.inholland.bank.models.dtos.AuthDTO.RefreshTokenRequest;
 import nl.inholland.bank.models.dtos.AuthDTO.jwt;
+import nl.inholland.bank.models.dtos.Token;
 import nl.inholland.bank.models.dtos.UserDTO.UserForAdminRequest;
 import nl.inholland.bank.models.dtos.UserDTO.UserRequest;
 import nl.inholland.bank.models.exceptions.OperationNotAllowedException;
@@ -630,5 +631,12 @@ class UserServiceTests {
     void getUserIdByUsernameShouldReturnUserId() {
         Mockito.when(userRepository.findUserByUsername(user.getUsername())).thenReturn(Optional.of(user));
         Assertions.assertEquals(user.getId(), userService.getUserIdByUsername(user.getUsername()));
+    }
+
+    @Test
+    void addNewUserWithExistingEmailThrowsIllegalArgumentException() {
+        Mockito.when(userRepository.existsByEmail(user.getEmail())).thenReturn(true);
+        Exception e = Assertions.assertThrows(IllegalArgumentException.class, () -> userService.addUser(userRequest));
+        Assertions.assertEquals("Email already exists.", e.getMessage());
     }
 }

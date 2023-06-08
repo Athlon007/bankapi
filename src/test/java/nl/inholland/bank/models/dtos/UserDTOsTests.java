@@ -2,6 +2,7 @@ package nl.inholland.bank.models.dtos;
 
 import nl.inholland.bank.models.dtos.AccountDTO.AccountResponse;
 import nl.inholland.bank.models.dtos.UserDTO.*;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 class UserDTOsTests {
@@ -81,5 +82,24 @@ class UserDTOsTests {
         assert userLimitResponse.transaction_limit() == 1;
         assert userLimitResponse.daily_transaction_limit() == 1;
         assert userLimitResponse.remaining_daily_transaction_limit() == 1;
+    }
+
+    @Test
+    void compareTwoUserForAdminRequest() {
+        UserForAdminRequest userRequest = new UserForAdminRequest("email", "username", "password", "firstname", "lastname", "1234", "phone", "2000", "role");
+        UserForAdminRequest userRequest2 = new UserForAdminRequest("email", "username", "password", "firstname", "lastname", "1234", "phone", "2000", "role");
+        assert userRequest.equals(userRequest2);
+    }
+
+    @Test
+    void compareOtherObjectWithUserForAdminRequest() {
+        UserForAdminRequest userRequest = new UserForAdminRequest("email", "username", "password", "firstname", "lastname", "1234", "phone", "2000", "role");
+        assert !userRequest.equals("test");
+    }
+
+    @Test
+    void getHashCode() {
+        UserForAdminRequest userRequest = new UserForAdminRequest("email", "username", "password", "firstname", "lastname", "1234", "phone", "2000", "role");
+        Assertions.assertEquals(-163770035, userRequest.hashCode());
     }
 }
