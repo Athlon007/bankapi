@@ -198,7 +198,7 @@ public class TransactionService {
      * @param account The account to compare the owner to.
      * @return Returns a boolean if the user is authorized.
      */
-    private boolean isUserAuthorizedForTransaction(User user, Account account) {
+    boolean isUserAuthorizedForTransaction(User user, Account account) {
         Role role = userService.getBearerUserRole();
         if (role == Role.USER) {
             return Objects.equals(account.getUser(), user);
@@ -212,7 +212,7 @@ public class TransactionService {
      * @param accountType The account type to message back (Only used for the message).
      * @throws InactiveAccountException Exception if the account is currently inactive.
      */
-    private void checkAccountStatus(Account account, String accountType) throws InactiveAccountException {
+    void checkAccountStatus(Account account, String accountType) throws InactiveAccountException {
         if (!account.isActive()) {
             throw new InactiveAccountException("The " + accountType + " account is currently inactive and can't transfer money.");
         }
@@ -225,7 +225,7 @@ public class TransactionService {
      * @param accountReceiver // The receiver account to check.
      * @throws SameAccountTransferException Exception if both accounts are equal to each other.
      */
-    private void checkSameAccount(Account accountSender, Account accountReceiver) throws SameAccountTransferException {
+    void checkSameAccount(Account accountSender, Account accountReceiver) throws SameAccountTransferException {
         if (Objects.equals(accountSender.getIBAN(), accountReceiver.getIBAN())) {
             throw new SameAccountTransferException("You can't send money to the same account.");
         }
@@ -239,7 +239,7 @@ public class TransactionService {
      * @param accountReceiver The receiver account to check.
      * @throws UserNotTheOwnerOfAccountException Exception if the user is not the owner of the account.
      */
-    private void checkSavingAccountOwnership(User user, Account accountSender, Account accountReceiver) throws UserNotTheOwnerOfAccountException {
+    void checkSavingAccountOwnership(User user, Account accountSender, Account accountReceiver) throws UserNotTheOwnerOfAccountException {
         boolean isSavingAccountTransaction = accountSender.getType() == AccountType.SAVING || accountReceiver.getType() == AccountType.SAVING;
         boolean isUserOwner = accountSender.getUser() == user && accountReceiver.getUser() == user;
 
@@ -258,7 +258,7 @@ public class TransactionService {
      * @throws DailyTransactionLimitException Exception if transaction exceeds daily limit.
      * @throws InsufficientFundsException Exception if insufficient funds.
      */
-    private void checkUserLimits(Account accountSender, double amount) throws TransactionLimitException,
+    void checkUserLimits(Account accountSender, double amount) throws TransactionLimitException,
             DailyTransactionLimitException, InsufficientFundsException, javax.naming.AuthenticationException {
         Limits limits = this.userLimitsService.getUserLimits(accountSender.getUser().getId());
 

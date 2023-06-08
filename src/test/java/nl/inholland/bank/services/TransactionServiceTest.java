@@ -3,7 +3,7 @@ package nl.inholland.bank.services;
 import nl.inholland.bank.configuration.ApiTestConfiguration;
 import nl.inholland.bank.models.*;
 import nl.inholland.bank.models.dtos.TransactionDTO.TransactionRequest;
-import nl.inholland.bank.models.exceptions.UserNotTheOwnerOfAccountException;
+import nl.inholland.bank.models.exceptions.*;
 import nl.inholland.bank.repositories.TransactionRepository;
 import nl.inholland.bank.repositories.UserRepository;
 import org.junit.jupiter.api.Assertions;
@@ -207,6 +207,276 @@ class TransactionServiceTest {
         assertNotNull(result);
     }
 
+    @Test
+    void checkUserAuthorization_ShouldNotThrowExceptionWhenUserIsAuthorized() {
+        User user = this.user;
+        Account account = currentAccount;
+        account.setUser(user);
+
+        // Mock the behavior of isUserAuthorizedForTransaction to return true
+        Mockito.when(transactionService.isUserAuthorizedForTransaction(user, account))
+                .thenReturn(true);
+
+        // Act and Assert
+        Assertions.assertDoesNotThrow(() -> transactionService.checkUserAuthorization(user, account));
+    }
+
+    @Test
+    void checkUserAuthorization_ShouldThrowExceptionWhenUserIsNotAuthorized() {
+        User user = this.user;
+        user.setRole(Role.USER);
+        Account account = currentAccount;
+        account.setUser(user);
+
+        // Mock the behavior of isUserAuthorizedForTransaction to return false
+        Mockito.when(transactionService.isUserAuthorizedForTransaction(user, account))
+                .thenReturn(false);
+
+        // Act and Assert
+        Assertions.assertThrows(UserNotTheOwnerOfAccountException.class,
+                () -> transactionService.checkUserAuthorization(user, account));
+    }
+
+    @Test
+    void isUserAuthorizedForTransaction_ShouldReturnTrueForMatchingUserAndUserRoleIsUser() {
+        User user = this.user;
+        user.setRole(Role.USER); // Set the user role to USER
+        Account account = currentAccount;
+        account.setUser(user);
+
+        // Act
+        boolean isAuthorized = transactionService.isUserAuthorizedForTransaction(user, account);
+
+        // Assert
+        Assertions.assertTrue(isAuthorized);
+    }
+
+    @Test
+    void isUserAuthorizedForTransaction_ShouldReturnTrueForEmployeeOrAdminRole() {
+        User user = this.user;
+        Account account = currentAccount;
+
+        user.setRole(Role.EMPLOYEE); // Set the user role to EMPLOYEE
+
+        // Act
+        boolean isAuthorized = transactionService.isUserAuthorizedForTransaction(user, account);
+
+        // Assert
+        Assertions.assertTrue(isAuthorized);
+
+        // Act
+        isAuthorized = transactionService.isUserAuthorizedForTransaction(user, account);
+
+        // Assert
+        Assertions.assertTrue(isAuthorized);
+    }
+
+    @Test
+    void isUserAuthorizedForTransaction_ShouldReturnFalseForMismatchedUserAndUserRoleIsUser() {
+        User user = this.user;
+        Account account = currentAccount;
+        account.setUser(user2); // Different user object
+
+        user.setRole(Role.USER); // Set the user role to USER
+
+        // Act
+        boolean isAuthorized = transactionService.isUserAuthorizedForTransaction(user, account);
+
+        // Assert
+        Assertions.assertFalse(isAuthorized);
+    }
+
+    @Test
+    void checkAccountStatus_ShouldThrowExceptionWhenAccountIsInactive() {
+        Account account = savingAccount;
+        String accountType = "Saving";
+
+        account.setActive(false); // Set the account as inactive
+
+        // Act and Assert
+        Assertions.assertThrows(InactiveAccountException.class, () -> {
+            transactionService.checkAccountStatus(account, accountType);
+        });
+    }
+
+    @Test
+    void checkAccountStatus_ShouldNotThrowExceptionWhenAccountIsActive() {
+        Account account = currentAccount;
+        String accountType = "Current";
+
+        account.setActive(true); // Set the account as active
+
+        // Act and Assert
+        Assertions.assertDoesNotThrow(() -> {
+            transactionService.checkAccountStatus(account, accountType);
+        });
+    }
+
+    @Test
+    void checkSameAccount_ShouldThrowExceptionWhenAccountsAreSame() {
+        Account accountSender = this.currentAccount;
+        Account accountReceiver = this.currentAccount;
+
+        accountSender.setIBAN(accountSender.getIBAN());
+        accountReceiver.setIBAN(accountReceiver.getIBAN()); // Set the same IBAN for both accounts
+
+        // Act and Assert
+        Assertions.assertThrows(SameAccountTransferException.class, () -> {
+            transactionService.checkSameAccount(accountSender, accountReceiver);
+        });
+    }
+
+    @Test
+    void checkSameAccount_ShouldNotThrowExceptionWhenAccountsAreDifferent() {
+        Account accountSender = this.currentAccount;
+        Account accountReceiver = this.currentAccount2;
+
+        accountSender.setIBAN(accountSender.getIBAN());
+        accountReceiver.setIBAN(accountReceiver.getIBAN());
+
+        // Act and Assert
+        Assertions.assertDoesNotThrow(() -> {
+            transactionService.checkSameAccount(accountSender, accountReceiver);
+        });
+    }
+
+    @Test
+    void checkSavingAccountOwnership_ShouldThrowExceptionWhenUserNotOwnerOfSavingAccounts() {
+        User user = this.user;
+        Account accountSender = this.currentAccount;
+        Account accountReceiver = this.currentAccount2;
+
+        accountSender.setType(AccountType.SAVING);
+        accountReceiver.setType(AccountType.SAVING);
+        accountSender.setUser(new User()); // Set up necessary dependencies
+        accountReceiver.setUser(user);
+
+        // Act and Assert
+        Assertions.assertThrows(UserNotTheOwnerOfAccountException.class, () -> {
+            transactionService.checkSavingAccountOwnership(user, accountSender, accountReceiver);
+        });
+
+        Assertions.assertThrows(UserNotTheOwnerOfAccountException.class, () -> {
+            transactionService.checkSavingAccountOwnership(user, accountReceiver, accountSender);
+        });
+    }
+
+    @Test
+    void checkSavingAccountOwnership_ShouldNotThrowExceptionWhenUserOwnerOfSavingAccounts() {
+        User user = this.user;
+        Account accountSender = this.currentAccount;
+        Account accountReceiver = this.currentAccount2;
+
+        accountSender.setType(AccountType.SAVING);
+        accountReceiver.setType(AccountType.SAVING);
+        accountSender.setUser(user);
+        accountReceiver.setUser(user);
+
+        // Act and Assert
+        Assertions.assertDoesNotThrow(() -> {
+            transactionService.checkSavingAccountOwnership(user, accountSender, accountReceiver);
+        });
+
+        Assertions.assertDoesNotThrow(() -> {
+            transactionService.checkSavingAccountOwnership(user, accountReceiver, accountSender);
+        });
+    }
+
+    @Test
+    void checkUserLimits_ShouldThrowExceptionsBasedOnLimitsAndBalance() throws Exception {
+        Account accountSender = this.currentAccount;
+        double amount = 100.0;
+
+        Limits limits = new Limits();
+        limits.setTransactionLimit(1000.0);
+        limits.setRemainingDailyTransactionLimit(500.0);
+
+        Mockito.when(userLimitsService.getUserLimits(this.user.getId())).thenReturn(limits);
+
+        // Act and Assert
+        Assertions.assertThrows(TransactionLimitException.class, () -> {
+            transactionService.checkUserLimits(accountSender, amount);
+        });
+
+        Assertions.assertThrows(DailyTransactionLimitException.class, () -> {
+            transactionService.checkUserLimits(accountSender, amount);
+        });
+
+        Assertions.assertThrows(InsufficientFundsException.class, () -> {
+            accountSender.setBalance(50.0);
+            transactionService.checkUserLimits(accountSender, amount);
+        });
+
+        // Verify that the getUserLimits method is called once with the correct argument
+        Mockito.verify(userLimitsService, Mockito.times(1)).getUserLimits(this.user.getId());
+    }
+
+    @Test
+    void transferMoney_ShouldCreateTransactionAndUpdateBalances() {
+        // Arrange
+        User user = this.user;
+        Account accountSender = this.currentAccount;
+        Account accountReceiver = this.currentAccount2;
+        CurrencyType currencyType = CurrencyType.EURO;
+        double amount = 100.0;
+        String description = "Transfer";
+
+        // Stubbing the createTransaction method
+        Mockito.when(transactionService.createTransaction(Mockito.eq(user), Mockito.eq(accountSender), Mockito.eq(accountReceiver),
+                        Mockito.eq(currencyType), Mockito.eq(amount), Mockito.eq(description), Mockito.any(TransactionType.class)))
+                .thenReturn(new Transaction());
+
+        // Stubbing the updateAccountBalance method
+        Mockito.doNothing().when(transactionService).updateAccountBalance(Mockito.eq(accountSender), Mockito.eq(amount), Mockito.eq(false));
+        Mockito.doNothing().when(transactionService).updateAccountBalance(Mockito.eq(accountReceiver), Mockito.eq(amount), Mockito.eq(true));
+
+        // Stubbing the repository save method
+        Mockito.when(transactionRepository.save(Mockito.any(Transaction.class))).thenReturn(new Transaction());
+
+        // Act
+        Transaction result = transactionService.transferMoney(user, accountSender, accountReceiver,
+                currencyType, amount, description);
+
+        // Assert
+        Mockito.verify(transactionRepository, Mockito.times(1)).save(Mockito.any(Transaction.class));
+        Mockito.verify(transactionService, Mockito.times(1)).updateAccountBalance(Mockito.eq(accountSender), Mockito.eq(amount), Mockito.eq(false));
+        Mockito.verify(transactionService, Mockito.times(1)).updateAccountBalance(Mockito.eq(accountReceiver), Mockito.eq(amount), Mockito.eq(true));
+        Assertions.assertNotNull(result);
+    }
+
+    @Test
+    void updateAccountBalance_WhenIsDeposit_ShouldIncreaseBalance() {
+        // Arrange
+        Account account = new Account();
+        account.setBalance(100.0);
+        double amount = 50.0;
+        boolean isDeposit = true;
+
+        // Act
+        transactionService.updateAccountBalance(account, amount, isDeposit);
+
+        // Assert
+        double expectedBalance = 150.0;
+        Assertions.assertEquals(expectedBalance, account.getBalance());
+        Mockito.verify(accountService, Mockito.times(1)).updateAccount(account);
+    }
+
+    @Test
+    void updateAccountBalance_WhenIsNotDeposit_ShouldDecreaseBalance() {
+        // Arrange
+        Account account = new Account();
+        account.setBalance(100.0);
+        double amount = 50.0;
+        boolean isDeposit = false;
+
+        // Act
+        transactionService.updateAccountBalance(account, amount, isDeposit);
+
+        // Assert
+        double expectedBalance = 50.0;
+        Assertions.assertEquals(expectedBalance, account.getBalance());
+        Mockito.verify(accountService, Mockito.times(1)).updateAccount(account);
+    }
 
     @Test
     void mapTransactionTypeToString_WhenDeposit_ReturnsDeposit() {
