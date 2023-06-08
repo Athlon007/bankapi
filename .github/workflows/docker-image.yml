@@ -1,0 +1,23 @@
+name: Run unit tests
+
+on:
+  push:
+    branches: [ "development" ]
+  pull_request:
+    branches: [ "development" ]
+
+jobs:
+
+  test:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Update repos
+      run: sudo apt-get update
+      
+    - name: Install Open JDK 19
+      run: sudo apt-get install openjdk-19-jdk -y
+
+    - name: Complile and run tests
+      run: ./mvnw clean install -U
