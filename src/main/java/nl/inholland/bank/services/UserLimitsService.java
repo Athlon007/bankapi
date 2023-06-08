@@ -68,7 +68,7 @@ public class UserLimitsService {
         User user = userRepository.findById(userId).orElseThrow(() -> new ObjectNotFoundException(userId, UserService.USERNAME_NOT_FOUND));
         Role role = jwtTokenProvider.getRole();
 
-        if (role == Role.USER && !user.getUsername().equals(jwtTokenProvider.getUsername())) {
+        if (role == Role.CUSTOMER && !user.getUsername().equals(jwtTokenProvider.getUsername())) {
             throw new AuthenticationException("You are not allowed to view this user's limits");
         }
 
@@ -99,7 +99,7 @@ public class UserLimitsService {
      */
     public Limits updateUserLimits(int userId, UserLimitsRequest userLimitsRequest) throws  AuthenticationException {
         // Users cannot update limits: theirs or others.
-        if (jwtTokenProvider.getRole() == Role.USER) {
+        if (jwtTokenProvider.getRole() == Role.CUSTOMER) {
             throw new AuthenticationException("You are not allowed to update limits");
         }
 

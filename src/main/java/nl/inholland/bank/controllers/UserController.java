@@ -1,5 +1,6 @@
 package nl.inholland.bank.controllers;
 
+import nl.inholland.bank.models.Account;
 import nl.inholland.bank.models.Limits;
 import nl.inholland.bank.models.Role;
 import nl.inholland.bank.models.User;
@@ -61,7 +62,7 @@ public class UserController {
     @GetMapping("/{id}")
     public ResponseEntity<Object> getUserById(@PathVariable int id) {
         User user = userService.getUserById(id);
-        if (userService.getBearerUserRole() == Role.USER && !userService.getBearerUsername().equals(user.getUsername())) {
+        if (userService.getBearerUserRole() == Role.CUSTOMER && !userService.getBearerUsername().equals(user.getUsername())) {
             return ResponseEntity.status(200).body(mapUserToUserForClientResponse(user));
         }
         return ResponseEntity.status(200).body(mapUserToUserResponse(user));
@@ -145,31 +146,27 @@ public class UserController {
         return ResponseEntity.status(200).body(userLimitsResponse);
     }
 
+    private AccountResponse mapAccountToAccountResponse(Account account) {
+        return new AccountResponse(
+                account.getId(),
+                account.getIBAN(),
+                account.getType().toString(),
+                account.getCurrencyType().toString(),
+                account.isActive(),
+                account.getBalance(),
+                account.getAbsoluteLimit()
+        );
+    }
+
     private UserResponse mapUserToUserResponse(User user) {
         AccountResponse currentAccountResponse = null;
         if (user.getCurrentAccount() != null) {
-            currentAccountResponse = new AccountResponse(
-                    user.getCurrentAccount().getId(),
-                    user.getCurrentAccount().getIBAN(),
-                    user.getCurrentAccount().getCurrencyType().toString(),
-                    user.getCurrentAccount().getType().toString(),
-                    user.getCurrentAccount().isActive(),
-                    user.getCurrentAccount().getBalance(),
-                    user.getCurrentAccount().getAbsoluteLimit()
-            );
+            currentAccountResponse = mapAccountToAccountResponse(user.getCurrentAccount());
         }
 
         AccountResponse savingAccountResponse = null;
         if (user.getSavingAccount() != null) {
-            savingAccountResponse = new AccountResponse(
-                    user.getSavingAccount().getId(),
-                    user.getSavingAccount().getIBAN(),
-                    user.getSavingAccount().getType().toString(),
-                    user.getSavingAccount().getCurrencyType().toString(),
-                    user.getSavingAccount().isActive(),
-                    user.getSavingAccount().getBalance(),
-                    user.getSavingAccount().getAbsoluteLimit()
-            );
+            savingAccountResponse = mapAccountToAccountResponse(user.getSavingAccount());
         }
 
         String dateOfBirth = user.getDateOfBirth().toString();

@@ -15,6 +15,7 @@ import javax.naming.AuthenticationException;
 
 import org.hibernate.ObjectNotFoundException;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.DisabledException;
@@ -43,6 +44,9 @@ public class UserService {
     public static final String USERNAME_NOT_FOUND = "Username not found.";
     public static final String USER_NOT_FOUND = "User not found.";
     public static final String USERNAME_ALREADY_EXISTS = "Username already exists.";
+
+    @Value("${bankapi.bank.account}")
+    private String bankAccountIBAN;
 
 
     public UserService(UserRepository userRepository, BCryptPasswordEncoder bCryptPasswordEncoder, JwtTokenProvider jwtTokenProvider, UserLimitsService userLimitsService, AccountRepository accountRepository) {
@@ -73,11 +77,8 @@ public class UserService {
             throw new IllegalArgumentException("Password does not meet requirements.");
         }
 
-        if (Boolean.TRUE.equals(userRepository.existsByEmail(userRequest.getEmail()))) {
-            throw new IllegalArgumentException("Email already exists.");
-        }
-
         User user = mapUserRequestToUser(userRequest);
+        user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
         user.setLimits(userLimitsService.getDefaultLimits());
         userRepository.save(user);
         userLimitsService.initialiseLimits(user);
@@ -100,6 +101,7 @@ public class UserService {
 
         User user = mapUserRequestToUser(userRequest);
         user.setLimits(userLimitsService.getDefaultLimits());
+        user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
         userRepository.save(user);
         userLimitsService.initialiseLimits(user);
         return userRepository.findUserByUsername(user.getUsername()).orElseThrow(() -> new ObjectNotFoundException(user.getId(), "User"));
@@ -214,6 +216,12 @@ public class UserService {
      */
     private User mapUserRequestToUser(UserRequest userRequest) {
         User user = new User();
+        user.setRole(Role.CUSTOMER);
+        transferUserRequestToExistingUser(userRequest, user);
+        return user;
+    }
+
+    private void transferUserRequestToExistingUser(UserRequest userRequest, User user) {
         user.setFirstName(userRequest.getFirstname());
         user.setLastName(userRequest.getLastname());
         user.setEmail(userRequest.getEmail());
@@ -222,12 +230,12 @@ public class UserService {
         user.setDateOfBirth(convertStringToLocalDate(userRequest.getBirth_date()));
         user.setUsername(userRequest.getUsername());
         user.setPassword(userRequest.getPassword());
-        user.setPassword(bCryptPasswordEncoder.encode(userRequest.getPassword()));
-        user.setRole(Role.USER);
+
         if (userRequest instanceof UserForAdminRequest userForAdminRequest) {
             user.setRole(mapStringToRole((userForAdminRequest.getRole())));
+        } else {
+            user.setRole(user.getRole());
         }
-        return user;
     }
 
     /**
@@ -297,52 +305,37 @@ public class UserService {
 
         User user = userRepository.findById(id).orElseThrow(()-> new ObjectNotFoundException(id, USER_NOT_FOUND));
 
-        // If requested username already exists, but is not the username of the user that is being updated, then throw exception.
-        if (userRepository.findUserByUsername(userRequest.getUsername()).isPresent() && !user.getUsername().equals(userRequest.getUsername())) {
-            throw new IllegalArgumentException(USERNAME_ALREADY_EXISTS);
-        }
-
-        // If requested email already exists, but is not the email of the user that is being updated, then throw exception.
-        if (
-                (Boolean.TRUE.equals(userRepository.existsByEmail(userRequest.getEmail())))
-                && (!user.getEmail().equals(userRequest.getEmail()))
-        ) {
-            throw new IllegalArgumentException("Email already exists.");
-        }
-
-        // Users can only update their own account.
-        // Employees can update all accounts, except for admins.
-        if (
-                (getBearerUserRole() == Role.USER && !user.getUsername().equals(getBearerUsername()))
-                || (getBearerUserRole() == Role.EMPLOYEE && user.getRole() == Role.ADMIN)
-        ) {
+        if (isAuthorizedToModifyUser(user)) {
             throw new AuthenticationException("You are not authorized to update this user.");
         }
 
-        user.setFirstName(userRequest.getFirstname());
-        user.setLastName(userRequest.getLastname());
-        user.setEmail(userRequest.getEmail());
-        user.setBsn(userRequest.getBsn());
-        user.setPhoneNumber(userRequest.getPhone_number());
-        user.setDateOfBirth(convertStringToLocalDate(userRequest.getBirth_date()));
-        user.setUsername(userRequest.getUsername());
         if (userRequest.getPassword() == null || userRequest.getPassword().length() == 0) {
             // If password is empty, keep the old password.
-            user.setPassword(user.getPassword());
+            userRequest.setPassword(user.getPassword());
         } else {
             // Otherwise update the password.
             if (!isPasswordValid(userRequest.getPassword())) {
                 throw new IllegalArgumentException("Password is not valid.");
             }
-            user.setPassword(bCryptPasswordEncoder.encode(userRequest.getPassword()));
+            userRequest.setPassword(bCryptPasswordEncoder.encode(userRequest.getPassword()));
         }
-        if (userRequest instanceof UserForAdminRequest userForAdminRequest) {
-            user.setRole(mapStringToRole((userForAdminRequest.getRole())));
-        }
-        user.setActive(true); // Reactivate user if it was deactivated.
-        user.setLimits(userLimitsService.getUserLimitsNoAuth(user.getId()));
 
-        return userRepository.save(user);
+        transferUserRequestToExistingUser(userRequest, user);
+        user.setActive(true); // Reactivate user if it was deactivated.
+        try {
+            return userRepository.save(user);
+        } catch (DataIntegrityViolationException e) {
+            throw new IllegalArgumentException(USERNAME_ALREADY_EXISTS);
+        }
+    }
+
+    /**
+     * Checks if user is authorized to modify user.
+     * @param user User to check authorization for.
+     * @return True if user is authorized to modify user, false if not.
+     */
+    private boolean isAuthorizedToModifyUser(User user) {
+        return (getBearerUserRole() == Role.CUSTOMER && !user.getUsername().equals(getBearerUsername())) || (getBearerUserRole() == Role.EMPLOYEE && user.getRole() == Role.ADMIN);
     }
 
     /**
@@ -352,8 +345,6 @@ public class UserService {
      */
     public void deleteUser(int id) throws AuthenticationException {
         User user = userRepository.findById(id).orElseThrow(()-> new ObjectNotFoundException(id, USER_NOT_FOUND));
-
-        String currentUserName = getBearerUsername();
         Role currentUserRole = getBearerUserRole();
 
         if (currentUserRole != Role.ADMIN && user.getRole() == Role.ADMIN) {
@@ -362,32 +353,44 @@ public class UserService {
 
         // Users can only delete their own account.
         // Employees can delete all accounts, except for admins.
-        if (currentUserRole == Role.USER && !user.getUsername().equals(currentUserName)) {
+        if (currentUserRole == Role.CUSTOMER && !user.getUsername().equals(getBearerUsername())) {
             throw new AuthenticationException("You are not authorized to delete this user.");
         }
 
         // Check if user has savings or checking accounts.
         // Users with any of these accounts cannot be deleted, but they can be deactivated.
         if (user.getCurrentAccount() != null || user.getSavingAccount() != null) {
-            // Take those accounts, and deactivate them too.
-            if (user.getCurrentAccount() != null) {
-                Account currentAccount = user.getCurrentAccount();
-                currentAccount.setActive(false);
-                accountRepository.save(currentAccount);
-            }
-
-            if (user.getSavingAccount() != null) {
-                Account savingAccount = user.getSavingAccount();
-                savingAccount.setActive(false);
-                accountRepository.save(savingAccount);
-            }
-
-            user.setActive(false);
-            userRepository.save(user);
+            deactivateUserAccounts(user);
             return;
         }
 
         userRepository.delete(user);
+    }
+
+    /**
+     * Deactivates user accounts.
+     * @param user User to deactivate accounts for.
+     */
+    private void deactivateUserAccounts(User user) {
+        // Take those accounts, and deactivate them too.
+        if (user.getCurrentAccount() != null) {
+            if (user.getCurrentAccount().getIBAN().equals(bankAccountIBAN)) {
+                throw new OperationNotAllowedException("Bank's account cannot be deactivated.");
+            }
+
+            Account currentAccount = user.getCurrentAccount();
+            currentAccount.setActive(false);
+            accountRepository.save(currentAccount);
+        }
+
+        if (user.getSavingAccount() != null) {
+            Account savingAccount = user.getSavingAccount();
+            savingAccount.setActive(false);
+            accountRepository.save(savingAccount);
+        }
+
+        user.setActive(false);
+        userRepository.save(user);
     }
 
     /**

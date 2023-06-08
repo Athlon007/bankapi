@@ -34,7 +34,7 @@ class UserRepositoryTests {
                 setPhoneNumber("0612345678");
                 setDateOfBirth(LocalDate.of(2000, 9, 8));
                 setPassword("Password1!");
-                setRole(Role.USER);
+                setRole(Role.CUSTOMER);
                 setBsn("123456782");
             }
         };

@@ -60,7 +60,7 @@ class AccountServiceTests {
         user.setPhoneNumber("0612345678");
         user.setDateOfBirth(LocalDate.of(2000, 9, 8));
         user.setPassword("Password1!");
-        user.setRole(Role.USER);
+        user.setRole(Role.CUSTOMER);
         user.setBsn("123456782");
 
         account = new Account();
@@ -302,7 +302,7 @@ class AccountServiceTests {
     void assigningBankAccountToNonAdminThrowsIllegalArgument() {
         User user = new User();
         user.setId(1);
-        user.setRole(Role.USER);
+        user.setRole(Role.CUSTOMER);
 
         Mockito.when(accountRepository.findByIBAN(account.getIBAN())).thenReturn(Optional.empty());
 

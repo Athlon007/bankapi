@@ -1,6 +1,7 @@
 package nl.inholland.bank.utils;
 
 import org.hibernate.ObjectNotFoundException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
@@ -108,6 +109,12 @@ public class ErrorHandler {
         // Media type is not supported.
         String mediaType = e.getContentType() == null ? "null" : e.getContentType().toString();
         return "{\"error_message\": \"Media type of type: " + mediaType + "\"}";
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public String handleDataIntegrityViolationException(DataIntegrityViolationException e) {
+        return "{\"error_message\": \"" + e.getMessage() + "\"}";
     }
 
     @ExceptionHandler(Exception.class)
