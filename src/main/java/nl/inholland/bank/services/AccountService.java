@@ -118,6 +118,9 @@ public class AccountService {
     }
 
     public Account updateAbsoluteLimit(Account account, AccountAbsoluteLimitRequest accountAbsoluteLimitRequest) {
+        if (account.getType() == AccountType.SAVING) {
+            throw new IllegalArgumentException("Absolute limit cannot be set for saving account");
+        }
         account.setAbsoluteLimit(accountAbsoluteLimitRequest.absoluteLimit());
         System.out.println(account.getAbsoluteLimit());
         return accountRepository.save(account);

@@ -12,9 +12,9 @@ Feature: Everything associated with the Account
     Given I have a valid employee login credentials
     And I call the application login endpoint
     And I receive a token
-    Given I call the application accounts end point with currencyType "EURO", accountType "SAVING", userId 3
+    Given I call the application accounts end point with currencyType "EURO", accountType "CURRENT", userId 2
     Then I get HTTP status 201
-    And I get account's currencyType "EURO" and accountType "SAVING" and id 7
+    And I get account's currencyType "EURO" and accountType "CURRENT" and id 7
 
 
   Scenario: Get accounts by user id without employee or admin credentials should result in 401
@@ -53,10 +53,50 @@ Feature: Everything associated with the Account
     Given I have a valid employee login credentials
     And I call the application login endpoint
     And I receive a token
+    Given I call the application accounts end point with currencyType "EURO", accountType "CURRENT", userId 2
+    Then I get HTTP status 201
+    And I get account's currencyType "EURO" and accountType "CURRENT" and id 7
+    And I call the application accounts end point with absoluteLimit -20.00 with userId 2, accountId 7
+    Then I get HTTP status 200
+
+    Scenario: Updating an account's absolute limit as employee/admin with invalid absolute limit should result in 400
+    Given I have a valid employee login credentials
+    And I call the application login endpoint
+    And I receive a token
+    Given I call the application accounts end point with currencyType "EURO", accountType "CURRENT", userId 2
+    Then I get HTTP status 201
+    And I get account's currencyType "EURO" and accountType "CURRENT" and id 7
+    And I call the application accounts end point with absoluteLimit 300.00 with userId 2, accountId 7
+    Then I get HTTP status 400
+
+    Scenario: Updating an account's absolute limit as employee/admin with invalid userId should result in 400
+    Given I have a valid employee login credentials
+    And I call the application login endpoint
+    And I receive a token
+    Given I call the application accounts end point with currencyType "EURO", accountType "CURRENT", userId 2
+    Then I get HTTP status 201
+    And I get account's currencyType "EURO" and accountType "CURRENT" and id 7
+    And I call the application accounts end point with absoluteLimit -20.00 with userId 0, accountId 7
+    Then I get HTTP status 400
+
+    Scenario: Updating an account's absolute limit as employee/admin with invalid accountId should result in 400
+    Given I have a valid employee login credentials
+    And I call the application login endpoint
+    And I receive a token
+    Given I call the application accounts end point with currencyType "EURO", accountType "CURRENT", userId 2
+    Then I get HTTP status 201
+    And I get account's currencyType "EURO" and accountType "CURRENT" and id 7
+    And I call the application accounts end point with absoluteLimit -20.00 with userId 2, accountId 0
+    Then I get HTTP status 400
+
+  Scenario: Updating an account's absolute limit of a saving account as employee/admin should result in 400
+    Given I have a valid employee login credentials
+    And I call the application login endpoint
+    And I receive a token
     Given I call the application accounts end point with currencyType "EURO", accountType "SAVING", userId 3
     Then I get HTTP status 201
     And I get account's currencyType "EURO" and accountType "SAVING" and id 7
     And I call the application accounts end point with absoluteLimit -20.00 with userId 3, accountId 7
-    Then I get HTTP status 200
+    Then I get HTTP status 400
 
 

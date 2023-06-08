@@ -61,7 +61,6 @@ public class AccountStepDefinitions extends BaseStepDefinitions{
                 String.class
         ));
     }
-
     @And("I get account's currencyType {string} and accountType {string} and id {int}")
     public void iGetAnAccountSIBANAndCurrencyTypeAndAccountTypeAndId(String currencyType, String accountType, int id) throws JsonProcessingException {
         // get the account response
