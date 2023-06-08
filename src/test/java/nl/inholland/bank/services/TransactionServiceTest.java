@@ -70,7 +70,7 @@ class TransactionServiceTest {
         );
         currentAccount = new Account(
                 user,
-                1000.0,
+                750.0,
                 CurrencyType.EURO,
                 "NL10INHO6628932884",
                 AccountType.CURRENT,
@@ -155,12 +155,12 @@ class TransactionServiceTest {
         account.setUser(user);
 
         // Test when user is authorized for the account
-        boolean isAuthorized = transactionService.isTransactionAuthorizedForUserAccount(user, account);
+        boolean isAuthorized = transactionService.isUserAuthorizedToAccessAccount(user, account);
         assertTrue(isAuthorized);
 
         // Test when user is not authorized for the account
         User otherUser = new User();
-        boolean isNotAuthorized = transactionService.isTransactionAuthorizedForUserAccount(otherUser, account);
+        boolean isNotAuthorized = transactionService.isUserAuthorizedToAccessAccount(otherUser, account);
         assertFalse(isNotAuthorized);
     }
 
@@ -383,13 +383,13 @@ class TransactionServiceTest {
     }
 
     @Test
-    void checkUserLimits_ShouldThrowExceptionsBasedOnLimitsAndBalance() throws Exception {
+    void checkUserLimitsTest_ExceedsTransactionLimit() throws Exception {
         Account accountSender = this.currentAccount;
-        double amount = 100.0;
+        double amount = 550.0;
 
         Limits limits = new Limits();
-        limits.setTransactionLimit(1000.0);
-        limits.setRemainingDailyTransactionLimit(500.0);
+        limits.setTransactionLimit(500.0);
+        limits.setRemainingDailyTransactionLimit(1000.0);
 
         Mockito.when(userLimitsService.getUserLimits(this.user.getId())).thenReturn(limits);
 
@@ -398,22 +398,48 @@ class TransactionServiceTest {
             transactionService.checkUserLimits(accountSender, amount);
         });
 
-        Assertions.assertThrows(DailyTransactionLimitException.class, () -> {
-            transactionService.checkUserLimits(accountSender, amount);
-        });
-
-        Assertions.assertThrows(InsufficientFundsException.class, () -> {
-            accountSender.setBalance(50.0);
-            transactionService.checkUserLimits(accountSender, amount);
-        });
-
         // Verify that the getUserLimits method is called once with the correct argument
         Mockito.verify(userLimitsService, Mockito.times(1)).getUserLimits(this.user.getId());
     }
 
     @Test
+    void checkUserLimitsTest_ExceedsDailyTransactionLimit() throws Exception {
+        Account accountSender = this.currentAccount;
+        double amount = 200.0;
+
+        Limits limits = new Limits();
+        limits.setTransactionLimit(500.0);
+        limits.setRemainingDailyTransactionLimit(100.0);
+
+        Mockito.when(userLimitsService.getUserLimits(this.user.getId())).thenReturn(limits);
+
+        Assertions.assertThrows(DailyTransactionLimitException.class, () -> {
+            transactionService.checkUserLimits(accountSender, amount);
+        });
+
+        Mockito.verify(userLimitsService, Mockito.times(1)).getUserLimits(this.user.getId());
+    }
+
+    @Test
+    void checkUserLimitsTest_InsufficientFunds() throws Exception {
+        Account accountSender = this.currentAccount;
+        double amount = 800.0;
+
+        Limits limits = new Limits();
+        limits.setTransactionLimit(1000.0);
+        limits.setRemainingDailyTransactionLimit(1000.0);
+
+        Mockito.when(userLimitsService.getUserLimits(this.user.getId())).thenReturn(limits);
+
+        Assertions.assertThrows(InsufficientFundsException.class, () -> {
+            transactionService.checkUserLimits(accountSender, amount);
+        });
+
+        Mockito.verify(userLimitsService, Mockito.times(1)).getUserLimits(this.user.getId());
+    }
+
+    @Test
     void transferMoney_ShouldCreateTransactionAndUpdateBalances() {
-        // Arrange
         User user = this.user;
         Account accountSender = this.currentAccount;
         Account accountReceiver = this.currentAccount2;
@@ -421,17 +447,16 @@ class TransactionServiceTest {
         double amount = 100.0;
         String description = "Transfer";
 
-        // Stubbing the createTransaction method
-        Mockito.when(transactionService.createTransaction(Mockito.eq(user), Mockito.eq(accountSender), Mockito.eq(accountReceiver),
-                        Mockito.eq(currencyType), Mockito.eq(amount), Mockito.eq(description), Mockito.any(TransactionType.class)))
-                .thenReturn(new Transaction());
+        Transaction createdTransaction = new Transaction();
+        Mockito.when(transactionService.createTransaction(user, accountSender, accountReceiver,
+                        currencyType, amount, description, TransactionType.TRANSACTION))
+                .thenReturn(createdTransaction);
 
-        // Stubbing the updateAccountBalance method
-        Mockito.doNothing().when(transactionService).updateAccountBalance(Mockito.eq(accountSender), Mockito.eq(amount), Mockito.eq(false));
-        Mockito.doNothing().when(transactionService).updateAccountBalance(Mockito.eq(accountReceiver), Mockito.eq(amount), Mockito.eq(true));
+        Mockito.doNothing().when(transactionService).updateAccountBalance(accountSender, amount, false);
+        Mockito.doNothing().when(transactionService).updateAccountBalance(accountReceiver, amount, true);
 
-        // Stubbing the repository save method
-        Mockito.when(transactionRepository.save(Mockito.any(Transaction.class))).thenReturn(new Transaction());
+        Transaction savedTransaction = new Transaction();
+        Mockito.when(transactionRepository.save(Mockito.any(Transaction.class))).thenReturn(savedTransaction);
 
         // Act
         Transaction result = transactionService.transferMoney(user, accountSender, accountReceiver,
@@ -439,9 +464,9 @@ class TransactionServiceTest {
 
         // Assert
         Mockito.verify(transactionRepository, Mockito.times(1)).save(Mockito.any(Transaction.class));
-        Mockito.verify(transactionService, Mockito.times(1)).updateAccountBalance(Mockito.eq(accountSender), Mockito.eq(amount), Mockito.eq(false));
-        Mockito.verify(transactionService, Mockito.times(1)).updateAccountBalance(Mockito.eq(accountReceiver), Mockito.eq(amount), Mockito.eq(true));
-        Assertions.assertNotNull(result);
+        Mockito.verify(transactionService, Mockito.times(1)).updateAccountBalance(accountSender, amount, false);
+        Mockito.verify(transactionService, Mockito.times(1)).updateAccountBalance(accountReceiver, amount, true);
+        Assertions.assertSame(savedTransaction, result);
     }
 
     @Test

@@ -70,7 +70,7 @@ public class TransactionService {
         return transaction;
     }
 
-    private boolean isUserAuthorizedToAccessAccount(User user, Account account) {
+    boolean isUserAuthorizedToAccessAccount(User user, Account account) {
         return user == account.getUser();
     }
 
@@ -153,11 +153,9 @@ public class TransactionService {
         Account accountSender = accountService.getAccountByIBAN(request.sender_iban());
         Account accountReceiver = accountService.getAccountByIBAN(request.receiver_iban());
 
-        if (accountSender == null) {
-            throw new AccountNotFoundException("Account with IBAN (" + request.sender_iban() + ") not found.");
-        }
-        if (accountReceiver == null) {
-            throw new AccountNotFoundException("Account with IBAN (" + request.receiver_iban() + ") not found.");
+        if (accountSender == null || accountReceiver == null) {
+            String message = "Account with IBAN (" + (accountSender == null ? request.sender_iban() : request.receiver_iban()) + ") not found.";
+            throw new AccountNotFoundException(message);
         }
 
         double amount = request.amount();
@@ -327,20 +325,11 @@ public class TransactionService {
         int transactionID = request.transactionID().orElse(0);
         String ibanSender = request.ibanSender().orElse("");
         String ibanReceiver = request.ibanReceiver().orElse("");
-        TransactionType transactionType = null;
-        if (request.transactionType().isPresent()) {
-            transactionType = mapTransactionTypeToString(request.transactionType().get());
-        }
+        TransactionType transactionType = request.transactionType().map(this::mapTransactionTypeToString).orElse(null);
 
         // Get users by ID
-        User userSender = null;
-        User userReceiver = null;
-        if (request.userSenderId().isPresent()) {
-            userSender = userService.getUserById(request.userSenderId().get());
-        }
-        if (request.userReceiverId().isPresent()) {
-            userReceiver = userService.getUserById(request.userReceiverId().get());
-        }
+        User userSender = request.userSenderId().map(userService::getUserById).orElse(null);
+        User userReceiver = request.userReceiverId().map(userService::getUserById).orElse(null);
 
         // Set up pagination
         int pageNumber = page.orElse(0);
@@ -354,12 +343,7 @@ public class TransactionService {
         }
 
         // Get user if they have the Role.USER, safety check for regular users to only see their own transactions.
-        User user = null;
-        if (userRole == Role.USER && userRepository.findUserByUsername(userService.getBearerUsername()).isPresent()) {
-            // Add client info to user, this is added as a check so that users can only see transactions
-            // Which they are a part of themselves.
-            user = userRepository.findUserByUsername(userService.getBearerUsername()).get();
-        }
+        User user = (userRole == Role.USER) ? userRepository.findUserByUsername(userService.getBearerUsername()).orElse(null) : null;
 
         return transactionRepository.findTransactions(
                 minAmount, maxAmount, startDateTime, endDateTime, transactionID,
