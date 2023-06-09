@@ -1009,7 +1009,7 @@ components:
           type: string
         refresh_token:
           type: string
-        int:
+        id:
           type: integer
           format: int64
         expires_at:
