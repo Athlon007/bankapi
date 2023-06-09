@@ -90,7 +90,7 @@ class AccountControllerTests {
 
         account2 = new Account();
         account2.setId(2);
-        user2.setId(1);
+        user2.setId(2);
         user2.setUsername("user2");
         user2.setEmail("emaiil@ex.com");
         user2.setFirstName("first");
@@ -291,6 +291,23 @@ class AccountControllerTests {
                 )
                 .andExpect(MockMvcResultMatchers.jsonPath("$.error_message").value("Unauthorized request"));
     }
+
+    @Test
+    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    void activateAnAccountThatDoesNotBelongToSameUserShouldReturnUnauthorized() throws Exception {
+        Mockito.when(accountService.getAccountById(account.getId())).thenReturn(account);
+        Mockito.when(userService.getUserById(2)).thenReturn(user2);
+        Mockito.when(accountService.activateOrDeactivateTheAccount(account, accountActiveRequest)).thenReturn(account);
+        Mockito.when(userService.getBearerUserRole()).thenReturn(Role.ADMIN);
+        Mockito.when(userService.getBearerUsername()).thenReturn("admin");
+
+        mockMvc.perform(MockMvcRequestBuilders.put("/accounts/2/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(accountActiveRequest))
+                )
+                .andExpect(MockMvcResultMatchers.jsonPath("$.error_message").value("Unauthorized request"));
+    }
+
 
     @Test
     @WithMockUser(username = "admin", roles = {"ADMIN"})
