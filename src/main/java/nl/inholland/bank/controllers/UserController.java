@@ -155,7 +155,9 @@ public class UserController {
                     user.getCurrentAccount().getType().toString(),
                     user.getCurrentAccount().isActive(),
                     user.getCurrentAccount().getBalance(),
-                    user.getCurrentAccount().getAbsoluteLimit()
+                    user.getCurrentAccount().getAbsoluteLimit(),
+                    user.getFirstName(),
+                    user.getLastName()
             );
         }
 
@@ -168,7 +170,9 @@ public class UserController {
                     user.getSavingAccount().getCurrencyType().toString(),
                     user.getSavingAccount().isActive(),
                     user.getSavingAccount().getBalance(),
-                    user.getSavingAccount().getAbsoluteLimit()
+                    user.getSavingAccount().getAbsoluteLimit(),
+                    user.getFirstName(),
+                    user.getLastName()
             );
         }
 

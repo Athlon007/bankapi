@@ -3,10 +3,7 @@ package nl.inholland.bank.controllers;
 import nl.inholland.bank.models.Account;
 import nl.inholland.bank.models.Role;
 import nl.inholland.bank.models.User;
-import nl.inholland.bank.models.dtos.AccountDTO.AccountAbsoluteLimitRequest;
-import nl.inholland.bank.models.dtos.AccountDTO.AccountActiveRequest;
-import nl.inholland.bank.models.dtos.AccountDTO.AccountRequest;
-import nl.inholland.bank.models.dtos.AccountDTO.AccountResponse;
+import nl.inholland.bank.models.dtos.AccountDTO.*;
 import nl.inholland.bank.models.dtos.ExceptionResponse;
 import nl.inholland.bank.services.AccountService;
 import nl.inholland.bank.services.UserService;
@@ -17,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.naming.AuthenticationException;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Controller
@@ -119,6 +117,33 @@ public class AccountController {
         }
     }
 
+    @GetMapping
+    public ResponseEntity getAccounts(
+            @RequestParam Optional<String> iban,
+            @RequestParam Optional<String> firstName,
+            @RequestParam Optional<String> lastName,
+            @RequestParam Optional<String> accountType
+    ) {
+        // Retrieve accounts
+        List<Account> accounts = accountService.getAccounts(iban, firstName, lastName, accountType);
+
+        if (userService.getBearerUserRole() == Role.USER) {
+            // Convert to client responses
+            List<AccountClientResponse> accountClientResponses = accounts.stream()
+                    .map(this::buildAccountClientResponse)
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.status(200).body(accountClientResponses);
+        } else {
+            // Convert to account responses
+            List<AccountResponse> accountResponses = accounts.stream()
+                    .map(this::buildAccountResponse)
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.status(200).body(accountResponses);
+        }
+    }
+
     public AccountResponse buildAccountResponse(Account account) {
         return new AccountResponse(
                 account.getId(),
@@ -127,7 +152,21 @@ public class AccountController {
                 account.getType().toString(),
                 account.isActive(),
                 account.getBalance(),
-                account.getAbsoluteLimit()
+                account.getAbsoluteLimit(),
+                account.getUser().getFirstName(),
+                account.getUser().getLastName()
+        );
+    }
+
+    private AccountClientResponse buildAccountClientResponse(Account account) {
+        return new AccountClientResponse(
+                account.getId(),
+                account.getIBAN(),
+                account.getCurrencyType().toString(),
+                account.getType().toString(),
+                account.isActive(),
+                account.getUser().getFirstName(),
+                account.getUser().getLastName()
         );
     }
 }

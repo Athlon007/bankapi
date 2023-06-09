@@ -1,6 +1,7 @@
 package nl.inholland.bank.repositories;
 
 import nl.inholland.bank.models.Account;
+import nl.inholland.bank.models.AccountType;
 import nl.inholland.bank.models.User;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
@@ -14,4 +15,11 @@ public interface AccountRepository extends CrudRepository<Account, Integer> {
     List<Account> findAllByUser(User user);
 
     Optional<Account> findByIBAN(String iban);
+
+ List<Account> findByUserFirstNameIgnoreCaseContainingAndUserLastNameIgnoreCaseContainingAndType(
+         String firstName, String lastName, AccountType accountType);
+
+    List<Account> findAllByIBAN(String iban);
+
+    List<Account> findAllByIBANAndType(String iban, AccountType accountType);
 }

@@ -182,13 +182,27 @@ class TransactionServiceTest {
         TransactionRequest request = new TransactionRequest(currentAccount.getIBAN(), currentAccount2.getIBAN(), 100.0, "description");
         User user = this.user2;
         Account accountSender = this.currentAccount;
+        Account accountReceiver = this.currentAccount2;
         Mockito.when(userRepository.findUserByUsername(anyString())).thenReturn(java.util.Optional.of(user));
         Mockito.when(accountService.getAccountByIBAN(request.sender_iban())).thenReturn(accountSender);
-        Mockito.doThrow(UserNotTheOwnerOfAccountException.class)
-                .when(transactionService).checkUserAuthorization(user, accountSender);
+        Mockito.when(accountService.getAccountByIBAN(request.receiver_iban())).thenReturn(accountReceiver);
 
         assertThrows(UserNotTheOwnerOfAccountException.class, () -> transactionService.processTransaction(request));
-        verify(transactionService, times(1)).checkUserAuthorization(user, accountSender);
+    }
+
+    @Test
+    void processTransaction_InactiveAccountException() throws AccountNotFoundException, InactiveAccountException {
+        // Arrange
+        TransactionRequest request = new TransactionRequest(currentAccount.getIBAN(), currentAccount2.getIBAN(), 100.0, "description");
+        User user = this.user;
+        Account accountSender = this.currentAccount;
+        accountSender.setActive(false);
+        Account accountReceiver = this.currentAccount2;
+        Mockito.when(userRepository.findUserByUsername(anyString())).thenReturn(java.util.Optional.of(user));
+        Mockito.when(accountService.getAccountByIBAN(request.sender_iban())).thenReturn(accountSender);
+        Mockito.when(accountService.getAccountByIBAN(request.receiver_iban())).thenReturn(accountReceiver);
+
+        assertThrows(InactiveAccountException.class, () -> transactionService.processTransaction(request));
     }
 
     @Test

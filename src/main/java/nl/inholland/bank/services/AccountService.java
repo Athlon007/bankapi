@@ -9,7 +9,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.security.auth.login.AccountNotFoundException;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class AccountService {
@@ -41,13 +43,41 @@ public class AccountService {
     }
 
 
+    /**
+     * Retrieves a single account by IBAN.
+     * @param iban The IBAN to find.
+     * @return Returns an Account.
+     * @throws AccountNotFoundException Exception if no account was found.
+     */
     public Account getAccountByIBAN(String iban) throws AccountNotFoundException {
-        if (IBANGenerator.isValidIBAN(iban)) {
-            return accountRepository.findByIBAN(iban)
+        if (IBANGenerator.isValidIBAN(iban.toUpperCase())) {
+            return accountRepository.findByIBAN(iban.toUpperCase())
                     .orElseThrow(() -> new AccountNotFoundException("Account not found."));
         } else {
             throw new IllegalArgumentException("Invalid IBAN provided.");
         }
+    }
+
+    /**
+     * Retrieves accounts by IBAN.
+     * @param iban The IBAN to find.
+     * @return Returns a list of Accounts.
+     */
+    public List<Account> getAccountsByIBANAndAccountType(String iban, AccountType accountType) {
+        return accountRepository.findAllByIBANAndType(iban.toUpperCase(), accountType);
+    }
+
+    /**
+     * Retrieves accounts by first and last name
+     * @param firstName The first name of the person.
+     * @param lastName The last name of the person.
+     * @return Returns a list of Accounts.
+     */
+    public List<Account> getAccountsByFirstAndLastNameAndAccountType(String firstName, String lastName, AccountType accountType)
+    {
+        return accountRepository.findByUserFirstNameIgnoreCaseContainingAndUserLastNameIgnoreCaseContainingAndType(
+                firstName, lastName, accountType
+        );
     }
 
 
@@ -146,5 +176,30 @@ public class AccountService {
 
         accountRepository.save(account);
         userService.assignAccountToUser(user, account);
+    }
+
+    /**
+     * Retrieves accounts based on given values.
+     * @param iban The IBAN to find.
+     * @param firstName The first name to find.
+     * @param lastName The last name to find.
+     * @param accountTypeString The account type to find.
+     * @return Returns a list of Accounts.
+     */
+    public List<Account> getAccounts(Optional<String> iban, Optional<String> firstName,
+                                     Optional<String> lastName, Optional<String> accountTypeString) {
+        AccountType accountType = AccountType.CURRENT;
+
+        // Check if certain accountType was given.
+        if (accountTypeString.isPresent()) {
+            accountType = mapAccountTypeToString(accountTypeString.get());
+        }
+
+        // Checks what values are used to find.
+        if (iban.isPresent()) { // Find by IBAN and accountType.
+            return getAccountsByIBANAndAccountType(iban.get(), accountType);
+        } else { // Find by first and last name and accountType.
+            return getAccountsByFirstAndLastNameAndAccountType(firstName.orElse(""), lastName.orElse(""), accountType);
+        }
     }
 }
