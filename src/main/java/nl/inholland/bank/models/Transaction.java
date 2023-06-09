@@ -5,6 +5,9 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -58,12 +61,10 @@ public class Transaction {
         if (amount <= 0) {
             throw new IllegalArgumentException("Amount cannot be negative or zero.");
         }
-
+        if (BigDecimal.valueOf(amount).scale() > 2) {
+            throw new IllegalArgumentException("Amount can not have more than two decimals.");
+        }
         this.amount = amount;
-    }
-
-    public double getAmount() {
-        return Math.round(amount * 100.00) / 100.00;
     }
 
     public void setCurrencyType(CurrencyType currencyType) {
@@ -115,13 +116,15 @@ public class Transaction {
             tempDescription = " ('" + description + "')";
         }
 
+        DecimalFormat decimalFormat = new DecimalFormat("#0.00");
+
         if (this.getTransactionType() == TransactionType.TRANSACTION) {
-            this.description = "Transferred " + this.amount + " "
+            this.description = "Transferred " + decimalFormat.format(this.amount) + " "
                     + this.currencyType + " to " + this.accountReceiver.getIBAN() + tempDescription;
         } else if (this.getTransactionType() == TransactionType.DEPOSIT) {
-            this.description = "Deposited " + this.amount + " " + this.currencyType + tempDescription;
+            this.description = "Deposited " + decimalFormat.format(this.amount) + " " + this.currencyType + tempDescription;
         } else {
-            this.description = "Withdrawn " + this.amount + " " + this.currencyType + tempDescription;
+            this.description = "Withdrawn " + decimalFormat.format(this.amount) + " " + this.currencyType + tempDescription;
         }
     }
 }

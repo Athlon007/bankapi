@@ -1,14 +1,12 @@
 package nl.inholland.bank.controllers;
 
 import nl.inholland.bank.models.*;
-import nl.inholland.bank.models.dtos.ExceptionResponse;
 import nl.inholland.bank.models.dtos.TransactionDTO.TransactionRequest;
 import nl.inholland.bank.models.dtos.TransactionDTO.TransactionResponse;
 import nl.inholland.bank.models.dtos.TransactionDTO.TransactionSearchRequest;
 import nl.inholland.bank.models.dtos.TransactionDTO.WithdrawDepositRequest;
 import nl.inholland.bank.models.exceptions.UserNotTheOwnerOfAccountException;
 import nl.inholland.bank.services.TransactionService;
-import nl.inholland.bank.services.UserService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
