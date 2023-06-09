@@ -1,9 +1,6 @@
 package nl.inholland.bank.models.dtos;
 
-import nl.inholland.bank.models.dtos.AccountDTO.AccountAbsoluteLimitRequest;
-import nl.inholland.bank.models.dtos.AccountDTO.AccountActiveRequest;
-import nl.inholland.bank.models.dtos.AccountDTO.AccountRequest;
-import nl.inholland.bank.models.dtos.AccountDTO.AccountResponse;
+import nl.inholland.bank.models.dtos.AccountDTO.*;
 import org.junit.jupiter.api.Test;
 
 class AccountDTOsTests {
@@ -34,5 +31,13 @@ class AccountDTOsTests {
     void AccountActiveOrReactiveRequestShouldWork(){
         AccountActiveRequest accountActiveRequest = new AccountActiveRequest(true);
         assert accountActiveRequest.isActive();
+    }
+
+    @Test
+    void accountClientResponse() {
+        AccountClientResponse accountClientResponse = new AccountClientResponse(1, "IBAN", "EURO", "SAVING", false, "Name", "Namey");
+        assert accountClientResponse.IBAN().equals("IBAN");
+        assert accountClientResponse.currency_type().equals("EURO");
+        assert accountClientResponse.account_type().equals("SAVING");
     }
 }
