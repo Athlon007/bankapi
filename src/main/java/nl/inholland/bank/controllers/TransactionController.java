@@ -119,49 +119,19 @@ public class TransactionController {
     }
 
     public TransactionResponse buildTransactionResponse(Transaction transaction) {
-        TransactionResponse response = null;
-        if (transaction.getTransactionType() == TransactionType.WITHDRAWAL) {
-            assert transaction.getAccountSender() != null;
-            response = new TransactionResponse(
-                    transaction.getId(),
-                    transaction.getUser().getUsername(),
-                    transaction.getAccountSender().getIBAN(),
-                    null,
-                    transaction.getAmount(),
-                    transaction.getTimestamp(),
-                    "Successfully withdrawn: " + transaction.getAmount() + " " + transaction.getCurrencyType() + " from your account",
-                    TransactionType.WITHDRAWAL,
-                    transaction.getAccountSender().getBalance()
-            );
-        }
-        if (transaction.getTransactionType() == TransactionType.DEPOSIT) {
-            assert transaction.getAccountReceiver() != null;
-            response = new TransactionResponse(
-                    transaction.getId(),
-                    transaction.getUser().getUsername(),
-                    null,
-                    transaction.getAccountReceiver().getIBAN(),
-                    transaction.getAmount(),
-                    transaction.getTimestamp(),
-                    "Successfully deposited: " + transaction.getAmount() + " " + transaction.getCurrencyType() + " into your account",
-                    TransactionType.DEPOSIT,
-                    transaction.getAccountReceiver().getBalance()
-            );
-        }
-        if (transaction.getTransactionType() == TransactionType.TRANSACTION) {
-            response = new TransactionResponse(
-                    transaction.getId(),
-                    transaction.getUser().getUsername(),
-                    transaction.getAccountSender().getIBAN(),
-                    transaction.getAccountReceiver().getIBAN(),
-                    transaction.getAmount(),
-                    transaction.getTimestamp(),
-                    "Successfully transferred: " + transaction.getAmount() + " "
-                            + transaction.getCurrencyType() + " to " + transaction.getAccountReceiver().getIBAN(),
-                    TransactionType.TRANSACTION,
-                    null
-            );
-        }
-        return response;
+        String senderIBAN = transaction.getAccountSender() != null ? transaction.getAccountSender().getIBAN() : null;
+        String receiverIBAN = transaction.getAccountReceiver() != null ? transaction.getAccountReceiver().getIBAN() : null;
+
+        return new TransactionResponse(
+                transaction.getId(),
+                transaction.getUser().getUsername(),
+                senderIBAN,
+                receiverIBAN,
+                transaction.getAmount(),
+                transaction.getTimestamp(),
+                transaction.getDescription(),
+                transaction.getTransactionType(),
+                null
+        );
     }
 }

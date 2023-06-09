@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Entity
 @Data
@@ -105,5 +106,20 @@ public class Transaction {
             throw new IllegalArgumentException("Timestamp cannot be in the future.");
         }
         this.timestamp = timestamp;
+    }
+
+    public String getDescription() {
+        if (!Objects.equals(this.description, "")) {
+            return description;
+        } else {
+            if (this.transactionType == TransactionType.TRANSACTION) {
+                return  "Transferred: " + this.amount + " "
+                        + this.currencyType + " to " + this.accountReceiver.getIBAN();
+            } else if (this.transactionType == TransactionType.DEPOSIT) {
+                return "Deposited: " + this.amount + " " + this.currencyType + " into your account";
+            } else {
+                return "Withdrawn: " + this.amount + " " + this.currencyType + " from your account";
+            }
+        }
     }
 }
