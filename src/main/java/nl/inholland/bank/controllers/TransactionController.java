@@ -39,21 +39,11 @@ public class TransactionController {
 
     @PostMapping("/withdraw")
     public ResponseEntity<Object> withdrawMoney(
-            @RequestBody WithdrawDepositRequest withdrawDepositRequest) {
-        try {
+            @RequestBody WithdrawDepositRequest withdrawDepositRequest) throws InsufficientResourcesException, AuthenticationException, javax.naming.AuthenticationException, AccountNotFoundException {
             Transaction transaction = transactionService.withdrawMoney(withdrawDepositRequest);
             TransactionResponse response = buildTransactionResponse(transaction);
 
             return ResponseEntity.status(201).body(response);
-        } catch (InsufficientResourcesException e) {
-            return ResponseEntity.status(500).body(new ExceptionResponse(e.getMessage()));
-        } catch (AccountNotFoundException e) {
-            return ResponseEntity.status(404).body(new ExceptionResponse(e.getMessage()));
-        } catch (AuthenticationException | UserNotTheOwnerOfAccountException e) {
-            return ResponseEntity.status(403).body(new ExceptionResponse(e.getMessage()));
-        } catch (javax.naming.AuthenticationException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
@@ -82,7 +72,7 @@ public class TransactionController {
             @RequestParam Optional<Integer> userSenderID,
             @RequestParam Optional<Integer> userReceiverID,
             @RequestParam Optional<String> transactionType
-            ) throws AuthenticationException {
+    ) throws AuthenticationException {
         // Group values
         TransactionSearchRequest request = new TransactionSearchRequest(
                 minAmount, maxAmount, startDate, endDate, transactionID, ibanSender, ibanReceiver,
@@ -103,19 +93,11 @@ public class TransactionController {
 
     @PostMapping("/deposit")
     public ResponseEntity<Object> depositMoney(
-            @RequestBody WithdrawDepositRequest withdrawDepositRequest) {
-        try {
-            Transaction transaction = transactionService.depositMoney(withdrawDepositRequest);
-            TransactionResponse response = buildTransactionResponse(transaction);
+            @RequestBody WithdrawDepositRequest withdrawDepositRequest) throws AuthenticationException, InsufficientResourcesException, AccountNotFoundException {
+        Transaction transaction = transactionService.depositMoney(withdrawDepositRequest);
+        TransactionResponse response = buildTransactionResponse(transaction);
 
-            return ResponseEntity.status(201).body(response);
-        } catch (AccountNotFoundException e) {
-            return ResponseEntity.status(404).body(new ExceptionResponse(e.getMessage()));
-        } catch (AuthenticationException | UserNotTheOwnerOfAccountException e) {
-            return ResponseEntity.status(403).body(new ExceptionResponse(e.getMessage()));
-        } catch (InsufficientResourcesException e) {
-            return ResponseEntity.status(500).body(new ExceptionResponse(e.getMessage()));
-        }
+        return ResponseEntity.status(201).body(response);
     }
 
     public TransactionResponse buildTransactionResponse(Transaction transaction) {
