@@ -195,6 +195,8 @@ paths:
                     account_type: "CURRENT"
                     currency_type: "EURO"
                     balance: 1000.0
+                    firstName: "Bobby"
+                    lastName: "Bobberson"
                   saving_account: null
                   active: true
         "401":
@@ -268,6 +270,8 @@ paths:
                     account_type: "CURRENT"
                     currency_type: "EURO"
                     balance: 1000.0
+                    firstName: "Bobby"
+                    lastName: "Bobberson"
                   saving_account: null
                   active: true
         "401":
