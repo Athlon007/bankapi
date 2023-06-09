@@ -128,10 +128,6 @@ class AccountServiceTests {
     }
 
 
-
-
-
-
     @Test
     void testAddAccountWithInvalidAccountType() {
         accountRequest = new AccountRequest(
@@ -335,5 +331,34 @@ class AccountServiceTests {
         Mockito.when(accountRepository.save(Mockito.any(Account.class))).thenReturn(account);
 
         Assertions.assertThrows(IllegalArgumentException.class, () -> accountService.activateOrDeactivateTheAccount(account, accountActiveRequest));
+    }
+
+    @Test
+    void attemptingToSetCurrentAccountTwiceThrowsIllegalArgumentException() {
+        Mockito.when(accountRepository.findAllByUser(user)).thenReturn(List.of(account));
+        Mockito.when(userService.getUserById(accountRequest.userId())).thenReturn(user);
+
+        Assertions.assertThrows(IllegalArgumentException.class, () -> accountService.addAccount(accountRequest));
+    }
+
+    @Test
+    void attemptingToSetSavingAccountTwiceThrowsIllegalArgumentException() {
+        AccountRequest savingRequest = new AccountRequest("euro", "SAVING", 1);
+        Account savingAccount = new Account();
+        savingAccount.setType(AccountType.SAVING);
+
+        Mockito.when(accountRepository.findAllByUser(user)).thenReturn(List.of(account, savingAccount));
+        Mockito.when(userService.getUserById(savingRequest.userId())).thenReturn(user);
+
+        Assertions.assertThrows(IllegalArgumentException.class, () -> accountService.addAccount(savingRequest));
+    }
+
+    @Test
+    void updateSavingAbsoluteLimitShouldThrowIllegalArgumentException(){
+        AccountAbsoluteLimitRequest accountAbsoluteLimitRequest = new AccountAbsoluteLimitRequest(-10);
+        account.setType(AccountType.SAVING);
+        Mockito.when(accountRepository.save(Mockito.any(Account.class))).thenReturn(account);
+
+        Assertions.assertThrows(IllegalArgumentException.class, () -> accountService.updateAbsoluteLimit(account, accountAbsoluteLimitRequest));
     }
 }
