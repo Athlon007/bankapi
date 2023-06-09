@@ -5,10 +5,10 @@ import nl.inholland.bank.models.dtos.UserDTO.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-public class UserDTOsTests {
+class UserDTOsTests {
     @Test
     void settingUserResponse() {
-        UserResponse userResponse = new UserResponse(1, "username", "email", "username", "lastname", "1234", "phone", "2000", 0d, "role", new AccountResponse(0, "bian", "eur", "a", false, 0), null, true);
+        UserResponse userResponse = new UserResponse(1, "username", "email", "username", "lastname", "1234", "phone", "2000", 0d, "role", new AccountResponse(0, "bian", "eur", "a", false, 0, 0, "firstName", "lastName"), null, true);
         assert userResponse.firstname().equals("username");
         assert userResponse.email().equals("email");
         assert userResponse.role().equals("role");
@@ -24,6 +24,7 @@ public class UserDTOsTests {
         assert userRequest.getLastname().equals("lastname");
         assert userRequest.getPhone_number().equals("phone");
         assert userRequest.getBirth_date().equals("2000");
+        assert userRequest.getBsn().equals("1234");
 
         // use set
         userRequest.setEmail("email2");
@@ -33,6 +34,7 @@ public class UserDTOsTests {
         userRequest.setLastname("lastname2");
         userRequest.setPhone_number("phone2");
         userRequest.setBirth_date("2002");
+        userRequest.setBsn("12345");
     }
 
     @Test
@@ -55,6 +57,7 @@ public class UserDTOsTests {
         userRequest.setLastname("lastname2");
         userRequest.setPhone_number("phone2");
         userRequest.setBirth_date("2002");
+        userRequest.setRole("role2");
     }
 
     @Test
@@ -68,18 +71,16 @@ public class UserDTOsTests {
 
     @Test
     void userLimitsRequestShouldWork() {
-        UserLimitsRequest userLimitsRequest = new UserLimitsRequest(1, 1, 1);
+        UserLimitsRequest userLimitsRequest = new UserLimitsRequest(1, 1);
         assert userLimitsRequest.transaction_limit() == 1;
         assert userLimitsRequest.daily_transaction_limit() == 1;
-        assert userLimitsRequest.absolute_limit() == 1;
     }
 
     @Test
     void userLimitResponseShouldWork() {
-        UserLimitsResponse userLimitResponse = new UserLimitsResponse(1, 1, 1, 1);
+        UserLimitsResponse userLimitResponse = new UserLimitsResponse(1, 1, 1);
         assert userLimitResponse.transaction_limit() == 1;
         assert userLimitResponse.daily_transaction_limit() == 1;
-        assert userLimitResponse.absolute_limit() == 1;
         assert userLimitResponse.remaining_daily_transaction_limit() == 1;
     }
 
