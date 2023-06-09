@@ -6,6 +6,8 @@ import nl.inholland.bank.models.dtos.AccountDTO.AccountActiveRequest;
 import nl.inholland.bank.models.dtos.AccountDTO.AccountRequest;
 import nl.inholland.bank.repositories.AccountRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import javax.security.auth.login.AccountNotFoundException;
@@ -63,8 +65,8 @@ public class AccountService {
      * @param iban The IBAN to find.
      * @return Returns a list of Accounts.
      */
-    public List<Account> getAccountsByIBANAndAccountType(String iban, AccountType accountType) {
-        return accountRepository.findAllByIBANAndType(iban.toUpperCase(), accountType);
+    public List<Account> getAccountsByIBANAndAccountType(String iban, AccountType accountType, Pageable pageable) {
+        return accountRepository.findAllByIBANContainingAndType(iban.toUpperCase(), accountType, pageable).getContent();
     }
 
     /**
@@ -73,11 +75,11 @@ public class AccountService {
      * @param lastName The last name of the person.
      * @return Returns a list of Accounts.
      */
-    public List<Account> getAccountsByFirstAndLastNameAndAccountType(String firstName, String lastName, AccountType accountType)
+    public List<Account> getAccountsByFirstAndLastNameAndAccountType(String firstName, String lastName,
+                                                                     AccountType accountType, Pageable pageable)
     {
         return accountRepository.findByUserFirstNameIgnoreCaseContainingAndUserLastNameIgnoreCaseContainingAndType(
-                firstName, lastName, accountType
-        );
+                firstName, lastName, accountType, pageable).getContent();
     }
 
 
@@ -180,14 +182,21 @@ public class AccountService {
 
     /**
      * Retrieves accounts based on given values.
+     * @param page The pagination page.
+     * @param limit The limit to retrieve.
      * @param iban The IBAN to find.
      * @param firstName The first name to find.
      * @param lastName The last name to find.
      * @param accountTypeString The account type to find.
      * @return Returns a list of Accounts.
      */
-    public List<Account> getAccounts(Optional<String> iban, Optional<String> firstName,
+    public List<Account> getAccounts(Optional<Integer> page, Optional<Integer> limit,
+                                     Optional<String> iban, Optional<String> firstName,
                                      Optional<String> lastName, Optional<String> accountTypeString) {
+        // Set up pagination
+        int pageNumber = page.orElse(0);
+        int pageSize = limit.orElse(50);
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
         AccountType accountType = AccountType.CURRENT;
 
         // Check if certain accountType was given.
@@ -197,9 +206,10 @@ public class AccountService {
 
         // Checks what values are used to find.
         if (iban.isPresent()) { // Find by IBAN and accountType.
-            return getAccountsByIBANAndAccountType(iban.get(), accountType);
+            return getAccountsByIBANAndAccountType(iban.get(), accountType, pageable);
         } else { // Find by first and last name and accountType.
-            return getAccountsByFirstAndLastNameAndAccountType(firstName.orElse(""), lastName.orElse(""), accountType);
+            return getAccountsByFirstAndLastNameAndAccountType(firstName.orElse(""), lastName.orElse(""),
+                    accountType, pageable);
         }
     }
 }
