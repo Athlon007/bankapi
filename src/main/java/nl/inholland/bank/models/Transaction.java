@@ -63,7 +63,7 @@ public class Transaction {
     }
 
     public double getAmount() {
-        return Math.round(amount * 100.0) / 100.0;
+        return Math.round(amount * 100.00) / 100.00;
     }
 
     public void setCurrencyType(CurrencyType currencyType) {
@@ -108,18 +108,20 @@ public class Transaction {
         this.timestamp = timestamp;
     }
 
-    public String getDescription() {
-        if (!Objects.equals(this.description, "")) {
-            return description;
+    public void setDescription(String description) {
+        String tempDescription = "";
+
+        if (!Objects.equals(description, "")) {
+            tempDescription = " ('" + description + "')";
+        }
+
+        if (this.getTransactionType() == TransactionType.TRANSACTION) {
+            this.description = "Transferred " + this.amount + " "
+                    + this.currencyType + " to " + this.accountReceiver.getIBAN() + tempDescription;
+        } else if (this.getTransactionType() == TransactionType.DEPOSIT) {
+            this.description = "Deposited " + this.amount + " " + this.currencyType + tempDescription;
         } else {
-            if (this.transactionType == TransactionType.TRANSACTION) {
-                return  "Transferred: " + this.amount + " "
-                        + this.currencyType + " to " + this.accountReceiver.getIBAN();
-            } else if (this.transactionType == TransactionType.DEPOSIT) {
-                return "Deposited: " + this.amount + " " + this.currencyType + " into your account";
-            } else {
-                return "Withdrawn: " + this.amount + " " + this.currencyType + " from your account";
-            }
+            this.description = "Withdrawn " + this.amount + " " + this.currencyType + tempDescription;
         }
     }
 }

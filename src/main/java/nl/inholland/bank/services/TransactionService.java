@@ -64,8 +64,9 @@ public class TransactionService {
         transaction.setCurrencyType(currencyType);
         transaction.setAmount(amount);
         transaction.setTimestamp(LocalDateTime.now());
-        transaction.setDescription(description);
         transaction.setTransactionType(transactionType);
+        transaction.setDescription(description);
+
 
         return transaction;
     }
@@ -87,7 +88,7 @@ public class TransactionService {
         User user = getUserByUsername();
         checkAccountPreconditionsForWithdrawOrDeposit(accountSender, user);
         checkUserLimits(accountSender, withdrawDepositRequest.amount());
-        Transaction transaction = createTransaction(user, accountSender, null, withdrawDepositRequest.currencyType(), withdrawDepositRequest.amount(), "Withdraw successful", TransactionType.WITHDRAWAL);
+        Transaction transaction = createTransaction(user, accountSender, null, withdrawDepositRequest.currencyType(), withdrawDepositRequest.amount(), "", TransactionType.WITHDRAWAL);
         updateAccountBalance(accountSender, withdrawDepositRequest.amount(), false);
 
         return transactionRepository.save(transaction);
@@ -105,7 +106,7 @@ public class TransactionService {
         Account accountReceiver = accountService.getAccountByIBAN(depositRequest.IBAN());
         User user = getUserByUsername();
         checkAccountPreconditionsForWithdrawOrDeposit(accountReceiver, user);
-        Transaction transaction = createTransaction(user, null, accountReceiver, depositRequest.currencyType(), depositRequest.amount(), "Deposit successful", TransactionType.DEPOSIT);
+        Transaction transaction = createTransaction(user, null, accountReceiver, depositRequest.currencyType(), depositRequest.amount(), "", TransactionType.DEPOSIT);
         updateAccountBalance(accountReceiver, depositRequest.amount(), true);
 
         return transactionRepository.save(transaction);

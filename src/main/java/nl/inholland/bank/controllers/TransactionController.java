@@ -30,11 +30,9 @@ import java.util.Optional;
 @CrossOrigin(origins = "*")
 public class TransactionController {
     private final TransactionService transactionService;
-    private final UserService userService;
 
-    public TransactionController(TransactionService transactionService, UserService userService) {
+    public TransactionController(TransactionService transactionService) {
         this.transactionService = transactionService;
-        this.userService = userService;
     }
 
     @PostMapping("/withdraw")
@@ -128,10 +126,10 @@ public class TransactionController {
                 senderIBAN,
                 receiverIBAN,
                 transaction.getAmount(),
+                transaction.getCurrencyType(),
                 transaction.getTimestamp(),
                 transaction.getDescription(),
-                transaction.getTransactionType(),
-                null
+                transaction.getTransactionType()
         );
     }
 }
