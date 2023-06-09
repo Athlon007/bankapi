@@ -3,6 +3,8 @@ servers:
   # Added by API Auto Mocking Plugin
   - description: SwaggerHub API
     url: https://virtserver.swaggerhub.com/684006_1/BankingAPI/1.0.0
+  - description: Live API
+    url: https://bankapi-inholland-project.onrender.com
 info:
   version: "1.0.0"
   title: banking-api
