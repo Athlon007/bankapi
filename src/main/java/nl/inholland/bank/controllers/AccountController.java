@@ -12,6 +12,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import javax.naming.AuthenticationException;
+import javax.security.auth.login.AccountNotFoundException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -30,81 +31,64 @@ public class AccountController {
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity getAllAccountsByUserId(@PathVariable int userId) {
-        try {
-            User user = userService.getUserById(userId);
-            if (userService.getBearerUserRole() != Role.EMPLOYEE &&
-                    userService.getBearerUserRole() != Role.ADMIN
-                    && !Objects.equals(userService.getBearerUsername(), user.getUsername())) {
-                throw new AuthenticationException("Unauthorized request");
-            }
+    public ResponseEntity getAllAccountsByUserId(@PathVariable int userId) throws AuthenticationException {
 
-            List<Account> accounts = accountService.getAccountsByUserId(user);
-            if (accounts.isEmpty()) {
-                return ResponseEntity.badRequest().body(new ExceptionResponse("No account found"));
-            }
-
-            List<AccountResponse> accountResponses = accounts.stream()
-                    .map(this::buildAccountResponse)
-                    .collect(Collectors.toList());
-
-            return ResponseEntity.ok(accountResponses);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new ExceptionResponse(e.getMessage()));
+        User user = userService.getUserById(userId);
+        if (userService.getBearerUserRole() != Role.EMPLOYEE &&
+                userService.getBearerUserRole() != Role.ADMIN
+                && !Objects.equals(userService.getBearerUsername(), user.getUsername())) {
+            throw new AuthenticationException("Unauthorized request");
         }
+
+        List<Account> accounts = accountService.getAccountsByUserId(user);
+        if (accounts.isEmpty()) {
+            return ResponseEntity.badRequest().body(new ExceptionResponse("No account found"));
+        }
+
+        List<AccountResponse> accountResponses = accounts.stream()
+                .map(this::buildAccountResponse)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(accountResponses);
     }
 
     @PostMapping
     public ResponseEntity addAccount(@RequestBody AccountRequest accountRequest) throws AuthenticationException {
-        try{
-            if(userService.getBearerUserRole() != Role.EMPLOYEE && userService.getBearerUserRole() != Role.ADMIN){
-                throw new AuthenticationException("Unauthorized request");
-            }else {
-                Account account = accountService.addAccount(accountRequest);
-                AccountResponse accountResponse = buildAccountResponse(account);
+        if (userService.getBearerUserRole() != Role.EMPLOYEE && userService.getBearerUserRole() != Role.ADMIN) {
+            throw new AuthenticationException("Unauthorized request");
+        } else {
+            Account account = accountService.addAccount(accountRequest);
+            AccountResponse accountResponse = buildAccountResponse(account);
 
-                return ResponseEntity.status(201).body(accountResponse);
-            }
-
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new ExceptionResponse(e.getMessage()));
+            return ResponseEntity.status(201).body(accountResponse);
         }
+
     }
 
     @PutMapping("/{userId}/{id}")
     public ResponseEntity activateAccount(@PathVariable int userId, @PathVariable int id,
-                                          @RequestBody AccountActiveRequest accountActiveRequest) {
-        try {
-            User user = userService.getUserById(userId);
-            Account account = accountService.getAccountById(id);
-            // Check if the user is an employee or admin and the owner of the account
-            authenticateAndAuthorize(user, account);
+                                          @RequestBody AccountActiveRequest accountActiveRequest) throws AccountNotFoundException, AuthenticationException {
 
-            accountService.activateOrDeactivateTheAccount(account, accountActiveRequest);
-            AccountResponse accountResponse = buildAccountResponse(account);
+        User user = userService.getUserById(userId);
+        Account account = accountService.getAccountById(id);
+        authenticateAndAuthorize(user, account);
+        accountService.activateOrDeactivateTheAccount(account, accountActiveRequest);
+        AccountResponse accountResponse = buildAccountResponse(account);
 
-            return ResponseEntity.ok(accountResponse);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new ExceptionResponse(e.getMessage()));
-        }
+        return ResponseEntity.ok(accountResponse);
     }
 
     @PutMapping("/{userId}/{id}/limit")
     public ResponseEntity updateAbsoluteLimit(@PathVariable int userId, @PathVariable int id,
-                                              @RequestBody AccountAbsoluteLimitRequest accountAbsoluteLimitRequest) {
-        try {
-            User user = userService.getUserById(userId);
-            Account account = accountService.getAccountById(id);
-            // Check if the user is an employee or admin and the owner of the account
-            authenticateAndAuthorize(user, account);
+                                              @RequestBody AccountAbsoluteLimitRequest accountAbsoluteLimitRequest) throws AccountNotFoundException, AuthenticationException {
+        User user = userService.getUserById(userId);
+        Account account = accountService.getAccountById(id);
+        authenticateAndAuthorize(user, account);
 
-            accountService.updateAbsoluteLimit(account, accountAbsoluteLimitRequest);
-            AccountResponse accountResponse = buildAccountResponse(account);
+        accountService.updateAbsoluteLimit(account, accountAbsoluteLimitRequest);
+        AccountResponse accountResponse = buildAccountResponse(account);
 
-            return ResponseEntity.status(200).body(accountResponse);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new ExceptionResponse(e.getMessage()));
-        }
+        return ResponseEntity.status(200).body(accountResponse);
     }
 
     private void authenticateAndAuthorize(User user, Account account) throws AuthenticationException {

@@ -82,7 +82,7 @@ class JwtTokenProviderTests {
         userDetails = new UserDetails() {
             @Override
             public Collection<? extends GrantedAuthority> getAuthorities() {
-                return Collections.singleton(Role.USER);
+                return Collections.singleton(Role.CUSTOMER);
             }
 
             @Override
@@ -133,7 +133,7 @@ class JwtTokenProviderTests {
 
     @Test
     void createTokenShouldReturnToken() {
-        Token token = jwtTokenProvider.createToken("username", Role.USER);
+        Token token = jwtTokenProvider.createToken("username", Role.CUSTOMER);
         Assertions.assertNotNull(token);
     }
 
@@ -147,7 +147,7 @@ class JwtTokenProviderTests {
     void getAuthenticationShouldReturnAuthentication() {
         Mockito.when(userDetailsService.loadUserByUsername("username")).thenReturn(userDetails);
 
-        Token token = jwtTokenProvider.createToken("username", Role.USER);
+        Token token = jwtTokenProvider.createToken("username", Role.CUSTOMER);
         Authentication authentication = jwtTokenProvider.getAuthentication(token.jwt());
         Assertions.assertNotNull(authentication);
     }
@@ -156,7 +156,7 @@ class JwtTokenProviderTests {
     void getAuthenticationForExpiredTokenShouldThrowRuntimeException() {
         Mockito.when(userDetailsService.loadUserByUsername("username")).thenReturn(userDetails);
 
-        Token token = jwtTokenProvider.createToken("username", Role.USER);
+        Token token = jwtTokenProvider.createToken("username", Role.CUSTOMER);
         try {
             Thread.sleep(3000);
         } catch (InterruptedException e) {
@@ -192,7 +192,7 @@ class JwtTokenProviderTests {
 
     @Test
     void getUsernameReturnsUsername() {
-        String token = jwtTokenProvider.createToken("username", Role.USER).jwt();
+        String token = jwtTokenProvider.createToken("username", Role.CUSTOMER).jwt();
         Mockito.when(userDetailsService.loadUserByUsername("username")).thenReturn(userDetails);
         jwtTokenProvider.getAuthentication(token);
         String username = jwtTokenProvider.getUsername();
@@ -207,14 +207,14 @@ class JwtTokenProviderTests {
 
     @Test
     void getRoleReturnsRole() {
-        String token = jwtTokenProvider.createToken("username", Role.USER).jwt();
+        String token = jwtTokenProvider.createToken("username", Role.CUSTOMER).jwt();
         Mockito.when(userDetailsService.loadUserByUsername("username")).thenReturn(userDetails);
         User user = new User();
-        user.setRole(Role.USER);
+        user.setRole(Role.CUSTOMER);
         Mockito.when(userRepository.findUserByUsername("username")).thenReturn(Optional.of(user));
         jwtTokenProvider.getAuthentication(token);
         Role role = jwtTokenProvider.getRole();
-        Assertions.assertEquals(Role.USER, role);
+        Assertions.assertEquals(Role.CUSTOMER, role);
     }
 
     @Test

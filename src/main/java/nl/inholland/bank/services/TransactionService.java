@@ -194,7 +194,7 @@ public class TransactionService {
      */
     boolean isUserAuthorizedForTransaction(User user, Account account) {
         Role role = userService.getBearerUserRole();
-        if (role == Role.USER) {
+        if (role == Role.CUSTOMER) {
             return Objects.equals(account.getUser(), user);
         } else return role == Role.EMPLOYEE || role == Role.ADMIN;
     }

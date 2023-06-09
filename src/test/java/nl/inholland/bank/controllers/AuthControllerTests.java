@@ -61,7 +61,7 @@ class AuthControllerTests {
         mockUser.setPhoneNumber("0612345678");
         mockUser.setDateOfBirth(LocalDate.of(2000, 9, 8));
         mockUser.setPassword("Password1!");
-        mockUser.setRole(Role.USER);
+        mockUser.setRole(Role.CUSTOMER);
         mockUser.setBsn("123456782");
     }
 

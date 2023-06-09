@@ -48,16 +48,6 @@ public class AccountTests {
 
     }
 
-    /*
-    @Test
-    void balanceCannotBeNegative() {
-        Exception exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            account.setBalance(-1);
-        });
-
-        Assertions.assertEquals("Balance cannot be negative", exception.getMessage());
-    }
-     */
     @Test
     void currencyTypeCannotBeNull() {
         Exception exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
