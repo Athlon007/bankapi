@@ -144,7 +144,7 @@ public class AccountController {
         );
     }
 
-    private AccountClientResponse buildAccountClientResponse(Account account) {
+    public AccountClientResponse buildAccountClientResponse(Account account) {
         return new AccountClientResponse(
                 account.getId(),
                 account.getIBAN(),

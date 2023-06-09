@@ -3,6 +3,8 @@ servers:
   # Added by API Auto Mocking Plugin
   - description: SwaggerHub API
     url: https://virtserver.swaggerhub.com/684006_1/BankingAPI/1.0.0
+  - description: Live API
+    url: https://bankapi-inholland-project.onrender.com
 info:
   version: "1.0.0"
   title: banking-api
@@ -195,6 +197,8 @@ paths:
                     account_type: "CURRENT"
                     currency_type: "EURO"
                     balance: 1000.0
+                    firstName: "Bobby"
+                    lastName: "Bobberson"
                   saving_account: null
                   active: true
         "401":
@@ -268,6 +272,8 @@ paths:
                     account_type: "CURRENT"
                     currency_type: "EURO"
                     balance: 1000.0
+                    firstName: "Bobby"
+                    lastName: "Bobberson"
                   saving_account: null
                   active: true
         "401":
@@ -933,6 +939,10 @@ components:
         balance:
           type: number
           format: double
+        firstName:
+          type: string
+        lastName:
+          type: string
     TransactionRequest:
       type: object
       properties:
@@ -1005,7 +1015,7 @@ components:
           type: string
         refresh_token:
           type: string
-        int:
+        id:
           type: integer
           format: int64
         expires_at:
@@ -1039,6 +1049,12 @@ components:
           type: number
           format: double
           minimum: 0
+    Error:
+        type: object
+        properties:
+            error_message:
+                type: string
+        example: { "error_message": "Error message" }
   securitySchemes:
     bearerAuth:
       type: http
@@ -1047,13 +1063,37 @@ components:
   responses:
     Unauthorized:
       description: "Authorization information is missing or is invalid."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
     NotAllowed:
       description: "User is not allowed to perform this action."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
     BadRequest:
       description: "Request body or URL parameter is incorrect."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
     NotFound:
       description: "Element does not exist."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
     Created:
       description: "Element created."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
     InternalServerError:
       description: "Internal server error."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
