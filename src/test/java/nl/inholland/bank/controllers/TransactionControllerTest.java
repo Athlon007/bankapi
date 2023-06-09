@@ -11,6 +11,7 @@ import nl.inholland.bank.models.dtos.TransactionDTO.WithdrawDepositRequest;
 import nl.inholland.bank.models.exceptions.UserNotTheOwnerOfAccountException;
 import nl.inholland.bank.services.TransactionService;
 import nl.inholland.bank.services.UserService;
+import org.hibernate.ObjectNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -114,7 +115,7 @@ class TransactionControllerTest {
 
         mockTransactionRequest = new TransactionRequest("NL01INHO0000000001", "NL01INHO0000000002", 100, "testing");
         withdrawDepositRequest = new WithdrawDepositRequest( "NL01INHO0000000001", 100, CurrencyType.EURO, mockUser.getId());
-        mockBadTransactionRequest = new WithdrawDepositRequest( "NL01INH12345678902qwrzhuzsgvbhSGLZCadblvaghvlizgsLZIVG", 100, CurrencyType.EURO, 123456789);
+        mockBadTransactionRequest = new WithdrawDepositRequest( "NL01INH12345678902qwrzhuzsgvbhSGLZCadblvaghvlizgsLZIVG", 100, CurrencyType.EURO, 0);
 
     }
 
@@ -174,7 +175,7 @@ class TransactionControllerTest {
 
 
     @Test
-    void depositMoney() throws Exeption{
+    void depositMoney(){
 
     }
     @Test
@@ -211,7 +212,7 @@ class TransactionControllerTest {
     void withdrawMoneyWithUnknownAccountShouldResultInFourOFour() throws Exception, UserNotTheOwnerOfAccountException {
 
         //BUSINESS CODE IS FAILING HERE
-        when(transactionService.withdrawMoney(mockBadTransactionRequest)).thenReturn(mockTransaction.get(0));
+        when(transactionService.withdrawMoney(mockBadTransactionRequest)).thenThrow(ObjectNotFoundException.class);
 
         Mockito.when(userService.getBearerUserRole()).thenReturn(Role.ADMIN);
 
@@ -245,5 +246,6 @@ class TransactionControllerTest {
 
     @Test
     void buildTransactionResponse() {
+
     }
 }
