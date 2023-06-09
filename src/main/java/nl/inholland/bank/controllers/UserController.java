@@ -150,8 +150,8 @@ public class UserController {
         return new AccountResponse(
                 account.getId(),
                 account.getIBAN(),
-                account.getType().toString(),
                 account.getCurrencyType().toString(),
+                account.getType().toString(),
                 account.isActive(),
                 account.getBalance(),
                 account.getAbsoluteLimit()
