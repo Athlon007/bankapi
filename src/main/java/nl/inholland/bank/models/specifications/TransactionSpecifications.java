@@ -1,7 +1,9 @@
 package nl.inholland.bank.models.specifications;
 
+import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
+import nl.inholland.bank.models.Account;
 import nl.inholland.bank.models.Transaction;
 import nl.inholland.bank.models.TransactionType;
 import nl.inholland.bank.models.User;
@@ -33,11 +35,11 @@ public class TransactionSpecifications {
 
     public static Specification<Transaction> withUserId(int userId) {
         return (root, query, criteriaBuilder) -> {
-            root.fetch("accountSender", JoinType.LEFT);
-            root.fetch("accountReceiver", JoinType.LEFT);
+            Join<Transaction, Account> accountSenderJoin = root.join("accountSender", JoinType.LEFT);
+            Join<Transaction, Account> accountReceiverJoin = root.join("accountReceiver", JoinType.LEFT);
 
-            Predicate senderUserPredicate = criteriaBuilder.equal(root.join("accountSender", JoinType.LEFT).get("user").get("id"), userId);
-            Predicate receiverUserPredicate = criteriaBuilder.equal(root.join("accountReceiver", JoinType.LEFT).get("user").get("id"), userId);
+            Predicate senderUserPredicate = criteriaBuilder.equal(accountSenderJoin.get("user").get("id"), userId);
+            Predicate receiverUserPredicate = criteriaBuilder.equal(accountReceiverJoin.get("user").get("id"), userId);
 
             return criteriaBuilder.or(senderUserPredicate, receiverUserPredicate);
         };

@@ -70,7 +70,7 @@ public class TransactionService {
         return transaction;
     }
 
-    private boolean isUserAuthorizedToAccessAccount(User user, Account account) {
+    boolean isUserAuthorizedToAccessAccount(User user, Account account) {
         return user == account.getUser();
     }
 
@@ -153,11 +153,9 @@ public class TransactionService {
         Account accountSender = accountService.getAccountByIBAN(request.sender_iban());
         Account accountReceiver = accountService.getAccountByIBAN(request.receiver_iban());
 
-        if (accountSender == null) {
-            throw new AccountNotFoundException("Account with IBAN (" + request.sender_iban() + ") not found.");
-        }
-        if (accountReceiver == null) {
-            throw new AccountNotFoundException("Account with IBAN (" + request.receiver_iban() + ") not found.");
+        if (accountSender == null || accountReceiver == null) {
+            String message = "Account with IBAN (" + (accountSender == null ? request.sender_iban() : request.receiver_iban()) + ") not found.";
+            throw new AccountNotFoundException(message);
         }
 
         double amount = request.amount();
@@ -181,7 +179,7 @@ public class TransactionService {
      * @param account The account of the user.
      * @throws UserNotTheOwnerOfAccountException Exception thrown when not authorized.
      */
-    private void checkUserAuthorization(User user, Account account) throws UserNotTheOwnerOfAccountException {
+    void checkUserAuthorization(User user, Account account) throws UserNotTheOwnerOfAccountException {
         if (!isUserAuthorizedForTransaction(user, account)) {
             throw new UserNotTheOwnerOfAccountException("You are not authorized to perform this transaction.");
         }
@@ -194,7 +192,7 @@ public class TransactionService {
      * @param account The account to compare the owner to.
      * @return Returns a boolean if the user is authorized.
      */
-    private boolean isUserAuthorizedForTransaction(User user, Account account) {
+    boolean isUserAuthorizedForTransaction(User user, Account account) {
         Role role = userService.getBearerUserRole();
         if (role == Role.CUSTOMER) {
             return Objects.equals(account.getUser(), user);
@@ -208,7 +206,7 @@ public class TransactionService {
      * @param accountType The account type to message back (Only used for the message).
      * @throws InactiveAccountException Exception if the account is currently inactive.
      */
-    private void checkAccountStatus(Account account, String accountType) throws InactiveAccountException {
+    void checkAccountStatus(Account account, String accountType) throws InactiveAccountException {
         if (!account.isActive()) {
             throw new InactiveAccountException("The " + accountType + " account is currently inactive and can't transfer money.");
         }
@@ -221,7 +219,7 @@ public class TransactionService {
      * @param accountReceiver // The receiver account to check.
      * @throws SameAccountTransferException Exception if both accounts are equal to each other.
      */
-    private void checkSameAccount(Account accountSender, Account accountReceiver) throws SameAccountTransferException {
+    void checkSameAccount(Account accountSender, Account accountReceiver) throws SameAccountTransferException {
         if (Objects.equals(accountSender.getIBAN(), accountReceiver.getIBAN())) {
             throw new SameAccountTransferException("You can't send money to the same account.");
         }
@@ -235,7 +233,7 @@ public class TransactionService {
      * @param accountReceiver The receiver account to check.
      * @throws UserNotTheOwnerOfAccountException Exception if the user is not the owner of the account.
      */
-    private void checkSavingAccountOwnership(User user, Account accountSender, Account accountReceiver) throws UserNotTheOwnerOfAccountException {
+    void checkSavingAccountOwnership(User user, Account accountSender, Account accountReceiver) throws UserNotTheOwnerOfAccountException {
         boolean isSavingAccountTransaction = accountSender.getType() == AccountType.SAVING || accountReceiver.getType() == AccountType.SAVING;
         boolean isUserOwner = accountSender.getUser() == user && accountReceiver.getUser() == user;
 
@@ -254,7 +252,7 @@ public class TransactionService {
      * @throws DailyTransactionLimitException Exception if transaction exceeds daily limit.
      * @throws InsufficientFundsException Exception if insufficient funds.
      */
-    private void checkUserLimits(Account accountSender, double amount) throws TransactionLimitException,
+    void checkUserLimits(Account accountSender, double amount) throws TransactionLimitException,
             DailyTransactionLimitException, InsufficientFundsException, javax.naming.AuthenticationException {
         Limits limits = this.userLimitsService.getUserLimits(accountSender.getUser().getId());
 
@@ -327,20 +325,11 @@ public class TransactionService {
         int transactionID = request.transactionID().orElse(0);
         String ibanSender = request.ibanSender().orElse("");
         String ibanReceiver = request.ibanReceiver().orElse("");
-        TransactionType transactionType = null;
-        if (request.transactionType().isPresent()) {
-            transactionType = mapTransactionTypeToString(request.transactionType().get());
-        }
+        TransactionType transactionType = request.transactionType().map(this::mapTransactionTypeToString).orElse(null);
 
         // Get users by ID
-        User userSender = null;
-        User userReceiver = null;
-        if (request.userSenderId().isPresent()) {
-            userSender = userService.getUserById(request.userSenderId().get());
-        }
-        if (request.userReceiverId().isPresent()) {
-            userReceiver = userService.getUserById(request.userReceiverId().get());
-        }
+        User userSender = request.userSenderId().map(userService::getUserById).orElse(null);
+        User userReceiver = request.userReceiverId().map(userService::getUserById).orElse(null);
 
         // Set up pagination
         int pageNumber = page.orElse(0);
@@ -354,12 +343,7 @@ public class TransactionService {
         }
 
         // Get user if they have the Role.USER, safety check for regular users to only see their own transactions.
-        User user = null;
-        if (userRole == Role.CUSTOMER && userRepository.findUserByUsername(userService.getBearerUsername()).isPresent()) {
-            // Add client info to user, this is added as a check so that users can only see transactions
-            // Which they are a part of themselves.
-            user = userRepository.findUserByUsername(userService.getBearerUsername()).get();
-        }
+        User user = (userRole == Role.CUSTOMER) ? userRepository.findUserByUsername(userService.getBearerUsername()).orElse(null) : null;
 
         return transactionRepository.findTransactions(
                 minAmount, maxAmount, startDateTime, endDateTime, transactionID,
