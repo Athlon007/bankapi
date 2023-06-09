@@ -4,6 +4,7 @@ import nl.inholland.bank.models.dtos.Token;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+@SpringBootTest
 class TokenTests {
     @Test
     void settingTokenRecordShouldWork() {

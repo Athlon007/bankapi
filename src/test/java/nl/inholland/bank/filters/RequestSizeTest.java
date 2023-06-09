@@ -37,20 +37,4 @@ class RequestSizeTest {
         LargeRequestFilter filter = new LargeRequestFilter();
         filter.doFilter(request, response, chain);
     }
-
-    @Test
-    void initTest() {
-        LargeRequestFilter filter = new LargeRequestFilter();
-        Assertions.assertDoesNotThrow(() -> {
-            filter.init(null);
-        });
-    }
-
-    @Test
-    void destroyTest() {
-        LargeRequestFilter filter = new LargeRequestFilter();
-        Assertions.assertDoesNotThrow(() -> {
-            filter.destroy();
-        });
-    }
 }

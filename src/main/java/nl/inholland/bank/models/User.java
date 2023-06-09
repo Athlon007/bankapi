@@ -85,7 +85,10 @@ public class User {
 
     public void setLastName(String name) {
         if (name == null || name.length() == 0) {
-            throw new IllegalArgumentException("Last name cannot be empty");
+            // Why we change null to empty string?
+            // Because there are people who don't have a last name (yes, really).
+            // https://en.wikipedia.org/wiki/List_of_legally_mononymous_people
+            name = "";
         }
 
         this.lastName = name;

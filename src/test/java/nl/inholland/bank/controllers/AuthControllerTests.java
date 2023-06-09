@@ -30,7 +30,7 @@ import java.time.LocalDate;
 @WebMvcTest(AuthController.class)
 @Import(ApiTestConfiguration.class)
 @AutoConfigureMockMvc(addFilters = false)
-class AuthControllerTests {
+public class AuthControllerTests {
     @Autowired
     private MockMvc mockMvc;
 

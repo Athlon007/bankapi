@@ -69,9 +69,9 @@ public class AccountStepDefinitions extends BaseStepDefinitions{
                 AccountResponse.class
         );
 
-        Assert.isTrue(accountResponse.currency_type().equals(currencyType), "currencyType is " + accountResponse.currency_type());
-        Assert.isTrue(accountResponse.account_type().equals(accountType), "accountType is " + accountResponse.account_type());
-        Assert.isTrue(accountResponse.id() == id, "id is " + accountResponse.id());
+        Assert.isTrue(accountResponse.currency_type().equals(currencyType), "currencyType is " + currencyType);
+        Assert.isTrue(accountResponse.account_type().equals(accountType), "accountType is " + accountType);
+        Assert.isTrue(accountResponse.id() == id, "id is " + id);
     }
 
     @When("I call the application accounts end point with user id {int}")

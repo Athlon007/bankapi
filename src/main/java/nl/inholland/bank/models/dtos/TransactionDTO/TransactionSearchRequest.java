@@ -5,8 +5,6 @@ import java.util.Optional;
 
 public record TransactionSearchRequest(Optional<Double> minAmount, Optional<Double> maxAmount,
                                        Optional<LocalDateTime> startDate, Optional<LocalDateTime> endDate,
-                                       Optional<Integer> transactionID,
                                        Optional<String> ibanSender, Optional<String> ibanReceiver,
-                                       Optional<Integer> userSenderId, Optional<Integer> userReceiverId,
-                                       Optional<String> transactionType) {
+                                       Optional<Integer> userSenderId, Optional<Integer> userReceiverId) {
 }

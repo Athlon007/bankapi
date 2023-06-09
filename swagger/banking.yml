@@ -326,6 +326,7 @@ paths:
         Returns all limits for specific user.<br>
         Employee can see all User limits.<br>
         Client can only see his own limits.<br><br>
+        '**absolute_limit**' refers to minimum money that must always be present on the account.<br><br>
         Users that are employee-only and do not have currents accounts can't access it. In this case, 405 will be returned.
       operationId: getUserLimits
       parameters:
@@ -346,6 +347,7 @@ paths:
               example:
                 transaction_limit: 1000
                 daily_transaction_limit: 5000
+                absolute_limit: 0
                 remaining_daily_transaction_limit: 420.69
         "401":
           $ref: "#/components/responses/Unauthorized"
@@ -366,7 +368,8 @@ paths:
         Updates the user limits.<br>
         Only Employee can edit User limits.<br><br>
         <b>'transaction_limit'</b> refers to maximum amount of money that can be transfered in a single transfer.<br>
-        <b>'daily_transfaction_limit'</b> refers to the maximum amount of money that can be transferred from the user during a single day.<br><br>
+        <b>'daily_transfaction_limit'</b> refers to the maximum amount of money that can be transferred from the user during a single day.<br>
+        <b>'absolute_limit'</b> refers to the minimum amount of money that must always be present on the account.<br><br>
         <i>Note: daily transfer limit does not apply to transfers between users of the same user.</i>
       operationId: updateUserLimits
       parameters:
@@ -386,6 +389,7 @@ paths:
             example:
               transaction_limit: 1000
               daily_transaction_limit: 10000
+              absolute_limit: 0
       responses:
         "200":
           description: User limits have been updated
@@ -396,6 +400,7 @@ paths:
               example:
                 transaction_limit: 1000
                 daily_transaction_limit: 10000
+                absolute_limit: 0
                 remaining_daily_transaction_limit: 5420.69
         "401":
           $ref: "#/components/responses/Unauthorized"
@@ -1034,6 +1039,11 @@ components:
           format: double
           maximum: 1000000
           minimum: 0
+        absolute_limit:
+          type: number
+          format: double
+          maximum: 0
+          minimum: -1000000
     UserLimitsResponse:
       type: object
       properties:
@@ -1045,6 +1055,10 @@ components:
           type: number
           format: double
           minimum: 0
+        absolute_limit:
+          type: number
+          format: double
+          maximum: 0
         remaining_daily_transaction_limit:
           type: number
           format: double

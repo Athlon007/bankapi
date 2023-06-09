@@ -41,9 +41,9 @@ public class UserLimitStepDefinitions extends BaseStepDefinitions {
         assert userLimitsResponse != null;
     }
 
-    @When("I update user id {int} limits to transaction limit {int}, daily limit {int}")
-    public void iUpdateMyLimitsToTransactionLimitDailyLimitAndAbsoluteLimit(int id, int transactionLimit, int dailyLimit) {
-        UserLimitsRequest userLimitsRequest = new UserLimitsRequest(transactionLimit, dailyLimit);
+    @When("I update user id {int} limits to transaction limit {int}, daily limit {int} and absolute limit {int}")
+    public void iUpdateMyLimitsToTransactionLimitDailyLimitAndAbsoluteLimit(int id, int transactionLimit, int dailyLimit, int absoluteLimit) {
+        UserLimitsRequest userLimitsRequest = new UserLimitsRequest(transactionLimit, dailyLimit, absoluteLimit);
 
         if (StorageForTestsInstance.getInstance().getJwt() != null) {
             headers.setContentType(MediaType.APPLICATION_JSON);
@@ -72,6 +72,7 @@ public class UserLimitStepDefinitions extends BaseStepDefinitions {
 
         Assertions.assertEquals(transactionLimit, userLimitsResponse.transaction_limit());
         Assertions.assertEquals(dailyLimit, userLimitsResponse.daily_transaction_limit());
+        Assertions.assertEquals(absoluteLimit, userLimitsResponse.absolute_limit());
         Assertions.assertEquals(remainingDailyLimit, userLimitsResponse.remaining_daily_transaction_limit());
     }
 }
