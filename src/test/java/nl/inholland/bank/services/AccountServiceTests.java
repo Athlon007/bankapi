@@ -128,10 +128,6 @@ class AccountServiceTests {
     }
 
 
-
-
-
-
     @Test
     void testAddAccountWithInvalidAccountType() {
         accountRequest = new AccountRequest(
@@ -355,5 +351,14 @@ class AccountServiceTests {
         Mockito.when(userService.getUserById(savingRequest.userId())).thenReturn(user);
 
         Assertions.assertThrows(IllegalArgumentException.class, () -> accountService.addAccount(savingRequest));
+    }
+
+    @Test
+    void updateSavingAbsoluteLimitShouldThrowIllegalArgumentException(){
+        AccountAbsoluteLimitRequest accountAbsoluteLimitRequest = new AccountAbsoluteLimitRequest(-10);
+        account.setType(AccountType.SAVING);
+        Mockito.when(accountRepository.save(Mockito.any(Account.class))).thenReturn(account);
+
+        Assertions.assertThrows(IllegalArgumentException.class, () -> accountService.updateAbsoluteLimit(account, accountAbsoluteLimitRequest));
     }
 }
