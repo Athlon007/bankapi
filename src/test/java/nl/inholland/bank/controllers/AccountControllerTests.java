@@ -1,13 +1,13 @@
 package nl.inholland.bank.controllers;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import nl.inholland.bank.configuration.ApiTestConfiguration;
 import nl.inholland.bank.models.*;
-import nl.inholland.bank.models.dtos.AccountDTO.AccountAbsoluteLimitRequest;
-import nl.inholland.bank.models.dtos.AccountDTO.AccountActiveRequest;
-import nl.inholland.bank.models.dtos.AccountDTO.AccountRequest;
+import nl.inholland.bank.models.dtos.AccountDTO.*;
 import nl.inholland.bank.services.AccountService;
 import nl.inholland.bank.services.UserService;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,6 +28,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -336,5 +337,42 @@ class AccountControllerTests {
                         .content(mapper.writeValueAsString(accountActiveRequest))
                 )
                 .andExpect(MockMvcResultMatchers.jsonPath("$.error_message").value("Unauthorized request"));
+    }
+
+    @Test
+    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    void getAccountsWithParams() throws Exception {
+        Mockito.when(accountService.getAccounts(Optional.of(0), Optional.of(10), Optional.of(account.getIBAN()), Optional.of("John"), Optional.of("Doe"), Optional.of("CURRENT")))
+                .thenReturn(List.of(account));
+
+        Mockito.when(userService.getBearerUserRole()).thenReturn(Role.ADMIN);
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/accounts", 0, 10, account.getIBAN(), "John", "Doe", "CURRENT")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(accountActiveRequest))
+                )
+                .andExpect(MockMvcResultMatchers.status().isOk());
+    }
+
+    @Test
+    @WithMockUser(username = "admin", roles = {"CUSTOMER"})
+    void getAccountsWithParamsAsCustomer() throws Exception {
+        Mockito.when(accountService.getAccounts(Optional.of(0), Optional.of(10), Optional.of(account.getIBAN()), Optional.of("John"), Optional.of("Doe"), Optional.of("CURRENT")))
+                .thenReturn(List.of(account));
+
+        Mockito.when(userService.getBearerUserRole()).thenReturn(Role.CUSTOMER);
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/accounts", 0, 10, account.getIBAN(), "John", "Doe", "CURRENT")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(accountActiveRequest))
+                )
+                .andExpect(MockMvcResultMatchers.status().isOk());
+    }
+
+    @Test
+    void buildAccountClientResponse() {
+        AccountController accountController = new AccountController(accountService, userService);
+        AccountClientResponse response = accountController.buildAccountClientResponse(account);
+        Assertions.assertEquals(account.getIBAN(), response.IBAN());
     }
 }
