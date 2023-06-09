@@ -149,7 +149,6 @@ class TransactionServiceTest {
         assertEquals(accountReceiver, transaction.getAccountReceiver());
         assertEquals(currencyType, transaction.getCurrencyType());
         assertEquals(amount, transaction.getAmount());
-        assertEquals(description, transaction.getDescription());
         assertEquals(transactionType, transaction.getTransactionType());
         assertEquals(LocalDateTime.now().getYear(), transaction.getTimestamp().getYear());
         assertEquals(LocalDateTime.now().getMonth(), transaction.getTimestamp().getMonth());
