@@ -3,7 +3,6 @@ package nl.inholland.bank.models;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import java.time.LocalDate;
 
@@ -21,7 +20,7 @@ class AccountTest {
                 LocalDate.of(1990, 1, 1),
                 "username",
                 "Password1!",
-                Role.USER);
+                Role.CUSTOMER);
 
        account = new Account(
                 user,

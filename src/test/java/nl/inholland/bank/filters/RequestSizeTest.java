@@ -10,7 +10,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.io.IOException;
 
-public class RequestSizeTest {
+class RequestSizeTest {
     @Value("${bankapi.application.request.maxsize}")
     private int maxSize;
 

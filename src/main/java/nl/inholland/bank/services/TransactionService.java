@@ -196,7 +196,7 @@ public class TransactionService {
      */
     private boolean isUserAuthorizedForTransaction(User user, Account account) {
         Role role = userService.getBearerUserRole();
-        if (role == Role.USER) {
+        if (role == Role.CUSTOMER) {
             return Objects.equals(account.getUser(), user);
         } else return role == Role.EMPLOYEE || role == Role.ADMIN;
     }
@@ -355,7 +355,7 @@ public class TransactionService {
 
         // Get user if they have the Role.USER, safety check for regular users to only see their own transactions.
         User user = null;
-        if (userRole == Role.USER && userRepository.findUserByUsername(userService.getBearerUsername()).isPresent()) {
+        if (userRole == Role.CUSTOMER && userRepository.findUserByUsername(userService.getBearerUsername()).isPresent()) {
             // Add client info to user, this is added as a check so that users can only see transactions
             // Which they are a part of themselves.
             user = userRepository.findUserByUsername(userService.getBearerUsername()).get();

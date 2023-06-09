@@ -10,10 +10,13 @@ Feature: DELETE features to Users endpoint
     Given I have a valid login credentials
     And I call the application login endpoint
     And I receive a token
+    And I call the application users endpoint
+    And I get a list of users
+    And I get 5 elements in the list
     When I call the delete user endpoint for user 2
     And I call the application users endpoint
     And I get a list of users
-    Then I get 2 elements in the list
+    Then I get 4 elements in the list
 
   Scenario: Delete user as admin that does have an account results in user deactivation
     Given I have a valid login credentials

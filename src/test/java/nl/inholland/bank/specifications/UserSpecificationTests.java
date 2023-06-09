@@ -8,12 +8,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.jpa.domain.Specification;
 
 @SpringBootTest
-public class UserSpecificationTests {
+class UserSpecificationTests {
     @Test
     void nameSpecificationShouldReturnSpecification() {
         Specification<User> specification = Specification.where(null);
         specification = specification.and(UserSpecifications.nameContains("test"));
 
+        System.out.println(specification);
         Assertions.assertNotNull(specification);
     }
 }

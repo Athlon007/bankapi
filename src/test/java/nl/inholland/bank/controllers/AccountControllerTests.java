@@ -8,12 +8,9 @@ import nl.inholland.bank.models.dtos.AccountDTO.AccountActiveRequest;
 import nl.inholland.bank.models.dtos.AccountDTO.AccountRequest;
 import nl.inholland.bank.services.AccountService;
 import nl.inholland.bank.services.UserService;
-import org.apache.catalina.connector.Response;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -21,7 +18,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
@@ -29,9 +25,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-import javax.naming.AuthenticationException;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -84,7 +78,7 @@ class AccountControllerTests {
         user.setPhoneNumber("0612345678");
         user.setDateOfBirth(LocalDate.of(2000, 9, 8));
         user.setPassword("Password1!");
-        user.setRole(Role.USER);
+        user.setRole(Role.CUSTOMER);
         user.setBsn("123456782");
         account.setUser(user);
         account.setBalance(100);
@@ -104,7 +98,7 @@ class AccountControllerTests {
         user2.setPhoneNumber("0642345678");
         user2.setDateOfBirth(LocalDate.of(2000, 9, 8));
         user2.setPassword("Password1!");
-        user2.setRole(Role.USER);
+        user2.setRole(Role.CUSTOMER);
         user2.setBsn("038718352");
         account2.setUser(user2);
         account2.setBalance(100);
@@ -122,7 +116,7 @@ class AccountControllerTests {
         user3.setPhoneNumber("0642345678");
         user3.setDateOfBirth(LocalDate.of(2000, 9, 8));
         user3.setPassword("Password1!");
-        user3.setRole(Role.USER);
+        user3.setRole(Role.CUSTOMER);
         user3.setBsn("038718352");
 
         accountRequest = new AccountRequest(CurrencyType.EURO.toString(), AccountType.CURRENT.toString(), 1);
@@ -179,7 +173,7 @@ class AccountControllerTests {
                 account
         ));
 
-        Mockito.when(userService.getBearerUserRole()).thenReturn(Role.USER);  // Set the appropriate role of the user
+        Mockito.when(userService.getBearerUserRole()).thenReturn(Role.CUSTOMER);  // Set the appropriate role of the user
         Mockito.when(userService.getBearerUsername()).thenReturn("user");  // Set the username of the owner
 
         mockMvc.perform(
@@ -215,7 +209,7 @@ class AccountControllerTests {
                 account
         ));
 
-        Mockito.when(userService.getBearerUserRole()).thenReturn(Role.USER);  // Set the appropriate role of the user
+        Mockito.when(userService.getBearerUserRole()).thenReturn(Role.CUSTOMER);  // Set the appropriate role of the user
         Mockito.when(userService.getBearerUsername()).thenReturn("user2");  // Set the username of a non-owner
 
 
@@ -258,7 +252,7 @@ class AccountControllerTests {
     @WithMockUser(username = "user", roles = {"USER"})
     void addAccountShouldAsUserReturnUnauthorized() throws Exception {
         Mockito.when(accountService.addAccount(accountRequest)).thenReturn(account);
-        Mockito.when(userService.getBearerUserRole()).thenReturn(Role.USER);
+        Mockito.when(userService.getBearerUserRole()).thenReturn(Role.CUSTOMER);
         MockHttpServletRequestBuilder post = MockMvcRequestBuilders.post("/accounts")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(accountRequest))
@@ -289,7 +283,7 @@ class AccountControllerTests {
     void activateAccountAsUserShouldReturnUnauthorized() throws Exception {
         Mockito.when(accountService.getAccountById(account.getId())).thenReturn(account);
         Mockito.when(accountService.activateOrDeactivateTheAccount(account, accountActiveRequest)).thenReturn(account);
-        Mockito.when(userService.getBearerUserRole()).thenReturn(Role.USER);
+        Mockito.when(userService.getBearerUserRole()).thenReturn(Role.CUSTOMER);
 
         mockMvc.perform(MockMvcRequestBuilders.put("/accounts/1/1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -318,7 +312,7 @@ class AccountControllerTests {
     void updateAccountAbsoluteLimitAsAdminShouldReturnUnauthorized() throws Exception{
         Mockito.when(accountService.getAccountById(account.getId())).thenReturn(account);
         Mockito.when(accountService.activateOrDeactivateTheAccount(account, accountActiveRequest)).thenReturn(account);
-        Mockito.when(userService.getBearerUserRole()).thenReturn(Role.USER);
+        Mockito.when(userService.getBearerUserRole()).thenReturn(Role.CUSTOMER);
 
         mockMvc.perform(MockMvcRequestBuilders.put("/accounts/1/1/limit")
                         .contentType(MediaType.APPLICATION_JSON)
