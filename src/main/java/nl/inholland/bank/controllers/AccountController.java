@@ -113,7 +113,7 @@ public class AccountController {
         // Retrieve accounts
         List<Account> accounts = accountService.getAccounts(page, limit, iban, firstName, lastName, accountType);
 
-        if (userService.getBearerUserRole() == Role.USER) {
+        if (userService.getBearerUserRole() == Role.CUSTOMER) {
             // Convert to client responses
             List<AccountClientResponse> accountClientResponses = accounts.stream()
                     .map(this::buildAccountClientResponse)

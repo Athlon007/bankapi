@@ -343,7 +343,7 @@ public class TransactionService {
         }
 
         // Get user if they have the Role.USER, safety check for regular users to only see their own transactions.
-        User user = (userRole == Role.USER) ? userRepository.findUserByUsername(userService.getBearerUsername()).orElse(null) : null;
+        User user = (userRole == Role.CUSTOMER) ? userRepository.findUserByUsername(userService.getBearerUsername()).orElse(null) : null;
 
         return transactionRepository.findTransactions(
                 minAmount, maxAmount, startDateTime, endDateTime, transactionID,

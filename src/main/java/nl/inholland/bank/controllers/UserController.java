@@ -154,7 +154,9 @@ public class UserController {
                 account.getType().toString(),
                 account.isActive(),
                 account.getBalance(),
-                account.getAbsoluteLimit()
+                account.getAbsoluteLimit(),
+                account.getUser().getFirstName(),
+                account.getUser().getLastName()
         );
     }
 
