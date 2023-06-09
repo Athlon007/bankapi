@@ -937,6 +937,10 @@ components:
         balance:
           type: number
           format: double
+        firstName:
+          type: string
+        lastName:
+          type: string
     TransactionRequest:
       type: object
       properties:
