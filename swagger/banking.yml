@@ -1043,6 +1043,12 @@ components:
           type: number
           format: double
           minimum: 0
+    Error:
+        type: object
+        properties:
+            error_message:
+                type: string
+        example: { "error_message": "Error message" }
   securitySchemes:
     bearerAuth:
       type: http
@@ -1051,13 +1057,37 @@ components:
   responses:
     Unauthorized:
       description: "Authorization information is missing or is invalid."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
     NotAllowed:
       description: "User is not allowed to perform this action."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
     BadRequest:
       description: "Request body or URL parameter is incorrect."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
     NotFound:
       description: "Element does not exist."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
     Created:
       description: "Element created."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
     InternalServerError:
       description: "Internal server error."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
