@@ -60,29 +60,6 @@ public class AccountService {
         }
     }
 
-    /**
-     * Retrieves accounts by IBAN.
-     * @param iban The IBAN to find.
-     * @return Returns a list of Accounts.
-     */
-    public List<Account> getAccountsByIBANAndAccountType(String iban, AccountType accountType, Pageable pageable) {
-        return accountRepository.findAllByIBANContainingAndType(iban.toUpperCase(), accountType, pageable).getContent();
-    }
-
-    /**
-     * Retrieves accounts by first and last name
-     * @param firstName The first name of the person.
-     * @param lastName The last name of the person.
-     * @return Returns a list of Accounts.
-     */
-    public List<Account> getAccountsByFirstAndLastNameAndAccountType(String firstName, String lastName,
-                                                                     AccountType accountType, Pageable pageable)
-    {
-        return accountRepository.findByUserFirstNameIgnoreCaseContainingAndUserLastNameIgnoreCaseContainingAndType(
-                firstName, lastName, accountType, pageable).getContent();
-    }
-
-
     public Account addAccount(AccountRequest accountRequest) {
         User user = userService.getUserById(accountRequest.userId());
         AccountType accountType = mapAccountTypeToString(accountRequest.accountType());
@@ -154,7 +131,6 @@ public class AccountService {
             throw new IllegalArgumentException("Absolute limit cannot be set for saving account");
         }
         account.setAbsoluteLimit(accountAbsoluteLimitRequest.absoluteLimit());
-        System.out.println(account.getAbsoluteLimit());
         return accountRepository.save(account);
     }
 
@@ -200,19 +176,12 @@ public class AccountService {
         int pageNumber = page.orElse(0);
         int pageSize = limit.orElse(50);
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
-        AccountType accountType = AccountType.CURRENT;
+        String IBAN = iban.orElse("");
+        String fName = firstName.orElse("");
+        String lName = lastName.orElse("");
+        AccountType accountType = accountTypeString.map(this::mapAccountTypeToString).orElse(null);
 
-        // Check if certain accountType was given.
-        if (accountTypeString.isPresent()) {
-            accountType = mapAccountTypeToString(accountTypeString.get());
-        }
-
-        // Checks what values are used to find.
-        if (iban.isPresent()) { // Find by IBAN and accountType.
-            return getAccountsByIBANAndAccountType(iban.get(), accountType, pageable);
-        } else { // Find by first and last name and accountType.
-            return getAccountsByFirstAndLastNameAndAccountType(firstName.orElse(""), lastName.orElse(""),
-                    accountType, pageable);
-        }
+        // Find accounts
+        return accountRepository.findAccounts(IBAN, fName, lName, accountType, pageable).getContent();
     }
 }

@@ -174,11 +174,6 @@ class TransactionRepositoryTests {
         public List<Transaction> findAllByTimestampIsAfterAndUserId(LocalDateTime start, int userId) {
             return null;
         }
-
-        @Override
-        public Page<Transaction> findAll(Pageable pageable) {
-            return null;
-        }
     };
 
     @Test
