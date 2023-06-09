@@ -27,7 +27,6 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         // Before each check, clear the old authentication.
         jwtTokenProvider.clearAuthentication();
 
-
         try {
             Authentication authentication = jwtTokenProvider.getAuthentication(token);
             SecurityContextHolder.getContext().setAuthentication(authentication);

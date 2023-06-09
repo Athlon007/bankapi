@@ -55,15 +55,19 @@ public class Transaction {
 
     public void setAmount(double amount) {
         if (amount <= 0) {
-            throw new IllegalArgumentException("Amount cannot be negative or zero");
+            throw new IllegalArgumentException("Amount cannot be negative or zero.");
         }
 
         this.amount = amount;
     }
 
+    public double getAmount() {
+        return Math.round(amount * 100.0) / 100.0;
+    }
+
     public void setCurrencyType(CurrencyType currencyType) {
         if (currencyType == null) {
-            throw new IllegalArgumentException("Currency type cannot be null");
+            throw new IllegalArgumentException("Currency type cannot be null.");
         }
 
         this.currencyType = currencyType;
@@ -71,7 +75,7 @@ public class Transaction {
 
     public void setTransactionType(TransactionType transactionType) {
         if (transactionType == null) {
-            throw new IllegalArgumentException("Transaction type cannot be null");
+            throw new IllegalArgumentException("Transaction type cannot be null.");
         }
 
         this.transactionType = transactionType;
@@ -87,7 +91,7 @@ public class Transaction {
 
     public void setUser(User user) {
         if (user == null) {
-            throw new IllegalArgumentException("User cannot be null");
+            throw new IllegalArgumentException("User cannot be null.");
         }
 
         this.user = user;
@@ -95,10 +99,10 @@ public class Transaction {
 
     public void setTimestamp(LocalDateTime timestamp) {
         if (timestamp == null) {
-            throw new IllegalArgumentException("Timestamp cannot be null");
+            throw new IllegalArgumentException("Timestamp cannot be null.");
         }
         if (timestamp.isAfter(LocalDateTime.now())) {
-            throw new IllegalArgumentException("Timestamp cannot be in the future");
+            throw new IllegalArgumentException("Timestamp cannot be in the future.");
         }
         this.timestamp = timestamp;
     }

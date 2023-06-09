@@ -14,7 +14,7 @@ Feature: GET requests on User end-point
     When I call the application users endpoint
     Then I get HTTP status 200
     And I get a list of users
-    And I get 3 elements in the list
+    And I get 5 elements in the list
 
   Scenario: Get all users as client
     Given I have a valid user login credentials
@@ -34,7 +34,7 @@ Feature: GET requests on User end-point
     And I receive a token
     When I call the application users endpoint with page 1 and limit 2
     Then I get HTTP status 200
-    And I get 1 elements in the list
+    And I get 2 elements in the list
 
   Scenario: Getting all users that have name like "yo mama"
     Given I have a valid login credentials

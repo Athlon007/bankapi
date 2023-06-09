@@ -24,10 +24,12 @@ public class ApplicationDataInitializer implements ApplicationRunner {
     @Transactional
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        // TODO: Add data to the database
+        // ----------------
+        // ---   USERS  ---
+        // ----------------
 
         UserForAdminRequest adminRequest = new UserForAdminRequest(
-                "admin@example.com",
+                "office@inhollandbank.nl",
                 "admin",
                 "Password1!",
                 "InHolland",
@@ -62,25 +64,75 @@ public class ApplicationDataInitializer implements ApplicationRunner {
                 "0612345678",
                 "2000-01-01");
         userService.addUser(userRequest);
-        //System.out.println(userService.getAllUsers(Optional.empty(), Optional.empty(), Optional.empty()));
+
+        // Client Bobby
+        UserRequest userBobbyRequest = new UserRequest(
+                "bobby@example.com",
+                "bobby",
+                "Password4!",
+                "Bobby",
+                "Bob",
+                "570372562",
+                "0612345678",
+                "2000-01-01");
+        userService.addUser(userBobbyRequest);
+
+        // Client Berta
+        UserRequest userBertaRequest = new UserRequest(
+                "berta@example.com",
+                "berta",
+                "Password5!",
+                "Berta",
+                "Bob",
+                "333550808",
+                "0612345678",
+                "2000-01-01");
+        userService.addUser(userBertaRequest);
 
         // ----------------
         // --- ACCOUNTS ---
         // ----------------
 
-        AccountRequest accountRequest = new AccountRequest(
-                "EURO",
-                "CURRENT",
-                1);
+        // First admin account belongs to the bank.
+        // Therefore, we assign it to the bank.
+        accountService.addAccountForBank(admin);
 
-        accountService.addAccount(accountRequest);
-
-        // Test for transfering money
+        // Test for transferring money
         // Account for employee
         AccountRequest accountRequest2 = new AccountRequest(
                 "EURO",
                 "CURRENT",
                 3);
         accountService.addAccount(accountRequest2);
+
+        // Current Account for Bobby
+        AccountRequest accountCurrentBobbyRequest = new AccountRequest(
+                "EURO",
+                "CURRENT",
+                4);
+        accountService.addAccount(accountCurrentBobbyRequest);
+
+        // Saving Account for Bobby
+        AccountRequest accountSavingBobbyRequest = new AccountRequest(
+                "EURO",
+                "SAVING",
+                4);
+        accountService.addAccount(accountSavingBobbyRequest);
+
+        // Current Account for Berta
+        AccountRequest accountCurrentBertaRequest = new AccountRequest(
+                "EURO",
+                "CURRENT",
+                5);
+        accountService.addAccount(accountCurrentBertaRequest);
+
+        // Saving Account for Berta
+        AccountRequest accountSavingBertaRequest = new AccountRequest(
+                "EURO",
+                "SAVING",
+                5);
+        accountService.addAccount(accountSavingBertaRequest);
+
+        System.out.println("=== Application Initialized ===");
     }
 }
