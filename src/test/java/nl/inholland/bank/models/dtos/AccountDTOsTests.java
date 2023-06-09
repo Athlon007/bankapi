@@ -10,7 +10,7 @@ class AccountDTOsTests {
 
     @Test
     void settingAccountResponse() {
-        AccountResponse accountResponse = new AccountResponse(1, "IBAN", "EURO", "SAVING", false, 0d, 0);
+        AccountResponse accountResponse = new AccountResponse(1, "IBAN", "EURO", "SAVING", false, 0d, 0, "firstName", "lastName");
         assert accountResponse.IBAN().equals("IBAN");
         assert accountResponse.currency_type().equals("EURO");
         assert accountResponse.account_type().equals("SAVING");
