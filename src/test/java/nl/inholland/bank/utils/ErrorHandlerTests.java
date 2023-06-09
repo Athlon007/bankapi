@@ -34,57 +34,62 @@ class ErrorHandlerTests {
 
     @Test
     void testException() {
-        errorHandler.handleException(new Exception("Test exception"));
+        Assertions.assertDoesNotThrow(() -> errorHandler.handleException(new Exception("Test exception")));
     }
 
     @Test
     void illegalArgument() {
-        errorHandler.handleIllegalArgumentException(new IllegalArgumentException("Test illegal argument"));
+        Assertions.assertDoesNotThrow(() -> errorHandler.handleIllegalArgumentException(new IllegalArgumentException("Test illegal argument")));
     }
 
     @Test
     void authentication() {
-        errorHandler.handleAuthenticationException(new AuthenticationException("Test authentication"));
+        Assertions.assertDoesNotThrow(() -> errorHandler.handleAuthenticationException(new AuthenticationException("Test authentication")));
     }
 
     @Test
     void accessDenied() {
-        errorHandler.handleAccessDeniedException(new AccessDeniedException("Test access denied"));
+        Assertions.assertDoesNotThrow(() -> errorHandler.handleAccessDeniedException(new AccessDeniedException("Test access denied")));
     }
 
     @Test
     void objectNotFound() {
-        errorHandler.handleObjectNotFoundException(new ObjectNotFoundException((Object) "Test object not found", "Test"));
+        Assertions.assertDoesNotThrow(() -> errorHandler.handleObjectNotFoundException(new ObjectNotFoundException((Object) "Test object not found", "Test")));
     }
 
     @Test
     void methodArgumentTypeMismatch() {
-        errorHandler.handleMethodArgumentTypeMismatchException(new MethodArgumentTypeMismatchException("Test", String.class, "Test", null, null));
+        Assertions.assertDoesNotThrow(() -> errorHandler.handleMethodArgumentTypeMismatchException(new MethodArgumentTypeMismatchException("Test", String.class, "Test", null, null)));
     }
 
     @Test
     void requestMethodNotSupported() {
-        errorHandler.handleHttpRequestMethodNotSupportedException(new org.springframework.web.HttpRequestMethodNotSupportedException("Test"));
+        Assertions.assertDoesNotThrow(() -> errorHandler.handleHttpRequestMethodNotSupportedException(new org.springframework.web.HttpRequestMethodNotSupportedException("Test")));
     }
 
 
     @Test
     void methodNotAllowed() {
-        errorHandler.handleMethodNotAllowedException(new org.springframework.web.server.MethodNotAllowedException("Test", null));
+        Assertions.assertDoesNotThrow(() -> errorHandler.handleMethodNotAllowedException(new org.springframework.web.server.MethodNotAllowedException("Test", null)));
     }
 
     @Test
     void messageNotReadable() {
-        errorHandler.handleHttpMessageNotReadableException(new HttpMessageNotReadableException("Test"));
+        Assertions.assertDoesNotThrow(() -> errorHandler.handleHttpMessageNotReadableException(new HttpMessageNotReadableException("Test")));
     }
 
     @Test
     void disabled() {
-        errorHandler.handleDisabledException(new DisabledException("Test"));
+        Assertions.assertDoesNotThrow(() -> errorHandler.handleDisabledException(new DisabledException("Test")));
     }
 
     @Test
     void mediaTypeNotSupported() {
-        errorHandler.handleHttpMediaTypeNotSupportedException(new HttpMediaTypeNotSupportedException("Test"));
+        Assertions.assertDoesNotThrow(() -> errorHandler.handleHttpMediaTypeNotSupportedException(new HttpMediaTypeNotSupportedException("Test")));
+    }
+
+    @Test
+    void handleDataIntegrityViolationException() {
+        Assertions.assertDoesNotThrow(() -> errorHandler.handleDataIntegrityViolationException(new org.springframework.dao.DataIntegrityViolationException("Test")));
     }
 }
