@@ -127,7 +127,6 @@ public class UserController {
         UserLimitsResponse userLimitsResponse = new UserLimitsResponse(
                 limits.getTransactionLimit(),
                 limits.getDailyTransactionLimit(),
-                limits.getAbsoluteLimit(),
                 limits.getRemainingDailyTransactionLimit()
         );
         return ResponseEntity.status(200).body(userLimitsResponse);
@@ -141,7 +140,6 @@ public class UserController {
         UserLimitsResponse userLimitsResponse = new UserLimitsResponse(
                 limits.getTransactionLimit(),
                 limits.getDailyTransactionLimit(),
-                limits.getAbsoluteLimit(),
                 limits.getRemainingDailyTransactionLimit()
         );
         return ResponseEntity.status(200).body(userLimitsResponse);
@@ -152,11 +150,12 @@ public class UserController {
         if (user.getCurrentAccount() != null) {
             currentAccountResponse = new AccountResponse(
                     user.getCurrentAccount().getId(),
-                    user.getCurrentAccount().getIBAN().toString(),
+                    user.getCurrentAccount().getIBAN(),
                     user.getCurrentAccount().getCurrencyType().toString(),
                     user.getCurrentAccount().getType().toString(),
                     user.getCurrentAccount().isActive(),
-                    user.getCurrentAccount().getBalance()
+                    user.getCurrentAccount().getBalance(),
+                    user.getCurrentAccount().getAbsoluteLimit()
             );
         }
 
@@ -164,11 +163,12 @@ public class UserController {
         if (user.getSavingAccount() != null) {
             savingAccountResponse = new AccountResponse(
                     user.getSavingAccount().getId(),
-                    user.getSavingAccount().getIBAN().toString(),
+                    user.getSavingAccount().getIBAN(),
                     user.getSavingAccount().getType().toString(),
                     user.getSavingAccount().getCurrencyType().toString(),
                     user.getSavingAccount().isActive(),
-                    user.getSavingAccount().getBalance()
+                    user.getSavingAccount().getBalance(),
+                    user.getSavingAccount().getAbsoluteLimit()
             );
         }
 
@@ -196,7 +196,7 @@ public class UserController {
                 user.getId(),
                 user.getFirstName(),
                 user.getLastName(),
-                user.getCurrentAccount() == null ? null : user.getCurrentAccount().getIBAN().toString()
+                user.getCurrentAccount() == null ? null : user.getCurrentAccount().getIBAN()
         );
     }
 

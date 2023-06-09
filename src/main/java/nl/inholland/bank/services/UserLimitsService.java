@@ -90,7 +90,6 @@ public class UserLimitsService {
         Limits limits = userLimitsRepository.findFirstByUserId(userId);
         limits.setTransactionLimit(userLimitsRequest.transaction_limit());
         limits.setDailyTransactionLimit(userLimitsRequest.daily_transaction_limit());
-        limits.setAbsoluteLimit(userLimitsRequest.absolute_limit());
 
         userLimitsRepository.save(limits);
 
@@ -108,14 +107,11 @@ public class UserLimitsService {
     private Double calculateRemainingDailyLimit(Limits limits, List<Transaction> todaysTransactions) {
         // Calculate total value of transactions today.
         // Also ignore transactions from/to SAVINGS accounts.
-        System.out.println(todaysTransactions);
         double todayTotal = todaysTransactions.stream()
                 .filter(transaction ->
-                        (transaction.getAccountSender() != null
-                            && !transaction.getAccountSender().getType().equals(AccountType.SAVING))
-                        || ( transaction.getAccountReceiver() != null
-                            && !transaction.getAccountReceiver().getType().equals(AccountType.SAVING))
-                        && !(transaction.getAccountSender() == null && transaction.getAccountReceiver() != null)) // Deposits
+                        (transaction.getAccountSender() != null && !transaction.getAccountSender().getType().equals(AccountType.SAVING))
+                        || ( transaction.getAccountReceiver() != null && !transaction.getAccountReceiver().getType().equals(AccountType.SAVING))
+                        && (transaction.getAccountSender() != null)) // Deposits
                 .mapToDouble(Transaction::getAmount)
                 .sum();
 
@@ -126,7 +122,6 @@ public class UserLimitsService {
         Limits limits = new Limits();
         limits.setDailyTransactionLimit(this.defaultDailyTransactionLimit);
         limits.setTransactionLimit(this.defaultTransactionLimit);
-        limits.setAbsoluteLimit(this.defaultAbsoluteLimit);
         limits.setRemainingDailyTransactionLimit(this.defaultDailyTransactionLimit);
         return limits;
     }

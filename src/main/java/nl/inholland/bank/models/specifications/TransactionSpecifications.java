@@ -1,6 +1,9 @@
 package nl.inholland.bank.models.specifications;
 
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Predicate;
 import nl.inholland.bank.models.Transaction;
+import nl.inholland.bank.models.TransactionType;
 import nl.inholland.bank.models.User;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -28,12 +31,16 @@ public class TransactionSpecifications {
                 builder.equal(root.get("accountReceiver").get("IBAN"), accountReceiverIBAN);
     }
 
-    public static Specification<Transaction> withUser(User user) {
-        return (root, query, builder) ->
-                builder.or(
-                        builder.equal(root.get("accountSender").get("user"), user),
-                        builder.equal(root.get("accountReceiver").get("user"), user)
-                );
+    public static Specification<Transaction> withUserId(int userId) {
+        return (root, query, criteriaBuilder) -> {
+            root.fetch("accountSender", JoinType.LEFT);
+            root.fetch("accountReceiver", JoinType.LEFT);
+
+            Predicate senderUserPredicate = criteriaBuilder.equal(root.join("accountSender", JoinType.LEFT).get("user").get("id"), userId);
+            Predicate receiverUserPredicate = criteriaBuilder.equal(root.join("accountReceiver", JoinType.LEFT).get("user").get("id"), userId);
+
+            return criteriaBuilder.or(senderUserPredicate, receiverUserPredicate);
+        };
     }
 
     public static Specification<Transaction> withSenderUser(User senderUser) {
@@ -44,5 +51,14 @@ public class TransactionSpecifications {
     public static Specification<Transaction> withReceiverUser(User receiverUser) {
         return (root, query, builder) ->
                 builder.equal(root.get("accountReceiver").get("user"), receiverUser);
+    }
+
+    public static Specification<Transaction> withTransactionID(int transactionID) {
+        return (root, query, criteriaBuilder) ->
+                criteriaBuilder.equal(root.get("id"), transactionID);
+    }
+
+    public static Specification<Transaction> withTransactionType(TransactionType transactionType) {
+        return (root, query, builder) -> builder.equal(root.get("transactionType"), transactionType);
     }
 }

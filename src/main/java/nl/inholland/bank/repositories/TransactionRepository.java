@@ -2,6 +2,7 @@ package nl.inholland.bank.repositories;
 
 import io.micrometer.common.util.StringUtils;
 import nl.inholland.bank.models.Transaction;
+import nl.inholland.bank.models.TransactionType;
 import nl.inholland.bank.models.User;
 import nl.inholland.bank.models.specifications.TransactionSpecifications;
 import org.springframework.data.domain.Page;
@@ -23,8 +24,9 @@ public interface TransactionRepository extends CrudRepository<Transaction, Long>
     default Page<Transaction> findTransactions(
             double minAmount, double maxAmount,
             LocalDateTime startDate, LocalDateTime endDate,
+            int transactionID,
             String accountSenderIBAN, String accountReceiverIBAN,
-            User user, User senderUser, User receiverUser,
+            User user, User senderUser, User receiverUser, TransactionType transactionType,
             Pageable pageable) {
 
         Specification<Transaction> specification = Specification.where(null);
@@ -37,20 +39,20 @@ public interface TransactionRepository extends CrudRepository<Transaction, Long>
             specification = specification.and(TransactionSpecifications.withTimestampBetween(startDate, endDate));
         }
 
-        if (StringUtils.isNotBlank(accountSenderIBAN)) {
-            specification = specification.and(TransactionSpecifications.withAccountSenderIBAN(accountSenderIBAN));
-        }
+        if (transactionID != 0) {
+            // Find transaction by ID
+            specification = specification.and(TransactionSpecifications.withTransactionID(transactionID));
+        } else if (StringUtils.isNotBlank(accountSenderIBAN) || StringUtils.isNotBlank(accountReceiverIBAN)) {
+            // Find transaction by IBAN(s)
+            if (StringUtils.isNotBlank(accountSenderIBAN)) {
+                specification = specification.and(TransactionSpecifications.withAccountSenderIBAN(accountSenderIBAN));
+            }
 
-        if (StringUtils.isNotBlank(accountReceiverIBAN)) {
-            specification = specification.and(TransactionSpecifications.withAccountReceiverIBAN(accountReceiverIBAN));
-        }
-
-        if (user != null) {
-            specification = specification.and(TransactionSpecifications.withUser(user));
-        }
-
-        if (StringUtils.isBlank(accountSenderIBAN) && StringUtils.isBlank(accountReceiverIBAN)) {
-
+            if (StringUtils.isNotBlank(accountReceiverIBAN)) {
+                specification = specification.and(TransactionSpecifications.withAccountReceiverIBAN(accountReceiverIBAN));
+            }
+        } else if (senderUser != null || receiverUser != null) {
+            // Find transaction by userID(s)
             if (senderUser != null) {
                 specification = specification.and(TransactionSpecifications.withSenderUser(senderUser));
             }
@@ -58,6 +60,15 @@ public interface TransactionRepository extends CrudRepository<Transaction, Long>
             if (receiverUser != null) {
                 specification = specification.and(TransactionSpecifications.withReceiverUser(receiverUser));
             }
+        }
+
+        if (user != null) {
+            specification = specification.and(TransactionSpecifications.withUserId(user.getId()));
+        }
+
+        // Add the transaction type check
+        if (transactionType != null) {
+            specification = specification.and(TransactionSpecifications.withTransactionType(transactionType));
         }
 
         return findAll(specification, pageable);

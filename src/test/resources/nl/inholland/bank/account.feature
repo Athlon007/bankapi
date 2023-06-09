@@ -14,7 +14,7 @@ Feature: Everything associated with the Account
     And I receive a token
     Given I call the application accounts end point with currencyType "EURO", accountType "SAVING", userId 3
     Then I get HTTP status 201
-    And I get account's currencyType "EURO" and accountType "SAVING" and id 3
+    And I get account's currencyType "EURO" and accountType "SAVING" and id 7
 
 
   Scenario: Get accounts by user id without employee or admin credentials should result in 401

@@ -41,7 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(UserController.class)
 @Import(ApiTestConfiguration.class)
 @AutoConfigureMockMvc(addFilters = false)
-public class UserControllerTests {
+class UserControllerTests {
     @Autowired
     private MockMvc mockMvc;
 
@@ -74,32 +74,33 @@ public class UserControllerTests {
         Limits limits = new Limits();
         limits.setTransactionLimit(1000);
         limits.setDailyTransactionLimit(1000);
-        limits.setAbsoluteLimit(0);
         limits.setRemainingDailyTransactionLimit(1000);
         mockUser.setLimits(limits);
 
         Account currentAccount = new Account();
         currentAccount.setType(AccountType.CURRENT);
         currentAccount.setBalance(1000);
-        currentAccount.setIBAN("NL01INHO0000000001");
+        currentAccount.setIBAN("NL62INHO2395766879");
         currentAccount.setUser(mockUser);
         currentAccount.setId(1);
         currentAccount.setCurrencyType(CurrencyType.EURO);
         currentAccount.setActive(true);
+        currentAccount.setAbsoluteLimit(0);
         mockUser.setCurrentAccount(currentAccount);
 
         Account savingAccount = new Account();
         savingAccount.setType(AccountType.SAVING);
         savingAccount.setBalance(1000);
-        savingAccount.setIBAN("NL01INHO0000000002");
+        savingAccount.setIBAN("NL04INHO2539494278");
         savingAccount.setUser(mockUser);
         savingAccount.setId(1);
         savingAccount.setCurrencyType(CurrencyType.EURO);
+        savingAccount.setAbsoluteLimit(0);
         mockUser.setSavingAccount(savingAccount);
 
         mockUserRequest = new UserRequest("email@ex.com", "user", "Password1!", "Firstly", "Fister", "820510026", "0612345678", "2000-09-08");
         mockUserForAdminRequest = new UserForAdminRequest("email@mail.com", "user2", "Password1!", "Firstly", "Fister", "820510026", "0612345678", "2000-09-08", "employee");
-        mockUserLimitsRequest = new UserLimitsRequest(1000, 1000, 0);
+        mockUserLimitsRequest = new UserLimitsRequest(1000, 1000);
     }
 
     @Test
@@ -168,7 +169,6 @@ public class UserControllerTests {
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(jsonPath("$.transaction_limit").value(1000))
                 .andExpect(jsonPath("$.daily_transaction_limit").value(1000))
-                .andExpect(jsonPath("$.absolute_limit").value(0))
                 .andExpect(jsonPath("$.remaining_daily_transaction_limit").value(1000));
     }
 
@@ -264,7 +264,6 @@ public class UserControllerTests {
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(jsonPath("$.transaction_limit").value(1000))
                 .andExpect(jsonPath("$.daily_transaction_limit").value(1000))
-                .andExpect(jsonPath("$.absolute_limit").value(0))
                 .andExpect(jsonPath("$.remaining_daily_transaction_limit").value(1000));
     }
 }
