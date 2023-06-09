@@ -41,17 +41,10 @@ public class TransactionController {
     @PostMapping("/withdraw")
     public ResponseEntity<Object> withdrawMoney(
             @RequestBody WithdrawDepositRequest withdrawDepositRequest) {
-        if (userService.getBearerUserRole() == null) {
-            return ResponseEntity.status(401).body(new ExceptionResponse("Unauthorized"));
-        }
         try {
-            // Call the withdrawal method in the transaction service
             Transaction transaction = transactionService.withdrawMoney(withdrawDepositRequest);
-
-            // Prepare the response
             TransactionResponse response = buildTransactionResponse(transaction);
 
-            // Return the response
             return ResponseEntity.status(201).body(response);
         } catch (InsufficientResourcesException e) {
             return ResponseEntity.status(500).body(new ExceptionResponse(e.getMessage()));
@@ -122,23 +115,14 @@ public class TransactionController {
     @PostMapping("/deposit")
     public ResponseEntity<Object> depositMoney(
             @RequestBody WithdrawDepositRequest withdrawDepositRequest) {
-        if (userService.getBearerUserRole() == null) {
-            return ResponseEntity.status(401).body(new ExceptionResponse("Unauthorized"));
-        }
         try {
-            // Call the deposit method in the transaction service
             Transaction transaction = transactionService.depositMoney(withdrawDepositRequest);
-
-            // Prepare the response
             TransactionResponse response = buildTransactionResponse(transaction);
 
-            // Return the response
             return ResponseEntity.status(201).body(response);
         } catch (AccountNotFoundException e) {
             return ResponseEntity.status(404).body(new ExceptionResponse(e.getMessage()));
-        } catch (AuthenticationException e) {
-            return ResponseEntity.status(403).body(new ExceptionResponse(e.getMessage()));
-        } catch (UserNotTheOwnerOfAccountException e) {
+        } catch (AuthenticationException | UserNotTheOwnerOfAccountException e) {
             return ResponseEntity.status(403).body(new ExceptionResponse(e.getMessage()));
         } catch (InsufficientResourcesException e) {
             return ResponseEntity.status(500).body(new ExceptionResponse(e.getMessage()));
@@ -148,6 +132,7 @@ public class TransactionController {
     public TransactionResponse buildTransactionResponse(Transaction transaction) {
         TransactionResponse response = null;
         if (transaction.getTransactionType() == TransactionType.WITHDRAWAL) {
+            assert transaction.getAccountSender() != null;
             response = new TransactionResponse(
                     transaction.getId(),
                     userService.getBearerUsername(),
@@ -160,6 +145,7 @@ public class TransactionController {
             );
         }
         if (transaction.getTransactionType() == TransactionType.DEPOSIT) {
+            assert transaction.getAccountReceiver() != null;
             response = new TransactionResponse(
                     transaction.getId(),
                     userService.getBearerUsername(),

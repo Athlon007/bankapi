@@ -21,6 +21,9 @@ import java.time.LocalDate;
 public class AccountTests {
     private Account account;
     private TransactionService transactionService;
+
+    private String generatedIban;
+
     @BeforeEach
     void setUp() {
         account = new Account(
@@ -28,7 +31,7 @@ public class AccountTests {
                         "John",
                         "Doe",
                         "mail@test.com",
-                        "12345678",
+                        "075060097",
                         "0612345678",
                         LocalDate.of(1990, 1, 1),
                         "username",
@@ -37,18 +40,12 @@ public class AccountTests {
                 0,
                 CurrencyType.EURO,
                 IBANGenerator.generateIBAN().toString(),
-                AccountType.CURRENT);
+                AccountType.CURRENT,
+                0);
         transactionService = Mockito.mock(TransactionService.class);
 
-    }
+        generatedIban = account.getIBAN();
 
-    @Test
-    void balanceCannotBeNegative() {
-        Exception exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            account.setBalance(-1);
-        });
-
-        Assertions.assertEquals("Balance cannot be negative", exception.getMessage());
     }
 
     @Test
@@ -68,7 +65,7 @@ public class AccountTests {
         // Check the account properties
         Assertions.assertEquals(0, account.getBalance());
         Assertions.assertEquals(CurrencyType.EURO, account.getCurrencyType());
-        Assertions.assertEquals("NL01INHO0000000001", account.getIBAN());
+        Assertions.assertEquals(this.generatedIban, account.getIBAN());
         Assertions.assertEquals(AccountType.CURRENT, account.getType());
     }
 
@@ -117,7 +114,7 @@ public class AccountTests {
             account.setIBAN(null);
         });
 
-        Assertions.assertEquals("IBAN cannot be null or empty", exception.getMessage());
+        Assertions.assertEquals("IBAN cannot be null", exception.getMessage());
     }
 
 

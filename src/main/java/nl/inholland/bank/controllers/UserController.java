@@ -1,5 +1,6 @@
 package nl.inholland.bank.controllers;
 
+import nl.inholland.bank.models.Account;
 import nl.inholland.bank.models.Limits;
 import nl.inholland.bank.models.Role;
 import nl.inholland.bank.models.User;
@@ -32,7 +33,7 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity getAllUsers(
+    public ResponseEntity<Object> getAllUsers(
             @RequestParam Optional<Integer> page,
             @RequestParam Optional<Integer> limit,
             @RequestParam Optional<String> name,
@@ -59,16 +60,16 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity getUserById(@PathVariable int id) {
+    public ResponseEntity<Object> getUserById(@PathVariable int id) {
         User user = userService.getUserById(id);
-        if (userService.getBearerUserRole() == Role.USER && !userService.getBearerUsername().equals(user.getUsername())) {
+        if (userService.getBearerUserRole() == Role.CUSTOMER && !userService.getBearerUsername().equals(user.getUsername())) {
             return ResponseEntity.status(200).body(mapUserToUserForClientResponse(user));
         }
         return ResponseEntity.status(200).body(mapUserToUserResponse(user));
     }
 
     @PostMapping
-    public ResponseEntity addUser(@RequestBody UserForAdminRequest request) throws AuthenticationException, IllegalArgumentException {
+    public ResponseEntity<Object> addUser(@RequestBody UserForAdminRequest request) throws AuthenticationException, IllegalArgumentException {
         // Check if request exists.
         if (!isUserForAdminRequestValid(request)) {
             System.out.println("Request is empty");
@@ -96,7 +97,7 @@ public class UserController {
 
 
     @PutMapping("/{id}")
-    public ResponseEntity updateUser(@PathVariable int id, @RequestBody UserForAdminRequest request) throws AuthenticationException {
+    public ResponseEntity<Object> updateUser(@PathVariable int id, @RequestBody UserForAdminRequest request) throws AuthenticationException {
         UserRequest userRequest = request;
         if (request.getRole() == null) {
             userRequest = new UserRequest(
@@ -116,18 +117,17 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity deleteUser(@PathVariable int id) throws AuthenticationException {
+    public ResponseEntity<Object> deleteUser(@PathVariable int id) throws AuthenticationException {
         userService.deleteUser(id);
         return ResponseEntity.status(200).build();
     }
 
     @GetMapping("/{id}/limits")
-    public ResponseEntity getUserLimits(@PathVariable int id) throws AuthenticationException {
+    public ResponseEntity<Object> getUserLimits(@PathVariable int id) throws AuthenticationException {
         Limits limits = userLimitsService.getUserLimits(id);
         UserLimitsResponse userLimitsResponse = new UserLimitsResponse(
                 limits.getTransactionLimit(),
                 limits.getDailyTransactionLimit(),
-                limits.getAbsoluteLimit(),
                 limits.getRemainingDailyTransactionLimit()
         );
         return ResponseEntity.status(200).body(userLimitsResponse);
@@ -135,41 +135,40 @@ public class UserController {
 
     @PutMapping("/{id}/limits")
     @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('EMPLOYEE')")
-    public ResponseEntity updateUserLimits(@PathVariable int id, @Validated @RequestBody UserLimitsRequest userLimitsRequest) throws AuthenticationException
+    public ResponseEntity<Object> updateUserLimits(@PathVariable int id, @Validated @RequestBody UserLimitsRequest userLimitsRequest) throws AuthenticationException
     {
         Limits limits = userLimitsService.updateUserLimits(id, userLimitsRequest);
         UserLimitsResponse userLimitsResponse = new UserLimitsResponse(
                 limits.getTransactionLimit(),
                 limits.getDailyTransactionLimit(),
-                limits.getAbsoluteLimit(),
                 limits.getRemainingDailyTransactionLimit()
         );
         return ResponseEntity.status(200).body(userLimitsResponse);
     }
 
+    private AccountResponse mapAccountToAccountResponse(Account account) {
+        return new AccountResponse(
+                account.getId(),
+                account.getIBAN(),
+                account.getCurrencyType().toString(),
+                account.getType().toString(),
+                account.isActive(),
+                account.getBalance(),
+                account.getAbsoluteLimit(),
+                account.getUser().getFirstName(),
+                account.getUser().getLastName()
+        );
+    }
+
     private UserResponse mapUserToUserResponse(User user) {
         AccountResponse currentAccountResponse = null;
         if (user.getCurrentAccount() != null) {
-            currentAccountResponse = new AccountResponse(
-                    user.getCurrentAccount().getId(),
-                    user.getCurrentAccount().getIBAN().toString(),
-                    user.getCurrentAccount().getCurrencyType().toString(),
-                    user.getCurrentAccount().getType().toString(),
-                    user.getCurrentAccount().isActive(),
-                    user.getCurrentAccount().getBalance()
-            );
+            currentAccountResponse = mapAccountToAccountResponse(user.getCurrentAccount());
         }
 
         AccountResponse savingAccountResponse = null;
         if (user.getSavingAccount() != null) {
-            savingAccountResponse = new AccountResponse(
-                    user.getSavingAccount().getId(),
-                    user.getSavingAccount().getIBAN().toString(),
-                    user.getSavingAccount().getType().toString(),
-                    user.getSavingAccount().getCurrencyType().toString(),
-                    user.getSavingAccount().isActive(),
-                    user.getSavingAccount().getBalance()
-            );
+            savingAccountResponse = mapAccountToAccountResponse(user.getSavingAccount());
         }
 
         String dateOfBirth = user.getDateOfBirth().toString();
@@ -196,7 +195,7 @@ public class UserController {
                 user.getId(),
                 user.getFirstName(),
                 user.getLastName(),
-                user.getCurrentAccount() == null ? null : user.getCurrentAccount().getIBAN().toString()
+                user.getCurrentAccount() == null ? null : user.getCurrentAccount().getIBAN()
         );
     }
 

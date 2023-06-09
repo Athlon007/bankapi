@@ -1,6 +1,5 @@
 package nl.inholland.bank.models;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import lombok.Data;

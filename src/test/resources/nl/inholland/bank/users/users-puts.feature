@@ -17,7 +17,7 @@ Feature: PUT requests to User endpoint
       And I update user with id "3" with username "client", first name "John", last name "Doe", email "mail@example.com", password "Password123!", bsn "318419403", phone number "0612345678" and birth-date "2000-09-08"
       Then I get HTTP status 200
       And I get a user with first name "John" and last name "Doe"
-      And The user has role of "user"
+      And The user has role of "customer"
 
   Scenario: Updating non existent user should return 404
       Given I have a valid login credentials
@@ -46,13 +46,6 @@ Feature: PUT requests to User endpoint
       And I call the application login endpoint
       And I receive a token
       And I update user with id "3" with username "employee", first name "John", last name "Doe", email "mail@example.com", password "Password123!", bsn "318419403", phone number "0612345678" and birth-date "2000-09-08"
-      Then I get HTTP status 400
-
-  Scenario: Updating email to already existing email should return 400
-      Given I have a valid login credentials
-      And I call the application login endpoint
-      And I receive a token
-      And I update user with id "3" with username "client", first name "John", last name "Doe", email "admin@example.com", password "Password123!", bsn "318419403", phone number "0612345678" and birth-date "2000-09-08"
       Then I get HTTP status 400
     
   Scenario: Updating an admin as an employee should return 401

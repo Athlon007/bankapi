@@ -85,7 +85,7 @@ Feature: GET requests on User end-point
     When I request user with id "3"
     Then I get HTTP status 200
     And I get a user with first name "Yo" and last name "Mama"
-    And The user has role of "user"
+    And The user has role of "customer"
 
   Scenario: Client getting his own account should return full UserResponse and not UserForClientResponse
     Given I have a valid user login credentials
@@ -94,7 +94,7 @@ Feature: GET requests on User end-point
     When I request user with id "3"
     Then I get HTTP status 200
     And I get a user with first name "Yo" and last name "Mama"
-    And The user has role of "user"
+    And The user has role of "customer"
 
   Scenario: Client getting someone else account should return UserForClientResponse and not UserResponse
     Given I have a valid user login credentials
@@ -122,3 +122,11 @@ Feature: GET requests on User end-point
     And I receive a token
     When I request user with id "banana"
     Then I get HTTP status 400
+
+  Scenario: Get User 'Bank' by his lastname
+    Given I have a valid login credentials
+    And I call the application login endpoint
+    And I receive a token
+    When I request user a user with name "Bank"
+    Then I get HTTP status 200
+    And I get 1 elements in the list

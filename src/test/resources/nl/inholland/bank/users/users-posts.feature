@@ -37,10 +37,9 @@ Feature: POST requests for User API
     When I call the application register endpoint with username "johhny", first name "John", last name "Doe", email "mail@example.com", password "Password123!", bsn "318419403", phone number "0612345678" and birth-date "banana"
     Then I get HTTP status 400
 
-  Scenario: Registering a new user with no last name should result in a new user
+  Scenario: Registering a new user with no last name should result in 400
     When I call the application register endpoint with username "mibby", first name "John", last name "", email "mibby@example.com", password "Password123!", bsn "318419403", phone number "0612345678" and birth-date "2000-09-08"
-    Then I get HTTP status 201
-    And I get a user with first name "John" and last name ""
+    Then I get HTTP status 400
 
   Scenario: Trying to use register endpoint without body should result in 400
     When I call the application register endpoint with no body

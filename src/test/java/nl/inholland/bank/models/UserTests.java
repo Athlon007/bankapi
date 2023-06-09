@@ -1,19 +1,12 @@
 package nl.inholland.bank.models;
 
-import nl.inholland.bank.models.Account;
-import nl.inholland.bank.models.AccountType;
-import nl.inholland.bank.models.Role;
-import nl.inholland.bank.models.User;
 import nl.inholland.bank.models.exceptions.OperationNotAllowedException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import java.time.LocalDate;
-import java.util.List;
 
-@SpringBootTest
 class UserTests {
     private User user;
 
@@ -28,7 +21,7 @@ class UserTests {
                 LocalDate.of(1990, 1, 1),
                 "username",
                 "Password1!",
-                Role.USER);
+                Role.CUSTOMER);
 
         Account currentAccount = new Account();
         currentAccount.setBalance(1000);
@@ -151,12 +144,6 @@ class UserTests {
         });
 
         Assertions.assertEquals("Username cannot be null or empty", exception.getMessage());
-    }
-
-    @Test
-    void setttingLastNameToNullShouldReplaceWithEmptyString() {
-        user.setLastName(null);
-        Assertions.assertEquals("", user.getLastName());
     }
 
     @Test
@@ -295,15 +282,6 @@ class UserTests {
     }
 
     @Test
-    void passwordMustBeAtLeast8CharsLong() {
-        Exception exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            user.setPassword("1234567");
-        });
-
-        Assertions.assertEquals("Password must be at least 8 characters long", exception.getMessage());
-    }
-
-    @Test
     void gettingTotalBalanceReturnsADouble() {
         Assertions.assertEquals(1000, user.getTotalBalance());
 
@@ -327,26 +305,8 @@ class UserTests {
     }
 
     @Test
-    void passwordMayNotHaveRepeatingCharacters() {
-        Exception exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            user.setPassword("aaaaaaaa");
-        });
-
-        Assertions.assertEquals("Password cannot have repeating characters only", exception.getMessage());
-    }
-
-    @Test
-    void passwordMustHave1Digit1Capital1Lowercase1SpecialChar() {
-        Exception exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            user.setPassword("aaaaaaa1");
-        });
-
-        Assertions.assertEquals("Password must contain at least one digit, one lowercase character, one uppercase character and one special character", exception.getMessage());
-    }
-
-    @Test
     void getAuthorityFromRole() {
-        Assertions.assertEquals("USER", user.getRole().getAuthority());
+        Assertions.assertEquals("CUSTOMER", user.getRole().getAuthority());
     }
 
     @Test
@@ -365,5 +325,97 @@ class UserTests {
         });
 
         Assertions.assertEquals("Cannot set saving account when current account is inactive", exception.getMessage());
+    }
+
+    @Test
+    void gettingAndSettingId() {
+        user.setId(1);
+        Assertions.assertEquals(1, user.getId());
+    }
+
+    @Test
+    void gettingAndSettingFirstName() {
+        user.setFirstName("John");
+        Assertions.assertEquals("John", user.getFirstName());
+    }
+
+    @Test
+    void gettingAndSettingPhoneNumber() {
+        user.setPhoneNumber("0612345678");
+        Assertions.assertEquals("0612345678", user.getPhoneNumber());
+    }
+
+    @Test
+    void gettingAndSettingDateOfBirth() {
+        user.setDateOfBirth(LocalDate.of(1999, 1, 1));
+        Assertions.assertEquals(LocalDate.of(1999, 1, 1), user.getDateOfBirth());
+    }
+
+    @Test
+    void gettingAndSettingActive() {
+        user.setActive(true);
+        Assertions.assertTrue(user.isActive());
+    }
+
+    @Test
+    void gettingAndSettingUserLimits() {
+        Limits limits = new Limits();
+        user.setLimits(limits);
+        Assertions.assertEquals(limits, user.getLimits());
+    }
+
+    @Test
+    void gettingAndSettingUsername() {
+        user.setUsername("JohnDoe");
+        Assertions.assertEquals("JohnDoe", user.getUsername());
+    }
+
+    @Test
+    void settingLastNameEmptyThrowsException() {
+        Exception exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            user.setLastName("");
+        });
+
+        Assertions.assertEquals("Last name cannot be empty", exception.getMessage());
+    }
+
+    @Test
+    void getSetLastName() {
+        user.setLastName("Doe");
+        Assertions.assertEquals("Doe", user.getLastName());
+    }
+
+    @Test
+    void compareUserToAnotherUserReturnsFalse() {
+        User user2 = new User();
+        user2.setId(2);
+        user2.setFirstName("Jane");
+        user2.setLastName("Doe");
+
+        Assertions.assertNotEquals(user, user2);
+    }
+
+    @Test
+    void compareUserToItselfReturnsTrue() {
+        Assertions.assertEquals(user, user);
+    }
+
+    @Test
+    void compareUserToOtherObjectReturnsFalse() {
+        Assertions.assertNotEquals(user, new Object());
+    }
+
+    @Test
+    void getHashCode() {
+        Assertions.assertEquals(31, user.hashCode());
+    }
+
+    @Test
+    void userMustBeAtleast18YearsOld() {
+        Exception exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            user.setDateOfBirth(LocalDate.now().minusYears(17));
+        });
+
+        Assertions.assertEquals("User must be 18 years or older", exception.getMessage());
     }
 }

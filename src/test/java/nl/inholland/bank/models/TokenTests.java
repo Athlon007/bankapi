@@ -1,8 +1,8 @@
 package nl.inholland.bank.models;
 
+import nl.inholland.bank.models.dtos.Token;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
 class TokenTests {

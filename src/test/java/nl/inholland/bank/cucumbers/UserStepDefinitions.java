@@ -347,4 +347,18 @@ public class UserStepDefinitions extends BaseStepDefinitions {
 
         Assert.isTrue(userResponse.active(), "User is not active");
     }
+
+    @When("I request user a user with name {string}")
+    public void iRequestUserAUserWithName(String name) {
+        if (StorageForTestsInstance.getInstance().getJwt() != null) {
+            headers.setBearerAuth(StorageForTestsInstance.getInstance().getJwt().access_token());
+        }
+
+        StorageForTestsInstance.getInstance().setResponse(restTemplate.exchange(
+                USERS_ENDPOINT + "?name=" + name,
+                HttpMethod.GET,
+                new HttpEntity<>(null, headers),
+                String.class
+        ));
+    }
 }
