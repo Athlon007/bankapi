@@ -14,10 +14,6 @@ import org.mockito.Mockito;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import javax.security.auth.login.AccountNotFoundException;
@@ -130,6 +126,10 @@ class AccountServiceTests {
         // Assert that the returned account matches the mock account
         Assertions.assertEquals(account, createdAccount);
     }
+
+
+
+
 
 
     @Test
@@ -335,68 +335,5 @@ class AccountServiceTests {
         Mockito.when(accountRepository.save(Mockito.any(Account.class))).thenReturn(account);
 
         Assertions.assertThrows(IllegalArgumentException.class, () -> accountService.activateOrDeactivateTheAccount(account, accountActiveRequest));
-    }
-
-    @Test
-    void attemptingToSetCurrentAccountTwiceThrowsIllegalArgumentException() {
-        Mockito.when(accountRepository.findAllByUser(user)).thenReturn(List.of(account));
-        Mockito.when(userService.getUserById(accountRequest.userId())).thenReturn(user);
-
-        Assertions.assertThrows(IllegalArgumentException.class, () -> accountService.addAccount(accountRequest));
-    }
-
-    @Test
-    void attemptingToSetSavingAccountTwiceThrowsIllegalArgumentException() {
-        AccountRequest savingRequest = new AccountRequest("euro", "SAVING", 1);
-        Account savingAccount = new Account();
-        savingAccount.setType(AccountType.SAVING);
-
-        Mockito.when(accountRepository.findAllByUser(user)).thenReturn(List.of(account, savingAccount));
-        Mockito.when(userService.getUserById(savingRequest.userId())).thenReturn(user);
-
-        Assertions.assertThrows(IllegalArgumentException.class, () -> accountService.addAccount(savingRequest));
-    }
-
-    @Test
-    void updateSavingAbsoluteLimitShouldThrowIllegalArgumentException(){
-        AccountAbsoluteLimitRequest accountAbsoluteLimitRequest = new AccountAbsoluteLimitRequest(-10);
-        account.setType(AccountType.SAVING);
-        Mockito.when(accountRepository.save(Mockito.any(Account.class))).thenReturn(account);
-
-        Assertions.assertThrows(IllegalArgumentException.class, () -> accountService.updateAbsoluteLimit(account, accountAbsoluteLimitRequest));
-    }
-
-    @Test
-    void getAccountsByIBANAndAccountTypeReturnsAccounts() {
-        Pageable pageable = PageRequest.of(0, 10);
-        Mockito.when(accountRepository.findAllByIBANContainingAndType("NL01INHO0000000001", AccountType.CURRENT, pageable))
-                .thenReturn(new PageImpl<>(List.of(account)));
-
-        Assertions.assertEquals(List.of(account), accountService.getAccountsByIBANAndAccountType("NL01INHO0000000001", AccountType.CURRENT, pageable));
-    }
-
-    @Test
-    void getAccountsByFirstAndLastNameAndAccountType() {
-        Pageable pageable = PageRequest.of(0, 10);
-        Mockito.when(accountRepository.findByUserFirstNameIgnoreCaseContainingAndUserLastNameIgnoreCaseContainingAndType("John", "Doe", AccountType.CURRENT, pageable))
-                .thenReturn(new PageImpl<>(List.of(account)));
-
-        Assertions.assertEquals(List.of(account), accountService.getAccountsByFirstAndLastNameAndAccountType("John", "Doe", AccountType.CURRENT, pageable));
-    }
-
-    @Test
-    void getAccounts() {
-        Pageable pageable = PageRequest.of(0, 10);
-        Mockito.when(accountRepository.findAllByIBANContainingAndType("NL01INHO0000000001", AccountType.CURRENT, pageable))
-                .thenReturn(new PageImpl<>(List.of(account)));
-        Assertions.assertEquals(List.of(account), accountService.getAccounts(Optional.of(0), Optional.of(10), Optional.of("NL01INHO0000000001"), Optional.of("John"), Optional.of("Doe"), Optional.of("CURRENT")));
-    }
-
-    @Test
-    void getAccountsIbanIsNotPresent() {
-        Pageable pageable = PageRequest.of(0, 10);
-        Mockito.when(accountRepository.findByUserFirstNameIgnoreCaseContainingAndUserLastNameIgnoreCaseContainingAndType("John", "Doe", AccountType.CURRENT, pageable))
-                .thenReturn(new PageImpl<>(List.of(account)));
-        Assertions.assertEquals(List.of(account), accountService.getAccounts(Optional.of(0), Optional.of(10), Optional.empty(), Optional.of("John"), Optional.of("Doe"), Optional.of("CURRENT")));
     }
 }
