@@ -175,7 +175,19 @@ class TransactionControllerTest {
 
 
     @Test
-    void depositMoney(){
+    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    void depositMoney() throws Exception {
+    when(transactionService.depositMoney(withdrawDepositRequest)).thenReturn(mockTransaction.get(0));
+
+    Mockito.when(userService.getBearerUserRole()).thenReturn(Role.ADMIN);
+
+    MockHttpServletRequestBuilder post = MockMvcRequestBuilders.post("/transactions/deposit")
+            .contentType("application/json")
+            .content(mapper.writeValueAsString(withdrawDepositRequest))
+            .header(HttpHeaders.AUTHORIZATION, "Bearer " + "token");
+    mockMvc.perform(post)
+            .andExpect(MockMvcResultMatchers.status().isCreated());
+
 
     }
     @Test
