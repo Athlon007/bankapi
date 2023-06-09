@@ -539,4 +539,21 @@ class TransactionServiceTest {
 
     }
 
+    @Test
+    void testGetTransactions_Authorized_ReturnsList() {
+        when(userService.getBearerUserRole()).thenReturn(Role.CUSTOMER);
+        Transaction transaction = new Transaction();
+        when(transactionRepository.findTransactions(anyDouble(), anyDouble(), any(), any(), anyInt(), anyString(), anyString(), any(), any(), any(), any(), any())).thenReturn(new PageImpl<>(List.of(transaction)));
+
+        assertDoesNotThrow(() -> {
+            transactionService.getTransactions(
+                    Optional.empty(), Optional.empty(), new TransactionSearchRequest(
+                            Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(),
+                            Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(),
+                            Optional.empty(), Optional.empty()
+                    )
+            );
+        });
+    }
+
 }
