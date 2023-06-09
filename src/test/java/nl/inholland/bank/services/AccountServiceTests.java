@@ -336,4 +336,24 @@ class AccountServiceTests {
 
         Assertions.assertThrows(IllegalArgumentException.class, () -> accountService.activateOrDeactivateTheAccount(account, accountActiveRequest));
     }
+
+    @Test
+    void attemptingToSetCurrentAccountTwiceThrowsIllegalArgumentException() {
+        Mockito.when(accountRepository.findAllByUser(user)).thenReturn(List.of(account));
+        Mockito.when(userService.getUserById(accountRequest.userId())).thenReturn(user);
+
+        Assertions.assertThrows(IllegalArgumentException.class, () -> accountService.addAccount(accountRequest));
+    }
+
+    @Test
+    void attemptingToSetSavingAccountTwiceThrowsIllegalArgumentException() {
+        AccountRequest savingRequest = new AccountRequest("euro", "SAVING", 1);
+        Account savingAccount = new Account();
+        savingAccount.setType(AccountType.SAVING);
+
+        Mockito.when(accountRepository.findAllByUser(user)).thenReturn(List.of(account, savingAccount));
+        Mockito.when(userService.getUserById(savingRequest.userId())).thenReturn(user);
+
+        Assertions.assertThrows(IllegalArgumentException.class, () -> accountService.addAccount(savingRequest));
+    }
 }
