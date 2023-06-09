@@ -1,24 +1,22 @@
 package nl.inholland.bank.services;
 
 import nl.inholland.bank.models.*;
-import nl.inholland.bank.models.dtos.AccountDTO.AccountAbsoluteLimitRequest;
-import nl.inholland.bank.models.dtos.AccountDTO.AccountActiveRequest;
 import nl.inholland.bank.models.dtos.AccountDTO.AccountRequest;
 import nl.inholland.bank.repositories.AccountRepository;
-import org.springframework.beans.factory.annotation.Value;
+import org.hibernate.ObjectNotFoundException;
+import org.iban4j.Iban;
 import org.springframework.stereotype.Service;
 
+import javax.naming.AuthenticationException;
 import javax.security.auth.login.AccountNotFoundException;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class AccountService {
     AccountRepository accountRepository;
 
     UserService userService;
-
-    @Value("${bankapi.bank.account}")
-    private String bankAccountIBAN;
 
     public AccountService(AccountRepository accountRepository, UserService userService) {
         this.accountRepository = accountRepository;
@@ -33,7 +31,6 @@ public class AccountService {
         account.setCurrencyType(currencyType);
         account.setBalance(0);
         account.setActive(true);
-        account.setAbsoluteLimit(0);
 
         return account;
     }
@@ -48,10 +45,9 @@ public class AccountService {
             return accountRepository.findByIBAN(iban)
                     .orElseThrow(() -> new AccountNotFoundException("Account not found."));
         } else {
-            throw new IllegalArgumentException("Invalid IBAN provided.");
+            return null;
         }
     }
-
 
     public Account addAccount(AccountRequest accountRequest) {
         User user = null;
@@ -87,8 +83,15 @@ public class AccountService {
         return accountRepository.findAllByUser(user);
     }
 
+    // Check if the user has a certain account type, returns true if the user has the account type
     public boolean doesUserHaveAccountType(User user, AccountType accountType) {
-        return getAccountsByUserId(user).stream().anyMatch(account -> account.getType().equals(accountType));
+        List<Account> accounts = getAccountsByUserId(user);
+        for (Account account : accounts) {
+            if (account.getType().equals(accountType)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public CurrencyType mapCurrencyTypeToString(String currencyType) {
@@ -107,51 +110,24 @@ public class AccountService {
     }
 
 
+    public Account getAccountByIban(String iban) {
+        return accountRepository.findByIBAN(iban).orElseThrow(() -> new IllegalArgumentException("Account not found"));
+    }
+
     public void updateAccount(Account account) {
         accountRepository.save(account);
     }
 
-    public Account getAccountById(int id) throws AccountNotFoundException {
-        return accountRepository.findById(id).orElseThrow(() -> new AccountNotFoundException("Account not found"));
+    public Account getAccountById(int id) {
+        return accountRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Account not found"));
     }
 
-    public void activateOrDeactivateTheAccount(Account account, AccountActiveRequest accountActiveRequest) {
-        if (account.getIBAN().equals(bankAccountIBAN)) {
-            throw new IllegalArgumentException("Bank account cannot be deactivated");
-        }
-
-        account.setActive(accountActiveRequest.isActive());
+    public void activateOrDeactivateTheAccount(Account account, boolean isActive) {
+        account.setActive(isActive);
         accountRepository.save(account);
     }
 
-    public void updateAbsoluteLimit(Account account, AccountAbsoluteLimitRequest accountAbsoluteLimitRequest) {
-        account.setAbsoluteLimit(accountAbsoluteLimitRequest.absoluteLimit());
-        System.out.println(account.getAbsoluteLimit());
-        accountRepository.save(account);
-    }
 
-    public void addAccountForBank(User user) {
-        // Bank has a special account with IBAN: NL01INHO0000000001.
-        // It should be assigned only to the first admin user.
-        // This method is called only once, when the first admin user is created.
 
-        if (user.getRole() != Role.ADMIN) {
-            throw new IllegalArgumentException("Only admin user can have a bank account");
-        }
 
-        if (accountRepository.findByIBAN(bankAccountIBAN).isPresent()) {
-            throw new IllegalArgumentException("Bank account already exists");
-        }
-
-        Account account = createAccount(
-                user,
-                AccountType.CURRENT,
-                CurrencyType.EURO
-        );
-
-        account.setIBAN(bankAccountIBAN);
-
-        accountRepository.save(account);
-        userService.assignAccountToUser(user, account);
-    }
 }

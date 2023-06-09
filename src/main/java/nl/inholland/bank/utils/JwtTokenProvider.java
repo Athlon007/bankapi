@@ -94,7 +94,12 @@ public class JwtTokenProvider {
             // Expire old refresh token.
             refreshTokenBlacklistService.blacklist(refreshToken);
 
-            return claims.getBody().getSubject();
+            // Return only if token is still valid.
+            if (claims.getBody().getExpiration().after(new Date())) {
+                return claims.getBody().getSubject();
+            } else {
+                throw new AuthenticationException("Refresh token is expired.");
+            }
         } catch (Exception e) {
             throw e;
         }
@@ -115,7 +120,9 @@ public class JwtTokenProvider {
             return null;
         }
 
-        return (Role) authentication.getAuthorities().stream().findFirst().get();
+        return (Role) authentication.getAuthorities().stream().findFirst().orElseThrow(
+                () -> new RuntimeException("No role found in authentication.")
+        );
     }
 
     public void clearAuthentication() {

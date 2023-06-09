@@ -12,7 +12,6 @@ import io.cucumber.java.en.When;
 import nl.inholland.bank.models.dtos.AuthDTO.LoginRequest;
 import nl.inholland.bank.models.dtos.AuthDTO.RefreshTokenRequest;
 import nl.inholland.bank.models.dtos.AuthDTO.jwt;
-import nl.inholland.bank.services.AccountService;
 import org.junit.jupiter.api.Assertions;
 import org.springframework.http.*;
 

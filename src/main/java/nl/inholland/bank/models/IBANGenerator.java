@@ -5,6 +5,9 @@ import org.iban4j.*;
 
 
 public class IBANGenerator {
+    public static void main(String[] args) {
+        System.out.println(generateIBAN());
+    }
     /**
      * Generates a random IBAN with the standard (NLxxINHO0xxxxxxxxx).
      * @return Returns a randomly generated IBAN.
@@ -24,10 +27,6 @@ public class IBANGenerator {
     public static boolean isValidIBAN(String iban)
     {
         if (iban != null) {
-            if (iban.equals("NL01INHO0000000001")) { // Bank IBAN
-                return true;
-            }
-
            IBANValidator ibanValidator = new IBANValidator();
            return ibanValidator.isValid(iban);
         }

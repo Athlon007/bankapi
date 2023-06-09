@@ -8,6 +8,7 @@ import nl.inholland.bank.models.exceptions.AccountIsNotActiveException;
 import nl.inholland.bank.models.exceptions.UserNotTheOwnerOfAccountException;
 import nl.inholland.bank.repositories.TransactionRepository;
 import nl.inholland.bank.repositories.UserRepository;
+import org.hibernate.ObjectNotFoundException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -27,36 +28,17 @@ public class TransactionService {
     private final UserRepository userRepository;
     private final UserService userService;
     private final AccountService accountService;
-    private final UserLimitsService userLimitsService;
 
     private static final LocalDateTime EARLIEST_TIME = LocalDateTime.of(1, 1, 1, 0, 0, 0);
 
-    /**
-     * @param transactionRepository the transaction repository
-     * @param userRepository the user repository
-     * @param userService the user service
-     * @param accountService the account service
-     * @param userLimitsService the user limits service
-     */
     public TransactionService(TransactionRepository transactionRepository, UserRepository userRepository, UserService userService,
-                              AccountService accountService, UserLimitsService userLimitsService) {
+                              AccountService accountService) {
         this.transactionRepository = transactionRepository;
         this.userRepository = userRepository;
         this.userService = userService;
         this.accountService = accountService;
-        this.userLimitsService = userLimitsService;
     }
 
-    /**
-     * @param user the user that is authenticated
-     * @param accountSender the account that is sending the money
-     * @param accountReceiver the account that is receiving the money
-     * @param currencyType the currency type of the transaction
-     * @param amount the amount of the transaction
-     * @param description the description of the transaction
-     * @param transactionType the type of the transaction
-     * @return the transaction object
-     */
     public Transaction createTransaction(User user, Account accountSender, Account accountReceiver, CurrencyType currencyType, double amount, String description, TransactionType transactionType) {
         Transaction transaction = new Transaction();
         transaction.setUser(user);
@@ -75,64 +57,84 @@ public class TransactionService {
         return user == account.getUser();
     }
 
-    /**
-     * @param withdrawDepositRequest request containing the IBAN of the account and the amount to be deposited
-     * @return the transaction object
-     * @throws AccountNotFoundException if the account is not found
-     * @throws InsufficientResourcesException if the account does not have enough balance
-     * @throws AuthenticationException if the user is not authenticated
-     * @throws UserNotTheOwnerOfAccountException if the user is not the owner of the account
-     */
-    public Transaction withdrawMoney(WithdrawDepositRequest withdrawDepositRequest) throws AccountNotFoundException, InsufficientResourcesException, AuthenticationException, UserNotTheOwnerOfAccountException, javax.naming.AuthenticationException {
-        Account accountSender = accountService.getAccountByIBAN(withdrawDepositRequest.IBAN());
-        User user = getUserByUsername();
-        checkAccountPreconditionsForWithdrawOrDeposit(accountSender, user);
-        checkUserLimits(accountSender, withdrawDepositRequest.amount());
-        updateAccountBalance(accountSender, withdrawDepositRequest.amount(), false);
+    public Transaction withdrawMoney(WithdrawDepositRequest withdrawDepositRequest) throws AccountNotFoundException, InsufficientResourcesException, AuthenticationException, UserNotTheOwnerOfAccountException {
+        Account accountSender = accountService.getAccountByIban(withdrawDepositRequest.IBAN());
+        User user = userService.getUserById(withdrawDepositRequest.userId());
+        String performerUserName = userService.getBearerUsername();
 
-        Transaction transaction = createTransaction(user, accountSender, null, withdrawDepositRequest.currencyType(), withdrawDepositRequest.amount(), "Withdraw successful", TransactionType.WITHDRAWAL);
-        return transactionRepository.save(transaction);
+        // This checks if the user is the owner of the account from the request body
+        if (!isTransactionAuthorizedForUserAccount(user, accountSender)) {
+            throw new AuthenticationException("You are not the owner of this account or you are not an employee");
+        }
+
+        // check account type
+        if (accountSender.getType() == AccountType.SAVING) {
+            throw new IllegalArgumentException("You cannot withdraw money from a savings account");
+        }
+
+        if (!accountSender.isActive()){
+            throw new IllegalArgumentException("You cannot withdraw money from an inactive account");
+        }
+
+        // This checks if the username of the logged-in user is the same as the username of the account owner, or if the logged in user is an employee
+        if (Objects.equals(userService.getBearerUsername(), performerUserName) || Objects.equals(userService.getBearerUsername(), accountSender.getUser().getUsername())) {
+            checkUserDailyLimitAndTransactionLimit(user, withdrawDepositRequest.amount());
+            if (checkAccountBalance(accountSender, withdrawDepositRequest.amount())) {
+                updateAccountBalance(accountSender, withdrawDepositRequest.amount(), false);
+            } else {
+                throw new InsufficientResourcesException("Account does not have enough balance");
+            }
+
+            Transaction transaction = createTransaction(user, accountSender, null, withdrawDepositRequest.currencyType(), withdrawDepositRequest.amount(), "Withdraw successful", TransactionType.WITHDRAWAL);
+            return transactionRepository.save(transaction);
+        } else {
+            throw new AuthenticationException("You are not authorized to perform this action");
+        }
     }
 
-    /**
-     * @param depositRequest the request body
-     * @return the transaction object
-     * @throws AccountNotFoundException          if the account is not found
-     * @throws AuthenticationException           if the user is not authenticated
-     * @throws UserNotTheOwnerOfAccountException if the user is not the owner of the account
-     * @throws InsufficientResourcesException    if the account does not have enough balance
-     */
     public Transaction depositMoney(WithdrawDepositRequest depositRequest) throws AccountNotFoundException, AuthenticationException, UserNotTheOwnerOfAccountException, InsufficientResourcesException {
-        Account accountReceiver = accountService.getAccountByIBAN(depositRequest.IBAN());
-        User user = getUserByUsername();
-        checkAccountPreconditionsForWithdrawOrDeposit(accountReceiver, user);
-        updateAccountBalance(accountReceiver, depositRequest.amount(), true);
-        Transaction transaction = createTransaction(user, null, accountReceiver, depositRequest.currencyType(), depositRequest.amount(), "Deposit successful", TransactionType.DEPOSIT);
+        Account accountReceiver = accountService.getAccountByIban(depositRequest.IBAN());
+        User user = userService.getUserById(depositRequest.userId());
+        String performerUserName = userService.getBearerUsername();
 
-        return transactionRepository.save(transaction);
-    }
+        if (!isTransactionAuthorizedForUserAccount(user, accountReceiver)) {
+            throw new UserNotTheOwnerOfAccountException("You are not the owner of this account or you are not an employee");
+        }
 
-    private User getUserByUsername() throws AccountNotFoundException {
-        Optional<User> user = userRepository.findUserByUsername(userService.getBearerUsername());
-        if (user.isPresent()) {
-            return user.get();
+        if (!accountReceiver.isActive()){
+            throw new IllegalArgumentException("You cannot deposit money to an inactive account");
+        }
+
+        if (accountReceiver.getType() == AccountType.SAVING) {
+            throw new IllegalArgumentException("You cannot deposit money to a savings account");
+        }
+
+        // This checks if the username of the logged-in user is the same as the username of the account owner, or if the logged in user is an employee
+        if (Objects.equals(userService.getBearerUsername(), performerUserName) || Objects.equals(userService.getBearerUsername(), accountReceiver.getUser().getUsername())) {
+            checkUserDailyLimitAndTransactionLimit(user, depositRequest.amount());
+            if (accountReceiver.isActive()) {
+                updateAccountBalance(accountReceiver, depositRequest.amount(), true);
+                Transaction transaction = createTransaction(user, null, accountReceiver, depositRequest.currencyType(), depositRequest.amount(), "Deposit successful", TransactionType.DEPOSIT);
+                return transactionRepository.save(transaction);
+            } else {
+                throw new AccountNotFoundException("Account not found or inactive");
+            }
         } else {
             throw new AccountNotFoundException("Account not found or inactive");
         }
     }
 
-    private void checkAccountPreconditionsForWithdrawOrDeposit(Account account, User user) throws UserNotTheOwnerOfAccountException {
-        if (!isTransactionAuthorizedForUserAccount(user, account)) {
-            throw new UserNotTheOwnerOfAccountException("You are not the owner of this account");
+    public void checkUserDailyLimitAndTransactionLimit(User user, double amount) throws InsufficientResourcesException {
+        if (user.getLimits().getDailyTransactionLimit() < amount) {
+            throw new InsufficientResourcesException("You have exceeded your daily limit");
         }
+        if (user.getLimits().getTransactionLimit() < amount) {
+            throw new InsufficientResourcesException("You have exceeded your transaction limit");
+        }
+    }
 
-        if (!account.isActive()) {
-            throw new IllegalArgumentException("You cannot deposit/withdraw money to an inactive account");
-        }
-
-        if (account.getType() == AccountType.SAVING) {
-            throw new IllegalArgumentException("You cannot deposit/withdraw money to a savings account");
-        }
+    public boolean checkAccountExist(Account account) {
+        return account != null;
     }
 
     /**
@@ -144,8 +146,8 @@ public class TransactionService {
      * @throws InsufficientResourcesException    If not enough money is present on the sender account.
      * @throws UserNotTheOwnerOfAccountException If the user is not the owner of the transaction.
      */
-    public Transaction processTransaction(TransactionRequest request) throws AccountNotFoundException, InsufficientResourcesException, UserNotTheOwnerOfAccountException, javax.naming.AuthenticationException {
-        // Get performing user
+    public Transaction processTransaction(TransactionRequest request) throws AccountNotFoundException, InsufficientResourcesException, UserNotTheOwnerOfAccountException {
+        // Get user
         User user = null;
         if (userRepository.findUserByUsername(userService.getBearerUsername()).isPresent()) {
             user = userRepository.findUserByUsername(userService.getBearerUsername()).get();
@@ -154,39 +156,32 @@ public class TransactionService {
         // Check if accounts exists and get the corresponding accounts of the given IBANs
         Account accountSender = accountService.getAccountByIBAN(request.sender_iban());
         Account accountReceiver = accountService.getAccountByIBAN(request.receiver_iban());
-
-        if (accountSender == null) {
-            throw new AccountNotFoundException("Account with IBAN (" + request.sender_iban() + ") not found.");
-        }
-        if (accountReceiver == null) {
-            throw new AccountNotFoundException("Account with IBAN (" + request.receiver_iban() + ") not found.");
-        }
-
         double amount = request.amount();
 
-        // Perform all requirements checks
-        checkUserAuthorization(user, accountSender);
-        checkAccountStatus(accountSender, "sender");
-        checkAccountStatus(accountReceiver, "receiver");
-        checkSameAccount(accountSender, accountReceiver);
-        checkSavingAccountOwnership(user, accountSender, accountReceiver);
-        checkUserLimits(accountSender, amount);
+        // Check all requirements
+        if (!isUserAuthorizedForTransaction(user, accountSender)) {
+            throw new UserNotTheOwnerOfAccountException("You are not authorized to perform this transaction.");
+        } else if (!accountSender.isActive()) {
+            throw new IllegalArgumentException("The sender account is currently inactive and can't transfer money.");
+        } else if (!accountReceiver.isActive()) {
+            throw new IllegalArgumentException("The receiver account is currently inactive and can't receive money.");
+        } else if (Objects.equals(accountSender.getIBAN(), accountReceiver.getIBAN())) {
+            throw new IllegalArgumentException("You can't send money to the same account.");
+        } else if (accountSender.getType() == AccountType.SAVING || accountReceiver.getType() == AccountType.SAVING) {
+            if (accountSender.getUser() != user || accountReceiver.getUser() != user) {
+                throw new UserNotTheOwnerOfAccountException("For a transaction from/to a saving account, " +
+                        "both accounts need to belong to you.");
+            }
+        } else if (!checkAccountBalance(accountSender, amount)) {
+            throw new InsufficientResourcesException("Insufficient funds to create the transaction.");
+        }
+
+        // TODO : Check if value of transactions that day >= daily transaction value limit
+        // TODO : Check if Transaction Value > Transaction Limit
+        // TODO : Check for currency type and map the string to CurrencyType
 
         // If all requirements have been met, create transaction
-        return transferMoney(user, accountSender, accountReceiver, accountSender.getCurrencyType(), amount, request.description());
-    }
-
-    /**
-     * Checks if user is authorized for the transaction.
-     *
-     * @param user    The user to check.
-     * @param account The account of the user.
-     * @throws UserNotTheOwnerOfAccountException Exception thrown when not authorized.
-     */
-    private void checkUserAuthorization(User user, Account account) throws UserNotTheOwnerOfAccountException {
-        if (!isUserAuthorizedForTransaction(user, account)) {
-            throw new UserNotTheOwnerOfAccountException("You are not authorized to perform this transaction.");
-        }
+        return transferMoney(user, accountSender, accountReceiver, CurrencyType.EURO, amount, request.description());
     }
 
     /**
@@ -197,69 +192,9 @@ public class TransactionService {
      * @return Returns a boolean if the user is authorized.
      */
     private boolean isUserAuthorizedForTransaction(User user, Account account) {
-        Role role = userService.getBearerUserRole();
-        if (role == Role.USER) {
+        if (userService.getBearerUserRole() == Role.USER) {
             return Objects.equals(account.getUser(), user);
-        } else return role == Role.EMPLOYEE || role == Role.ADMIN;
-    }
-
-    /**
-     * Checks if the account is active.
-     *
-     * @param account     The account to check.
-     * @param accountType The account type to message back (Only used for the message).
-     */
-    private void checkAccountStatus(Account account, String accountType) {
-        if (!account.isActive()) {
-            throw new IllegalArgumentException("The " + accountType + " account is currently inactive and can't transfer money.");
-        }
-    }
-
-    /**
-     * Check if sender and receiver account are the same.
-     *
-     * @param accountSender   // The sender account to check.
-     * @param accountReceiver // The receiver account to check.
-     */
-    private void checkSameAccount(Account accountSender, Account accountReceiver) {
-        if (Objects.equals(accountSender.getIBAN(), accountReceiver.getIBAN())) {
-            throw new IllegalArgumentException("You can't send money to the same account.");
-        }
-    }
-
-    /**
-     * Checks if both accounts belong to the user when an account is of the type SAVING.
-     *
-     * @param user            The user of the accounts to check.
-     * @param accountSender   The sender account to check.
-     * @param accountReceiver The receiver account to check.
-     * @throws UserNotTheOwnerOfAccountException Exception if the user is not the owner of the account.
-     */
-    private void checkSavingAccountOwnership(User user, Account accountSender, Account accountReceiver) throws UserNotTheOwnerOfAccountException {
-        if (accountSender.getType() == AccountType.SAVING || accountReceiver.getType() == AccountType.SAVING) {
-            if (accountSender.getUser() != user || accountReceiver.getUser() != user) {
-                throw new UserNotTheOwnerOfAccountException("For a transaction from/to a saving account, both accounts need to belong to you.");
-            }
-        }
-    }
-
-    /**
-     * Checks the account holder's limits.
-     *
-     * @param accountSender The account to check.
-     * @param amount        The amount of the transaction.
-     * @throws javax.naming.AuthenticationException Exception if user is not authenticated.
-     */
-    private void checkUserLimits(Account accountSender, double amount) throws javax.naming.AuthenticationException {
-        Limits limits = this.userLimitsService.getUserLimits(accountSender.getUser().getId());
-
-        if (amount > limits.getTransactionLimit()) {
-            throw new IllegalArgumentException("Amount exceeds the transaction limit.");
-        } else if (amount > limits.getRemainingDailyTransactionLimit()) {
-            throw new IllegalArgumentException("Amount exceeds remaining daily transaction limit.");
-        } else if (accountSender.getBalance() - amount < accountSender.getAbsoluteLimit()) {
-            throw new IllegalArgumentException("Insufficient funds, transaction exceeds the absolute limit.");
-        }
+        } else return userService.getBearerUserRole() == Role.EMPLOYEE;
     }
 
     /**
@@ -290,11 +225,10 @@ public class TransactionService {
         return transaction;
     }
 
-    /**
-     * @param account The account to update.
-     * @param amount The amount to update the balance with.
-     * @param isDeposit If the amount is a deposit or withdraw (or not).
-     */
+    public boolean checkAccountBalance(Account account, double amount) {
+        return account.getBalance() >= amount;
+    }
+
     public void updateAccountBalance(Account account, double amount, boolean isDeposit) {
         // If deposited, add amount to balance, else subtract amount from balance
         if (isDeposit) {
@@ -322,13 +256,8 @@ public class TransactionService {
         double maxAmount = request.maxAmount().orElse(Double.MAX_VALUE);
         LocalDateTime startDateTime = request.startDate().orElse(EARLIEST_TIME);
         LocalDateTime endDateTime = request.endDate().orElse(LocalDateTime.now());
-        int transactionID = request.transactionID().orElse(0);
         String ibanSender = request.ibanSender().orElse("");
         String ibanReceiver = request.ibanReceiver().orElse("");
-        TransactionType transactionType = null;
-        if (request.transactionType().isPresent()) {
-            transactionType = mapTransactionTypeToString(request.transactionType().get());
-        }
 
         // Get users by ID
         User userSender = null;
@@ -360,23 +289,8 @@ public class TransactionService {
         }
 
         return transactionRepository.findTransactions(
-                minAmount, maxAmount, startDateTime, endDateTime, transactionID,
-                ibanSender, ibanReceiver, user, userSender, userReceiver, transactionType,
+                minAmount, maxAmount, startDateTime, endDateTime,
+                ibanSender, ibanReceiver, user, userSender, userReceiver,
                 pageable).getContent();
-    }
-
-    /**
-     * @param transactionType The transaction type to map.
-     * @return Returns a TransactionType.
-     */
-    public TransactionType mapTransactionTypeToString(String transactionType) {
-        switch (transactionType.toUpperCase()) {
-            case "DEPOSIT":
-                return TransactionType.DEPOSIT;
-            case "WITHDRAWAL":
-                return TransactionType.WITHDRAWAL;
-            default:
-                return TransactionType.TRANSACTION;
-        }
     }
 }

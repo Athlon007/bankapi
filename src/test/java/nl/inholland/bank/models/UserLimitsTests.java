@@ -6,6 +6,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
+@SpringBootTest
 class UserLimitsTests {
     private Limits limits;
 
@@ -14,6 +15,16 @@ class UserLimitsTests {
         limits = new Limits();
         limits.setTransactionLimit(10000);
         limits.setDailyTransactionLimit(1000);
+        limits.setAbsoluteLimit(0);
+    }
+
+    @Test
+    void settingAbsoluteLimitAbove0ThrowsIllegalArgumentException() {
+        Exception exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            limits.setAbsoluteLimit(1000);
+        });
+
+        Assertions.assertEquals("Absolute limit cannot be higher than 0", exception.getMessage());
     }
 
     @Test
@@ -45,23 +56,5 @@ class UserLimitsTests {
         User user = new User();
         limits.setUser(user);
         Assertions.assertEquals(user, limits.getUser());
-    }
-
-    @Test
-    void getSetId() {
-        limits.setId(1);
-        Assertions.assertEquals(1, limits.getId());
-    }
-
-    @Test
-    void getSetTransactionLimit() {
-        limits.setTransactionLimit(1);
-        Assertions.assertEquals(1, limits.getTransactionLimit());
-    }
-
-    @Test
-    void getSetDailyTransactionLimit() {
-        limits.setDailyTransactionLimit(1);
-        Assertions.assertEquals(1, limits.getDailyTransactionLimit());
     }
 }

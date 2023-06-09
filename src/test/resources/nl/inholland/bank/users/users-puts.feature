@@ -52,7 +52,7 @@ Feature: PUT requests to User endpoint
       Given I have a valid login credentials
       And I call the application login endpoint
       And I receive a token
-      And I update user with id "3" with username "client", first name "John", last name "Doe", email "office@inhollandbank.nl", password "Password123!", bsn "318419403", phone number "0612345678" and birth-date "2000-09-08"
+      And I update user with id "3" with username "client", first name "John", last name "Doe", email "admin@example.com", password "Password123!", bsn "318419403", phone number "0612345678" and birth-date "2000-09-08"
       Then I get HTTP status 400
     
   Scenario: Updating an admin as an employee should return 401

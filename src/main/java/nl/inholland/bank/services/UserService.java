@@ -170,7 +170,6 @@ public class UserService {
         LocalDate dateOfBirth = LocalDate.parse(userRequest.getBirth_date(), DateTimeFormatter.ofPattern("yyyy-MM-dd"));
         user.setDateOfBirth(dateOfBirth);
         user.setUsername(userRequest.getUsername());
-        user.setPassword(userRequest.getPassword());
         user.setPassword(bCryptPasswordEncoder.encode(userRequest.getPassword()));
         user.setRole(Role.USER);
         if (userRequest instanceof UserForAdminRequest userForAdminRequest) {
@@ -275,6 +274,9 @@ public class UserService {
             user.setPassword(bCryptPasswordEncoder.encode(userRequest.getPassword()));
         }
         if (userRequest instanceof UserForAdminRequest userForAdminRequest) {
+            if (getBearerUserRole() != Role.ADMIN) {
+                throw new AuthenticationException("You are not authorized to change the role of a user.");
+            }
             user.setRole(mapStringToRole((userForAdminRequest.getRole())));
         }
         user.setActive(true); // Reactivate user if it was deactivated.
@@ -286,17 +288,8 @@ public class UserService {
     public void deleteUser(int id) throws AuthenticationException, OperationNotAllowedException {
         User user = userRepository.findById(id).orElseThrow(()-> new ObjectNotFoundException(id, "User not found"));
 
-        String currentUserName = getBearerUsername();
-        Role currentUserRole = getBearerUserRole();
-
-        if (currentUserRole != Role.ADMIN && user.getRole() == Role.ADMIN) {
-            throw new AuthenticationException("You are not authorized to delete admins as non-admin user.");
-        }
-
-        // Users can only delete their own account.
-        // Employees can delete all accounts, except for admins.
-        if (currentUserRole == Role.USER && !user.getUsername().equals(currentUserName)) {
-            throw new AuthenticationException("You are not authorized to delete this user.");
+        if (getBearerUserRole() != Role.ADMIN && user.getRole() == Role.ADMIN) {
+            throw new AuthenticationException("You are not authorized to delete a user.");
         }
 
         // Check if user has savings or checking accounts.
@@ -318,6 +311,18 @@ public class UserService {
             user.setActive(false);
             userRepository.save(user);
             return;
+        }
+
+        String currentUserName = getBearerUsername();
+        Role currentUserRole = getBearerUserRole();
+
+        // Users can only delete their own account.
+        // Employees can delete all accounts, except for admins.
+        if (
+                currentUserRole == Role.USER && !user.getUsername().equals(currentUserName)
+                || currentUserRole == Role.EMPLOYEE && user.getRole() == Role.ADMIN
+        ) {
+            throw new AuthenticationException("You are not authorized to delete this user.");
         }
 
         userRepository.delete(user);

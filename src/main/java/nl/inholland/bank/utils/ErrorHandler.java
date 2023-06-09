@@ -15,28 +15,30 @@ import org.springframework.web.server.MethodNotAllowedException;
 
 import javax.naming.AuthenticationException;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 @RestControllerAdvice
 public class ErrorHandler {
-   public static final String LOG_FILE_TEMPLATE = "log/error-%s.log";
+   private final String LOG_FILE_TEMPLATE = "log/error-%s.log";
 
-    public void writeToFile(Exception e) {
+    private void writeToFile(Exception e) {
         // Create directory if it doesn't exist.
         String logDir = System.getProperty("user.dir") + "/log";
         new java.io.File(logDir).mkdir();
 
         String logFile = String.format(LOG_FILE_TEMPLATE, LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH.mm.ss.SSS")));
-        try (FileWriter fileWriter = new FileWriter(logFile, true)) {
+        try {
+            FileWriter fileWriter = new FileWriter(logFile, true);
             PrintWriter printWriter = new PrintWriter(fileWriter);
             e.printStackTrace(printWriter);
             printWriter.close();
 
             String fullPath = System.getProperty("user.dir") + "/" + logFile;
             System.out.println("Error written to file " + fullPath);
-        } catch (Exception ex) {
+        } catch (IOException ex) {
             System.out.println("Error writing to file " + logFile + ": " + ex.getMessage());
         }
     }
@@ -106,7 +108,7 @@ public class ErrorHandler {
     @ResponseStatus(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
     public String handleHttpMediaTypeNotSupportedException(HttpMediaTypeNotSupportedException e) {
         // Media type is not supported.
-        String mediaType = e.getContentType() == null ? "null" : e.getContentType().toString();
+        String mediaType = e.getContentType().getType();
         return "{\"error_message\": \"Media type of type: " + mediaType + "\"}";
     }
 
