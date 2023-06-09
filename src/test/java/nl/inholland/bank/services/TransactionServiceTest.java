@@ -66,7 +66,7 @@ class TransactionServiceTest {
                 LocalDate.of(1990, 1, 1),
                 "billy",
                 "P@ssw0rd",
-                Role.USER
+                Role.CUSTOMER
         );
         currentAccount = new Account(
                 user,
@@ -93,7 +93,7 @@ class TransactionServiceTest {
                 LocalDate.of(1992, 1, 1),
                 "berta",
                 "P@ssw0rd",
-                Role.USER
+                Role.CUSTOMER
         );
         currentAccount2 = new Account(
                 user2,
@@ -238,7 +238,7 @@ class TransactionServiceTest {
     @Test
     void checkUserAuthorization_ShouldThrowExceptionWhenUserIsNotAuthorized() {
         User user = this.user;
-        user.setRole(Role.USER);
+        user.setRole(Role.CUSTOMER);
         Account account = currentAccount;
         account.setUser(user);
 
@@ -254,7 +254,7 @@ class TransactionServiceTest {
     @Test
     void isUserAuthorizedForTransaction_ShouldReturnTrueForMatchingUserAndUserRoleIsUser() {
         User user = this.user;
-        user.setRole(Role.USER); // Set the user role to USER
+        user.setRole(Role.CUSTOMER); // Set the user role to USER
         Account account = currentAccount;
         account.setUser(user);
 
@@ -291,7 +291,7 @@ class TransactionServiceTest {
         Account account = currentAccount;
         account.setUser(user2); // Different user object
 
-        user.setRole(Role.USER); // Set the user role to USER
+        user.setRole(Role.CUSTOMER); // Set the user role to USER
 
         // Act
         boolean isAuthorized = transactionService.isUserAuthorizedForTransaction(user, account);
