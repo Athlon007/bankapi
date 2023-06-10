@@ -759,16 +759,14 @@ class TransactionServiceTest {
         limits.setTransactionLimit(500.0);
         limits.setRemainingDailyTransactionLimit(1000.0);
 
-
-        when(userService.getBearerUsername()).thenReturn("billy");
-        when(userRepository.findUserByUsername("billy")).thenReturn(Optional.of(user));
-        when(accountService.getAccountByIBAN("NL10INHO6628932884")).thenReturn(accountReceiver);
+        Mockito.when(userService.getBearerUsername()).thenReturn("billy");
+        Mockito.when(userRepository.findUserByUsername("billy")).thenReturn(Optional.of(user));
+        Mockito.when(accountService.getAccountByIBAN("NL10INHO6628932884")).thenReturn(accountReceiver);
         Mockito.when(userLimitsService.getUserLimits(this.user.getId())).thenReturn(limits);
 
         transactionService.withdrawMoney(depositRequest);
 
         assertEquals(650, accountReceiver.getBalance());
-
     }
 
     @Test
@@ -787,5 +785,4 @@ class TransactionServiceTest {
             );
         });
     }
-
 }
