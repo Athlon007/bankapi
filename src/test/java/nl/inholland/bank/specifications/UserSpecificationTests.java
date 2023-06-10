@@ -1,4 +1,4 @@
-package nl.inholland.bank.spcifications;
+package nl.inholland.bank.specifications;
 
 import nl.inholland.bank.models.User;
 import nl.inholland.bank.models.specifications.UserSpecifications;
