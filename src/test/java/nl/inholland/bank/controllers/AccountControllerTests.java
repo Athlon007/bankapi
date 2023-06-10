@@ -62,7 +62,7 @@ class AccountControllerTests {
 
     User user3 = new User();
 
-    private ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper = new ObjectMapper();
 
 
     @BeforeEach

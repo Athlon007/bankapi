@@ -23,8 +23,8 @@ import java.util.Optional;
 @Import(ApiTestConfiguration.class)
 @AutoConfigureMockMvc(addFilters = false)
 class UserRepositoryTests {
-    private UserRepository userRepository = new UserRepository() {
-        private User user = new User() {
+    private final UserRepository userRepository = new UserRepository() {
+        private final User user = new User() {
             {
                 setId(1);
                 setUsername("user");

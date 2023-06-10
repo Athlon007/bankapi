@@ -29,7 +29,7 @@ import java.util.function.Function;
 class AccountRepositoryTests {
 
 
-    private AccountRepository accountRepository = new AccountRepository() {
+    private final AccountRepository accountRepository = new AccountRepository() {
         @Override
         public List<Account> findAllByUser(User user) {
             return null;

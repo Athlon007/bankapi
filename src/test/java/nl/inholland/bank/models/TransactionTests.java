@@ -141,7 +141,7 @@ class TransactionTests {
         transaction.setDescription(description);
 
         // Verify the description is set correctly
-        assertEquals("Withdrawn 0,00 null (\'Test description\')", transaction.getDescription());
+        assertEquals("Withdrawn 0,00 null ('Test description')", transaction.getDescription());
     }
 
     @Test

@@ -246,7 +246,7 @@ class TransactionControllerTest {
 //    }
 
     @Test
-    void withdrawMoneyWithUnknownAccountShouldResultInFourOFour() throws Exception, UserNotTheOwnerOfAccountException {
+    void withdrawMoneyWithUnknownAccountShouldResultInFourOFour() throws Exception {
 
         when(transactionService.withdrawMoney(mockBadTransactionRequest)).thenThrow(ObjectNotFoundException.class);
 
@@ -262,7 +262,7 @@ class TransactionControllerTest {
 
 
     @Test
-    void withdrawMoneyWithBadRequestShouldResultInFiveHundred() throws Exception, UserNotTheOwnerOfAccountException {
+    void withdrawMoneyWithBadRequestShouldResultInFiveHundred() throws Exception {
 //
 //
 //        when(transactionService.withdrawMoney(mockBadTransactionRequest)).thenReturn(mockTransaction.get(0));

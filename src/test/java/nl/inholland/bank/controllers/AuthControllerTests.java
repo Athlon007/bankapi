@@ -43,7 +43,7 @@ class AuthControllerTests {
     private User mockUser;
     private RefreshTokenRequest mockRefreshTokenRequest;
 
-    private ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper = new ObjectMapper();
 
     @BeforeEach
     public void setup() {

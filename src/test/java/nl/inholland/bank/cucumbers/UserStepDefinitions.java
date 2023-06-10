@@ -21,7 +21,7 @@ import java.util.List;
 public class UserStepDefinitions extends BaseStepDefinitions {
     public static final String USERS_ENDPOINT = "/users";
 
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @When("I call the application users endpoint")
     public void iCallTheApplicationUsersEndpoint() {

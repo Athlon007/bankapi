@@ -17,7 +17,7 @@ public class AccountStepDefinitions extends BaseStepDefinitions{
 
     public static final String ACCOUNTS_ENDPOINT = "/accounts";
 
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @When("I call the application accounts endpoint with user id {int}")
     public void iCallTheApplicationAccountsEndpointWithUserId(int userId) {

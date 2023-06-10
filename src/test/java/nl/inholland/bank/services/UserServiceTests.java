@@ -64,11 +64,11 @@ class UserServiceTests {
     private Account currentAccount;
     private Account savingAccount;
 
-    private int defaultDailyTransactionLimit = 100;
-    private int defaultTransactionLimit = 1000;
-    private int defaultAbsoluteLimit = 0;
+    private final int defaultDailyTransactionLimit = 100;
+    private final int defaultTransactionLimit = 1000;
+    private final int defaultAbsoluteLimit = 0;
 
-    private int defaultGetAllUsersLimit = 20;
+    private final int defaultGetAllUsersLimit = 20;
 
     @BeforeEach
     void setUp() {

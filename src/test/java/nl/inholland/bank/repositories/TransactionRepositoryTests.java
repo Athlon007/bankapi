@@ -21,8 +21,8 @@ import java.util.function.Function;
 @Import(ApiTestConfiguration.class)
 @AutoConfigureMockMvc(addFilters = false)
 class TransactionRepositoryTests {
-    private TransactionRepository transactionRepository = new TransactionRepository() {
-        Transaction transaction = new Transaction() {
+    private final TransactionRepository transactionRepository = new TransactionRepository() {
+        final Transaction transaction = new Transaction() {
             {
                 setId(1);
                 setTimestamp(LocalDateTime.now());
@@ -36,7 +36,7 @@ class TransactionRepositoryTests {
             }
         };
 
-        Transaction deposit = new Transaction() {
+        final Transaction deposit = new Transaction() {
             {
                 setId(2);
                 setTimestamp(LocalDateTime.now());
@@ -50,7 +50,7 @@ class TransactionRepositoryTests {
             }
         };
 
-        Transaction withdrawal = new Transaction() {
+        final Transaction withdrawal = new Transaction() {
             {
                 setId(3);
                 setTimestamp(LocalDateTime.now());
