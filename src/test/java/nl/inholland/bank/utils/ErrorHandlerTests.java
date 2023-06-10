@@ -1,6 +1,9 @@
 package nl.inholland.bank.utils;
 
 import nl.inholland.bank.configuration.ApiTestConfiguration;
+import nl.inholland.bank.models.exceptions.AccountIsNotActiveException;
+import nl.inholland.bank.models.exceptions.DailyTransactionLimitException;
+import nl.inholland.bank.models.exceptions.UserNotTheOwnerOfAccountException;
 import org.hibernate.ObjectNotFoundException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,8 +21,11 @@ import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import javax.naming.AuthenticationException;
+import javax.security.auth.login.AccountNotFoundException;
 import java.io.File;
 import java.io.FileWriter;
+import java.util.ArrayList;
+import java.util.List;
 
 @ExtendWith(SpringExtension.class)
 @Import(ApiTestConfiguration.class)
@@ -46,6 +52,8 @@ class ErrorHandlerTests {
             Assertions.fail("No methods found in ErrorHandler.");
         }
 
+        List<String> exceptions = new ArrayList<>();
+
         // Check if all custom exceptions are represented in ErrorHandler.
         for (File file : files) {
             String exceptionName = file.getName().replace(".java", "");
@@ -57,8 +65,12 @@ class ErrorHandlerTests {
                 }
             }
             if (!found) {
-                Assertions.fail("Custom exception " + exceptionName + " is not represented in ErrorHandler.");
+                exceptions.add(exceptionName);
             }
+        }
+
+        if (exceptions.size() > 0) {
+            Assertions.fail("Custom exceptions: " + String.join(", ", exceptions) + " are not represented in ErrorHandler.");
         }
     }
 
@@ -121,5 +133,50 @@ class ErrorHandlerTests {
     @Test
     void handleDataIntegrityViolationException() {
         Assertions.assertDoesNotThrow(() -> errorHandler.handleDataIntegrityViolationException(new org.springframework.dao.DataIntegrityViolationException("Test")));
+    }
+
+    @Test
+    void handleAccountNotFoundException() {
+        Assertions.assertDoesNotThrow(() -> errorHandler.handleAccountNotFoundException(new AccountNotFoundException("Test")));
+    }
+
+    @Test
+    void handleUserNotTheOwnerOfAccountException() {
+        Assertions.assertDoesNotThrow(() -> errorHandler.handleUserNotTheOwnerOfAccountException(new UserNotTheOwnerOfAccountException("Test")));
+    }
+
+    @Test
+    void handleAccountIsNotActiveException() {
+        Assertions.assertDoesNotThrow(() -> errorHandler.handleAccountIsNotActiveException(new AccountIsNotActiveException("Test")));
+    }
+
+    @Test
+    void handleDailyTransactionLimitException() {
+        Assertions.assertDoesNotThrow(() -> errorHandler.handleDailyTransactionLimitException(new DailyTransactionLimitException("Test")));
+    }
+
+    @Test
+    void handleSameAccountTransferException() {
+        Assertions.assertDoesNotThrow(() -> errorHandler.handleSameAccountTransferException(new nl.inholland.bank.models.exceptions.SameAccountTransferException("Test")));
+    }
+
+    @Test
+    void handleInactiveAccountException() {
+        Assertions.assertDoesNotThrow(() -> errorHandler.handleInactiveAccountException(new nl.inholland.bank.models.exceptions.InactiveAccountException("Test")));
+    }
+
+    @Test
+    void handleOperationNotAllowedException() {
+        Assertions.assertDoesNotThrow(() -> errorHandler.handleOperationNotAllowedException(new nl.inholland.bank.models.exceptions.OperationNotAllowedException("Test")));
+    }
+
+    @Test
+    void handleInsufficientFundsException() {
+        Assertions.assertDoesNotThrow(() -> errorHandler.handleInsufficientFundsException(new nl.inholland.bank.models.exceptions.InsufficientFundsException("Test")));
+    }
+
+    @Test
+    void handleTransactionLimitException() {
+        Assertions.assertDoesNotThrow(() -> errorHandler.handleTransactionLimitException(new nl.inholland.bank.models.exceptions.TransactionLimitException("Test")));
     }
 }

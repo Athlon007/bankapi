@@ -274,8 +274,8 @@ class TransactionControllerTest {
     }
 
 
-//    @Test
-//    void withdrawMoneyWithBadRequestShouldResultInFiveHundred() throws Exception, UserNotTheOwnerOfAccountException {
+    @Test
+    void withdrawMoneyWithBadRequestShouldResultInFiveHundred() throws Exception, UserNotTheOwnerOfAccountException {
 //
 //
 //        when(transactionService.withdrawMoney(mockBadTransactionRequest)).thenReturn(mockTransaction.get(0));
@@ -294,7 +294,7 @@ class TransactionControllerTest {
 
         MockHttpServletRequestBuilder post = MockMvcRequestBuilders.post("/transactions/withdraw")
                 .contentType("application/json")
-                .content(mapper.writeValueAsString(withdrawDepositRequest));
+                .content(mapper.writeValueAsString(mockWithdrawDepositRequest));
 
         mockMvc.perform(post)
                 .andExpect(MockMvcResultMatchers.status().is(500));
