@@ -1,12 +1,14 @@
 package nl.inholland.bank.models;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+import java.text.DecimalFormat;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Entity
 @Data
@@ -58,12 +60,10 @@ public class Transaction {
         if (amount <= 0) {
             throw new IllegalArgumentException("Amount cannot be negative or zero.");
         }
-
+        if (BigDecimal.valueOf(amount).scale() > 2) {
+            throw new IllegalArgumentException("Amount can not have more than two decimals.");
+        }
         this.amount = amount;
-    }
-
-    public double getAmount() {
-        return Math.round(amount * 100.0) / 100.0;
     }
 
     public void setCurrencyType(CurrencyType currencyType) {
@@ -106,5 +106,24 @@ public class Transaction {
             throw new IllegalArgumentException("Timestamp cannot be in the future.");
         }
         this.timestamp = timestamp;
+    }
+
+    public void setDescription(String description) {
+        String tempDescription = "";
+
+        if (!Objects.equals(description, "")) {
+            tempDescription = " ('" + description + "')";
+        }
+
+        DecimalFormat decimalFormat = new DecimalFormat("#0.00");
+
+        if (this.getTransactionType() == TransactionType.TRANSACTION) {
+            this.description = "Transferred " + decimalFormat.format(this.amount) + " "
+                    + this.currencyType + " to " + this.accountReceiver.getIBAN() + tempDescription;
+        } else if (this.getTransactionType() == TransactionType.DEPOSIT) {
+            this.description = "Deposited " + decimalFormat.format(this.amount) + " " + this.currencyType + tempDescription;
+        } else {
+            this.description = "Withdrawn " + decimalFormat.format(this.amount) + " " + this.currencyType + tempDescription;
+        }
     }
 }

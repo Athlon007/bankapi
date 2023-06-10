@@ -8,11 +8,9 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.ToString;
 import nl.inholland.bank.models.exceptions.OperationNotAllowedException;
-import org.springframework.lang.NonNullFields;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Data
@@ -24,8 +22,8 @@ public class User {
     private int id;
     @NonNull
     private String firstName;
+    @NonNull
     private String lastName;
-    @Column(unique = true)
     @NonNull
     private String email;
     private String bsn;
@@ -151,6 +149,11 @@ public class User {
             throw new IllegalArgumentException("Date of birth cannot be in the future");
         }
 
+        // User must be 18 years or older
+        if (dateOfBirth.plusYears(18).isAfter(LocalDate.now())) {
+            throw new IllegalArgumentException("User must be 18 years or older");
+        }
+
         this.dateOfBirth = dateOfBirth;
     }
 
@@ -160,28 +163,6 @@ public class User {
         }
 
         this.role = role;
-    }
-
-    public void setPassword(String password) {
-        if (password == null || password.length() < 8) {
-            throw new IllegalArgumentException("Password must be at least 8 characters long");
-        }
-
-        // Password cannot have repeating character only (e.g. 'aaaaaaaa')
-        if (password.matches("(.)\\1+")) {
-            throw new IllegalArgumentException("Password cannot have repeating characters only");
-        }
-
-        // Password must adhere to the following rules:
-        // - Must contain at least one digit
-        // - Must contain at least one lowercase character
-        // - Must contain at least one uppercase character
-        // - Must contain at least one special character
-        if (!password.matches("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*()_+={}:;'\",.<>?]).{8,}$")) {
-            throw new IllegalArgumentException("Password must contain at least one digit, one lowercase character, one uppercase character and one special character");
-        }
-
-        this.password = password;
     }
 
     public void setUsername(String username) {
@@ -213,7 +194,7 @@ public class User {
             throw new OperationNotAllowedException("Cannot remove saving account with balance");
         }
 
-        if (savingAccount.getType() == null || savingAccount.getType() != AccountType.SAVING) {
+        if (savingAccount != null && (savingAccount.getType() == null || savingAccount.getType() != AccountType.SAVING)) {
             throw new IllegalArgumentException("Account type must be SAVING");
         }
 
@@ -248,5 +229,19 @@ public class User {
         }
 
         return sum;
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (!(object instanceof User user)) {
+            return false;
+        }
+
+        return user.getId() == this.getId();
+    }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(id);
     }
 }

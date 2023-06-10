@@ -1,20 +1,14 @@
 package nl.inholland.bank;
 
 import nl.inholland.bank.models.*;
-import nl.inholland.bank.repositories.AccountRepository;
-import nl.inholland.bank.repositories.UserRepository;
 import nl.inholland.bank.services.AccountService;
 import nl.inholland.bank.services.TransactionService;
-import nl.inholland.bank.services.UserService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import javax.naming.InsufficientResourcesException;
-import javax.security.auth.login.AccountNotFoundException;
 import java.time.LocalDate;
 
 @SpringBootTest
@@ -48,16 +42,6 @@ public class AccountTests {
 
     }
 
-    /*
-    @Test
-    void balanceCannotBeNegative() {
-        Exception exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            account.setBalance(-1);
-        });
-
-        Assertions.assertEquals("Balance cannot be negative", exception.getMessage());
-    }
-     */
     @Test
     void currencyTypeCannotBeNull() {
         Exception exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {

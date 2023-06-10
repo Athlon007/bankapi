@@ -1,21 +1,16 @@
 package nl.inholland.bank.controllers;
 
-import nl.inholland.bank.models.*;
-import nl.inholland.bank.models.dtos.ExceptionResponse;
+import nl.inholland.bank.models.Transaction;
 import nl.inholland.bank.models.dtos.TransactionDTO.TransactionRequest;
 import nl.inholland.bank.models.dtos.TransactionDTO.TransactionResponse;
 import nl.inholland.bank.models.dtos.TransactionDTO.TransactionSearchRequest;
 import nl.inholland.bank.models.dtos.TransactionDTO.WithdrawDepositRequest;
 import nl.inholland.bank.models.exceptions.UserNotTheOwnerOfAccountException;
 import nl.inholland.bank.services.TransactionService;
-import nl.inholland.bank.services.UserService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 
 import javax.naming.InsufficientResourcesException;
 import javax.security.auth.login.AccountNotFoundException;
@@ -30,37 +25,18 @@ import java.util.Optional;
 @CrossOrigin(origins = "*")
 public class TransactionController {
     private final TransactionService transactionService;
-    private final UserService userService;
 
-    public TransactionController(TransactionService transactionService, UserService userService) {
+    public TransactionController(TransactionService transactionService) {
         this.transactionService = transactionService;
-        this.userService = userService;
     }
 
     @PostMapping("/withdraw")
     public ResponseEntity<Object> withdrawMoney(
-            @RequestBody WithdrawDepositRequest withdrawDepositRequest) {
-        if (userService.getBearerUserRole() == null) {
-            return ResponseEntity.status(401).body(new ExceptionResponse("Unauthorized"));
-        }
-        try {
-            // Call the withdrawal method in the transaction service
+            @RequestBody WithdrawDepositRequest withdrawDepositRequest) throws InsufficientResourcesException, AuthenticationException, javax.naming.AuthenticationException, AccountNotFoundException {
             Transaction transaction = transactionService.withdrawMoney(withdrawDepositRequest);
-
-            // Prepare the response
             TransactionResponse response = buildTransactionResponse(transaction);
 
-            // Return the response
             return ResponseEntity.status(201).body(response);
-        } catch (InsufficientResourcesException e) {
-            return ResponseEntity.status(500).body(new ExceptionResponse(e.getMessage()));
-        } catch (AccountNotFoundException e) {
-            return ResponseEntity.status(404).body(new ExceptionResponse(e.getMessage()));
-        } catch (AuthenticationException | UserNotTheOwnerOfAccountException e) {
-            return ResponseEntity.status(403).body(new ExceptionResponse(e.getMessage()));
-        } catch (javax.naming.AuthenticationException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
@@ -89,7 +65,7 @@ public class TransactionController {
             @RequestParam Optional<Integer> userSenderID,
             @RequestParam Optional<Integer> userReceiverID,
             @RequestParam Optional<String> transactionType
-            ) throws AuthenticationException {
+    ) throws AuthenticationException {
         // Group values
         TransactionSearchRequest request = new TransactionSearchRequest(
                 minAmount, maxAmount, startDate, endDate, transactionID, ibanSender, ibanReceiver,
@@ -110,72 +86,27 @@ public class TransactionController {
 
     @PostMapping("/deposit")
     public ResponseEntity<Object> depositMoney(
-            @RequestBody WithdrawDepositRequest withdrawDepositRequest) {
-        if (userService.getBearerUserRole() == null) {
-            return ResponseEntity.status(401).body(new ExceptionResponse("Unauthorized"));
-        }
-        try {
-            // Call the deposit method in the transaction service
-            Transaction transaction = transactionService.depositMoney(withdrawDepositRequest);
+            @RequestBody WithdrawDepositRequest withdrawDepositRequest) throws AuthenticationException, InsufficientResourcesException, AccountNotFoundException {
+        Transaction transaction = transactionService.depositMoney(withdrawDepositRequest);
+        TransactionResponse response = buildTransactionResponse(transaction);
 
-            // Prepare the response
-            TransactionResponse response = buildTransactionResponse(transaction);
-
-            // Return the response
-            return ResponseEntity.status(201).body(response);
-        } catch (AccountNotFoundException e) {
-            return ResponseEntity.status(404).body(new ExceptionResponse(e.getMessage()));
-        } catch (AuthenticationException e) {
-            return ResponseEntity.status(403).body(new ExceptionResponse(e.getMessage()));
-        } catch (UserNotTheOwnerOfAccountException e) {
-            return ResponseEntity.status(403).body(new ExceptionResponse(e.getMessage()));
-        } catch (InsufficientResourcesException e) {
-            return ResponseEntity.status(500).body(new ExceptionResponse(e.getMessage()));
-        }
+        return ResponseEntity.status(201).body(response);
     }
 
     public TransactionResponse buildTransactionResponse(Transaction transaction) {
-        TransactionResponse response = null;
-        if (transaction.getTransactionType() == TransactionType.WITHDRAWAL) {
-            response = new TransactionResponse(
-                    transaction.getId(),
-                    transaction.getUser().getUsername(),
-                    transaction.getAccountSender().getIBAN(),
-                    null,
-                    transaction.getAmount(),
-                    transaction.getTimestamp(),
-                    "Successfully withdrawn: " + transaction.getAmount() + " " + transaction.getCurrencyType() + " from your account",
-                    TransactionType.WITHDRAWAL,
-                    transaction.getAccountSender().getBalance()
-            );
-        }
-        if (transaction.getTransactionType() == TransactionType.DEPOSIT) {
-            response = new TransactionResponse(
-                    transaction.getId(),
-                    transaction.getUser().getUsername(),
-                    null,
-                    transaction.getAccountReceiver().getIBAN(),
-                    transaction.getAmount(),
-                    transaction.getTimestamp(),
-                    "Successfully deposited: " + transaction.getAmount() + " " + transaction.getCurrencyType() + " into your account",
-                    TransactionType.DEPOSIT,
-                    transaction.getAccountReceiver().getBalance()
-            );
-        }
-        if (transaction.getTransactionType() == TransactionType.TRANSACTION) {
-            response = new TransactionResponse(
-                    transaction.getId(),
-                    transaction.getUser().getUsername(),
-                    transaction.getAccountSender().getIBAN(),
-                    transaction.getAccountReceiver().getIBAN(),
-                    transaction.getAmount(),
-                    transaction.getTimestamp(),
-                    "Successfully transferred: " + transaction.getAmount() + " "
-                            + transaction.getCurrencyType() + " to " + transaction.getAccountReceiver().getIBAN(),
-                    TransactionType.TRANSACTION,
-                    null
-            );
-        }
-        return response;
+        String senderIBAN = transaction.getAccountSender() != null ? transaction.getAccountSender().getIBAN() : null;
+        String receiverIBAN = transaction.getAccountReceiver() != null ? transaction.getAccountReceiver().getIBAN() : null;
+
+        return new TransactionResponse(
+                transaction.getId(),
+                transaction.getUser().getUsername(),
+                senderIBAN,
+                receiverIBAN,
+                transaction.getAmount(),
+                transaction.getCurrencyType(),
+                transaction.getTimestamp(),
+                transaction.getDescription(),
+                transaction.getTransactionType()
+        );
     }
 }

@@ -6,17 +6,18 @@ import nl.inholland.bank.models.dtos.AccountDTO.AccountActiveRequest;
 import nl.inholland.bank.models.dtos.AccountDTO.AccountRequest;
 import nl.inholland.bank.repositories.AccountRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import javax.security.auth.login.AccountNotFoundException;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class AccountService {
     AccountRepository accountRepository;
-
     UserService userService;
-
     @Value("${bankapi.bank.account}")
     private String bankAccountIBAN;
 
@@ -43,21 +44,25 @@ public class AccountService {
     }
 
 
+    /**
+     * Retrieves a single account by IBAN.
+     * @param iban The IBAN to find.
+     * @return Returns an Account.
+     * @throws AccountNotFoundException Exception if no account was found.
+     */
     public Account getAccountByIBAN(String iban) throws AccountNotFoundException {
-        if (IBANGenerator.isValidIBAN(iban)) {
-            return accountRepository.findByIBAN(iban)
+        if (IBANGenerator.isValidIBAN(iban.toUpperCase())) {
+            return accountRepository.findByIBAN(iban.toUpperCase())
                     .orElseThrow(() -> new AccountNotFoundException("Account not found."));
         } else {
             throw new IllegalArgumentException("Invalid IBAN provided.");
         }
     }
 
-
     public Account addAccount(AccountRequest accountRequest) {
-        User user = null;
-        user = userService.getUserById(accountRequest.userId());
-
+        User user = userService.getUserById(accountRequest.userId());
         AccountType accountType = mapAccountTypeToString(accountRequest.accountType());
+
         if (accountType == AccountType.CURRENT) {
             if (doesUserHaveAccountType(user, AccountType.CURRENT)) {
                 throw new IllegalArgumentException("User already has a current account");
@@ -71,11 +76,7 @@ public class AccountService {
             }
         }
 
-        Account account = createAccount(
-                user,
-                accountType,
-                mapCurrencyTypeToString(accountRequest.currencyType())
-        );
+        Account account = createAccount(user, accountType, mapCurrencyTypeToString(accountRequest.currencyType()));
         Account responseAccount = accountRepository.save(account);
         userService.assignAccountToUser(user, responseAccount);
 
@@ -115,19 +116,21 @@ public class AccountService {
         return accountRepository.findById(id).orElseThrow(() -> new AccountNotFoundException("Account not found"));
     }
 
-    public void activateOrDeactivateTheAccount(Account account, AccountActiveRequest accountActiveRequest) {
+    public Account activateOrDeactivateTheAccount(Account account, AccountActiveRequest accountActiveRequest) {
         if (account.getIBAN().equals(bankAccountIBAN)) {
             throw new IllegalArgumentException("Bank account cannot be deactivated");
         }
 
         account.setActive(accountActiveRequest.isActive());
-        accountRepository.save(account);
+        return accountRepository.save(account);
     }
 
-    public void updateAbsoluteLimit(Account account, AccountAbsoluteLimitRequest accountAbsoluteLimitRequest) {
+    public Account updateAbsoluteLimit(Account account, AccountAbsoluteLimitRequest accountAbsoluteLimitRequest) {
+        if (account.getType() == AccountType.SAVING) {
+            throw new IllegalArgumentException("Absolute limit cannot be set for saving account");
+        }
         account.setAbsoluteLimit(accountAbsoluteLimitRequest.absoluteLimit());
-        System.out.println(account.getAbsoluteLimit());
-        accountRepository.save(account);
+        return accountRepository.save(account);
     }
 
     public void addAccountForBank(User user) {
@@ -153,5 +156,31 @@ public class AccountService {
 
         accountRepository.save(account);
         userService.assignAccountToUser(user, account);
+    }
+
+    /**
+     * Retrieves accounts based on given values.
+     * @param page The pagination page.
+     * @param limit The limit to retrieve.
+     * @param iban The IBAN to find.
+     * @param firstName The first name to find.
+     * @param lastName The last name to find.
+     * @param accountTypeString The account type to find.
+     * @return Returns a list of Accounts.
+     */
+    public List<Account> getAccounts(Optional<Integer> page, Optional<Integer> limit,
+                                     Optional<String> iban, Optional<String> firstName,
+                                     Optional<String> lastName, Optional<String> accountTypeString) {
+        // Set up pagination
+        int pageNumber = page.orElse(0);
+        int pageSize = limit.orElse(50);
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+        String IBAN = iban.orElse("");
+        String fName = firstName.orElse("");
+        String lName = lastName.orElse("");
+        AccountType accountType = accountTypeString.map(this::mapAccountTypeToString).orElse(null);
+
+        // Find accounts
+        return accountRepository.findAccounts(IBAN, fName, lName, accountType, pageable).getContent();
     }
 }

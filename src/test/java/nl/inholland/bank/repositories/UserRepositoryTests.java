@@ -23,8 +23,8 @@ import java.util.Optional;
 @Import(ApiTestConfiguration.class)
 @AutoConfigureMockMvc(addFilters = false)
 class UserRepositoryTests {
-    private UserRepository userRepository = new UserRepository() {
-        private User user = new User() {
+    private final UserRepository userRepository = new UserRepository() {
+        private final User user = new User() {
             {
                 setId(1);
                 setUsername("user");
@@ -34,7 +34,7 @@ class UserRepositoryTests {
                 setPhoneNumber("0612345678");
                 setDateOfBirth(LocalDate.of(2000, 9, 8));
                 setPassword("Password1!");
-                setRole(Role.USER);
+                setRole(Role.CUSTOMER);
                 setBsn("123456782");
             }
         };

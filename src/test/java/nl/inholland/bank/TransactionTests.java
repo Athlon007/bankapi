@@ -1,10 +1,7 @@
 package nl.inholland.bank;
 
 import nl.inholland.bank.models.*;
-import nl.inholland.bank.models.dtos.AccountDTO.AccountRequest;
 import nl.inholland.bank.models.dtos.TransactionDTO.WithdrawDepositRequest;
-import nl.inholland.bank.models.dtos.UserDTO.UserRequest;
-import nl.inholland.bank.models.exceptions.UserNotTheOwnerOfAccountException;
 import nl.inholland.bank.services.AccountService;
 import nl.inholland.bank.services.TransactionService;
 import nl.inholland.bank.services.UserService;
@@ -12,12 +9,9 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import javax.naming.AuthenticationException;
-import javax.naming.InsufficientResourcesException;
-import javax.security.auth.login.AccountNotFoundException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -87,25 +81,13 @@ public class TransactionTests {
         Assertions.assertEquals("Timestamp cannot be in the future.", exception.getMessage());
     }
 
-    // Account receiver CAN be null, because it is not always needed.
-    // Example: withdrawal transaction
-    /*
-    @Test
-    void accountReceiverCannotBeNull() {
-        Exception exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            transaction.setAccountReceiver(null);
-        });
-
-        org.junit.jupiter.api.Assertions.assertEquals("Account receiver cannot be null.", exception.getMessage());
-    }
-     */
     @Test
     void userCannotBeNull() {
         Exception exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
             transaction.setUser(null);
         });
 
-        org.junit.jupiter.api.Assertions.assertEquals("User cannot be null.", exception.getMessage());
+        Assertions.assertEquals("User cannot be null.", exception.getMessage());
     }
 
 }

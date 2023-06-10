@@ -1,9 +1,7 @@
 package nl.inholland.bank.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import net.minidev.json.JSONUtil;
 import nl.inholland.bank.configuration.ApiTestConfiguration;
-import nl.inholland.bank.controllers.UserController;
 import nl.inholland.bank.models.*;
 import nl.inholland.bank.models.dtos.UserDTO.UserForAdminRequest;
 import nl.inholland.bank.models.dtos.UserDTO.UserLimitsRequest;
@@ -13,7 +11,6 @@ import nl.inholland.bank.services.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -26,10 +23,8 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-import javax.naming.AuthenticationException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -55,7 +50,7 @@ class UserControllerTests {
     private UserForAdminRequest mockUserForAdminRequest;
     private UserLimitsRequest mockUserLimitsRequest;
 
-    private ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper = new ObjectMapper();
 
     @BeforeEach
     void setUp() {
@@ -68,7 +63,7 @@ class UserControllerTests {
         mockUser.setPhoneNumber("0612345678");
         mockUser.setDateOfBirth(LocalDate.of(2000, 9, 8));
         mockUser.setPassword("Password1!");
-        mockUser.setRole(Role.USER);
+        mockUser.setRole(Role.CUSTOMER);
         mockUser.setBsn("123456782");
 
         Limits limits = new Limits();
@@ -127,7 +122,7 @@ class UserControllerTests {
                         mockUser
                 ));
 
-        Mockito.when(userService.getBearerUserRole()).thenReturn(Role.USER);
+        Mockito.when(userService.getBearerUserRole()).thenReturn(Role.CUSTOMER);
 
         mockMvc.perform(MockMvcRequestBuilders.get("/users"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -152,7 +147,7 @@ class UserControllerTests {
     void gettingUserByIdOfOtherUserAsUserShouldReturnUser() throws Exception {
         Mockito.when(userService.getUserById(1)).thenReturn(mockUser);
         Mockito.when(userService.getBearerUsername()).thenReturn("otherguy");
-        Mockito.when(userService.getBearerUserRole()).thenReturn(Role.USER);
+        Mockito.when(userService.getBearerUserRole()).thenReturn(Role.CUSTOMER);
 
         mockMvc.perform(MockMvcRequestBuilders.get("/users/1"))
                 .andExpect(MockMvcResultMatchers.status().isOk())

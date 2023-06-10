@@ -3,11 +3,11 @@ package nl.inholland.bank.controllers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import nl.inholland.bank.configuration.ApiTestConfiguration;
 import nl.inholland.bank.models.Role;
-import nl.inholland.bank.models.Token;
 import nl.inholland.bank.models.User;
 import nl.inholland.bank.models.dtos.AuthDTO.LoginRequest;
 import nl.inholland.bank.models.dtos.AuthDTO.RefreshTokenRequest;
 import nl.inholland.bank.models.dtos.AuthDTO.jwt;
+import nl.inholland.bank.models.dtos.Token;
 import nl.inholland.bank.services.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,7 +43,7 @@ class AuthControllerTests {
     private User mockUser;
     private RefreshTokenRequest mockRefreshTokenRequest;
 
-    private ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper = new ObjectMapper();
 
     @BeforeEach
     public void setup() {
@@ -61,7 +61,7 @@ class AuthControllerTests {
         mockUser.setPhoneNumber("0612345678");
         mockUser.setDateOfBirth(LocalDate.of(2000, 9, 8));
         mockUser.setPassword("Password1!");
-        mockUser.setRole(Role.USER);
+        mockUser.setRole(Role.CUSTOMER);
         mockUser.setBsn("123456782");
     }
 

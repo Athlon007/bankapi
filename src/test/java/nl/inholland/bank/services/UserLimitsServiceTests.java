@@ -64,7 +64,7 @@ class UserLimitsServiceTests {
         user.setPhoneNumber("0612345678");
         user.setDateOfBirth(LocalDate.of(2000, 9, 8));
         user.setPassword("Password1!");
-        user.setRole(Role.USER);
+        user.setRole(Role.CUSTOMER);
         user.setBsn("123456782");
 
         receiverUser = new User();
@@ -76,7 +76,7 @@ class UserLimitsServiceTests {
         receiverUser.setPhoneNumber("0612345678");
         receiverUser.setDateOfBirth(LocalDate.of(2000, 9, 8));
         receiverUser.setPassword("Password1!");
-        receiverUser.setRole(Role.USER);
+        receiverUser.setRole(Role.CUSTOMER);
         receiverUser.setBsn("123456782");
 
         userWithNoAccount = new User();
@@ -88,7 +88,7 @@ class UserLimitsServiceTests {
         userWithNoAccount.setPhoneNumber("0612345678");
         userWithNoAccount.setDateOfBirth(LocalDate.of(2000, 9, 8));
         userWithNoAccount.setPassword("Password1!");
-        userWithNoAccount.setRole(Role.USER);
+        userWithNoAccount.setRole(Role.CUSTOMER);
         userWithNoAccount.setBsn("123456782");
 
         userAccount = new Account();
@@ -170,7 +170,7 @@ class UserLimitsServiceTests {
         Mockito.when(transactionRepository.findAllByTimestampIsAfterAndUserId(Mockito.any(), Mockito.anyInt())).thenReturn(java.util.List.of(sendTransaction, receiveTransaction, withdrawal, deposit));
 
         Mockito.when(userRepository.findById(Mockito.anyInt())).thenReturn(java.util.Optional.of(user));
-        Mockito.when(mockJwtTokenProvider.getRole()).thenReturn(Role.USER);
+        Mockito.when(mockJwtTokenProvider.getRole()).thenReturn(Role.CUSTOMER);
         Mockito.when(mockJwtTokenProvider.getUsername()).thenReturn("user");
 
         Assertions.assertDoesNotThrow(() -> userLimitsService.getUserLimits(1));
@@ -182,7 +182,7 @@ class UserLimitsServiceTests {
         Mockito.when(transactionRepository.findAllByTimestampIsAfterAndUserId(Mockito.any(), Mockito.anyInt())).thenReturn(java.util.List.of(sendTransaction, receiveTransaction, withdrawal, deposit));
 
         Mockito.when(userRepository.findById(Mockito.anyInt())).thenReturn(java.util.Optional.of(user));
-        Mockito.when(mockJwtTokenProvider.getRole()).thenReturn(Role.USER);
+        Mockito.when(mockJwtTokenProvider.getRole()).thenReturn(Role.CUSTOMER);
         Mockito.when(mockJwtTokenProvider.getUsername()).thenReturn("user2");
 
         Assertions.assertThrows(AuthenticationException.class, () -> userLimitsService.getUserLimits(1));
@@ -220,11 +220,54 @@ class UserLimitsServiceTests {
     @Test
     void updatingUserLimitsAsUserThrowsAuthenticationException() {
         Mockito.when(userRepository.findById(Mockito.anyInt())).thenReturn(java.util.Optional.of(userWithNoAccount));
-        Mockito.when(mockJwtTokenProvider.getRole()).thenReturn(Role.USER);
+        Mockito.when(mockJwtTokenProvider.getRole()).thenReturn(Role.CUSTOMER);
         Mockito.when(mockJwtTokenProvider.getUsername()).thenReturn("user");
 
         Mockito.when(userLimitsRepository.findFirstByUserId(Mockito.anyInt())).thenReturn(limits);
 
         Assertions.assertThrows(AuthenticationException.class, () -> userLimitsService.updateUserLimits(1, userLimitsRequest));
+    }
+
+    @Test
+    void accountReceiverIsSaving() {
+        Account receiver = new Account();
+        receiver.setType(AccountType.SAVING);
+
+        sendTransaction.setAccountReceiver(receiver);
+
+        List<Transaction> transactions = List.of(
+               sendTransaction
+        );
+
+        Assertions.assertEquals(1000, userLimitsService.calculateRemainingDailyLimit(limits, transactions, 1));
+    }
+
+    @Test
+    void accountSenderIsSaving() {
+        Account receiver = new Account();
+        receiver.setType(AccountType.SAVING);
+
+        sendTransaction.setAccountSender(receiver);
+
+        List<Transaction> transactions = List.of(
+                sendTransaction
+        );
+
+        Assertions.assertEquals(1000, userLimitsService.calculateRemainingDailyLimit(limits, transactions, 1));
+    }
+
+    @Test
+    void ignoreDepositsToCurrentAccount() {
+
+        receiverAccount.setUser(receiverUser);
+
+        sendTransaction.setAccountSender(receiverAccount);
+        sendTransaction.setAccountReceiver(userAccount);
+
+        List<Transaction> transactions = List.of(
+                sendTransaction
+        );
+
+        Assertions.assertEquals(1000, userLimitsService.calculateRemainingDailyLimit(limits, transactions, 1));
     }
 }

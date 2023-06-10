@@ -2,10 +2,11 @@ package nl.inholland.bank.utils;
 
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.SignatureAlgorithm;
-import jakarta.xml.bind.DatatypeConverter;
 import nl.inholland.bank.configuration.ApiTestConfiguration;
 import nl.inholland.bank.models.Role;
-import nl.inholland.bank.models.Token;
+import nl.inholland.bank.models.User;
+import nl.inholland.bank.models.dtos.Token;
+import nl.inholland.bank.repositories.UserRepository;
 import nl.inholland.bank.services.RefreshTokenBlacklistService;
 import nl.inholland.bank.services.UserDetailsService;
 import org.junit.jupiter.api.Assertions;
@@ -13,7 +14,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
@@ -28,12 +28,13 @@ import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.naming.AuthenticationException;
 import java.lang.reflect.Field;
-import java.security.*;
+import java.security.Key;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Random;
+import java.util.Optional;
 
 @ExtendWith(SpringExtension.class)
 @Import(ApiTestConfiguration.class)
@@ -50,11 +51,14 @@ class JwtTokenProviderTests {
     @MockBean
     private RefreshTokenBlacklistService refreshTokenBlacklistService;
 
+    @MockBean
+    private UserRepository userRepository;
+
     private UserDetails userDetails;
 
     @BeforeEach
     public void setUp() {
-        jwtTokenProvider = new JwtTokenProvider(userDetailsService, jwtKeyProvider, refreshTokenBlacklistService);
+        jwtTokenProvider = new JwtTokenProvider(userDetailsService, jwtKeyProvider, refreshTokenBlacklistService, userRepository);
         String key = "random_secret_key";
         Mockito.when(jwtKeyProvider.getPrivateKey()).thenReturn(getPasswordBasedKey(SignatureAlgorithm.HS256.getJcaName(), 256, key.toCharArray()));
 
@@ -80,7 +84,7 @@ class JwtTokenProviderTests {
         userDetails = new UserDetails() {
             @Override
             public Collection<? extends GrantedAuthority> getAuthorities() {
-                return Collections.singleton(Role.USER);
+                return Collections.singleton(Role.CUSTOMER);
             }
 
             @Override
@@ -131,7 +135,7 @@ class JwtTokenProviderTests {
 
     @Test
     void createTokenShouldReturnToken() {
-        Token token = jwtTokenProvider.createToken("username", Role.USER);
+        Token token = jwtTokenProvider.createToken("username", Role.CUSTOMER);
         Assertions.assertNotNull(token);
     }
 
@@ -145,7 +149,7 @@ class JwtTokenProviderTests {
     void getAuthenticationShouldReturnAuthentication() {
         Mockito.when(userDetailsService.loadUserByUsername("username")).thenReturn(userDetails);
 
-        Token token = jwtTokenProvider.createToken("username", Role.USER);
+        Token token = jwtTokenProvider.createToken("username", Role.CUSTOMER);
         Authentication authentication = jwtTokenProvider.getAuthentication(token.jwt());
         Assertions.assertNotNull(authentication);
     }
@@ -154,7 +158,7 @@ class JwtTokenProviderTests {
     void getAuthenticationForExpiredTokenShouldThrowRuntimeException() {
         Mockito.when(userDetailsService.loadUserByUsername("username")).thenReturn(userDetails);
 
-        Token token = jwtTokenProvider.createToken("username", Role.USER);
+        Token token = jwtTokenProvider.createToken("username", Role.CUSTOMER);
         try {
             Thread.sleep(3000);
         } catch (InterruptedException e) {
@@ -190,7 +194,7 @@ class JwtTokenProviderTests {
 
     @Test
     void getUsernameReturnsUsername() {
-        String token = jwtTokenProvider.createToken("username", Role.USER).jwt();
+        String token = jwtTokenProvider.createToken("username", Role.CUSTOMER).jwt();
         Mockito.when(userDetailsService.loadUserByUsername("username")).thenReturn(userDetails);
         jwtTokenProvider.getAuthentication(token);
         String username = jwtTokenProvider.getUsername();
@@ -204,12 +208,15 @@ class JwtTokenProviderTests {
     }
 
     @Test
-    void getRuleReturnsRole() {
-        String token = jwtTokenProvider.createToken("username", Role.USER).jwt();
+    void getRoleReturnsRole() {
+        String token = jwtTokenProvider.createToken("username", Role.CUSTOMER).jwt();
         Mockito.when(userDetailsService.loadUserByUsername("username")).thenReturn(userDetails);
+        User user = new User();
+        user.setRole(Role.CUSTOMER);
+        Mockito.when(userRepository.findUserByUsername("username")).thenReturn(Optional.of(user));
         jwtTokenProvider.getAuthentication(token);
         Role role = jwtTokenProvider.getRole();
-        Assertions.assertEquals(Role.USER, role);
+        Assertions.assertEquals(Role.CUSTOMER, role);
     }
 
     @Test

@@ -14,6 +14,8 @@ import org.mockito.Mockito;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import javax.security.auth.login.AccountNotFoundException;
@@ -22,6 +24,9 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 
 @ExtendWith(SpringExtension.class)
 @Import(ApiTestConfiguration.class)
@@ -60,7 +65,7 @@ class AccountServiceTests {
         user.setPhoneNumber("0612345678");
         user.setDateOfBirth(LocalDate.of(2000, 9, 8));
         user.setPassword("Password1!");
-        user.setRole(Role.USER);
+        user.setRole(Role.CUSTOMER);
         user.setBsn("123456782");
 
         account = new Account();
@@ -112,7 +117,7 @@ class AccountServiceTests {
     void testAddAccount() {
         // Set up the mock objects and data
         Mockito.when(userService.getUserById(accountRequest.userId())).thenReturn(user);
-        Mockito.when(accountRepository.save(Mockito.any(Account.class))).thenReturn(account);
+        Mockito.when(accountRepository.save(any(Account.class))).thenReturn(account);
 
         // Call the addAccount method
         Account createdAccount = accountService.addAccount(accountRequest);
@@ -121,15 +126,11 @@ class AccountServiceTests {
         Mockito.verify(userService, Mockito.times(1)).getUserById(accountRequest.userId());
 
         // Verify that the accountRepository.save method was called with any Account object
-        Mockito.verify(accountRepository, Mockito.times(1)).save(Mockito.any(Account.class));
+        Mockito.verify(accountRepository, Mockito.times(1)).save(any(Account.class));
 
         // Assert that the returned account matches the mock account
         Assertions.assertEquals(account, createdAccount);
     }
-
-
-
-
 
 
     @Test
@@ -141,7 +142,7 @@ class AccountServiceTests {
         );
 
         Mockito.when(userService.getUserById(accountRequest.userId())).thenReturn(user);
-        Mockito.when(accountRepository.save(Mockito.any(Account.class))).thenReturn(account);
+        Mockito.when(accountRepository.save(any(Account.class))).thenReturn(account);
 
         Assertions.assertThrows(IllegalArgumentException.class, () -> {
             accountService.addAccount(accountRequest);
@@ -157,7 +158,7 @@ class AccountServiceTests {
         );
 
         Mockito.when(userService.getUserById(accountRequest.userId())).thenReturn(user);
-        Mockito.when(accountRepository.save(Mockito.any(Account.class))).thenReturn(account);
+        Mockito.when(accountRepository.save(any(Account.class))).thenReturn(account);
 
         Assertions.assertThrows(IllegalArgumentException.class, () -> {
             accountService.addAccount(accountRequest);
@@ -173,7 +174,7 @@ class AccountServiceTests {
         );
 
         Mockito.when(userService.getUserById(accountRequest.userId())).thenReturn(user);
-        Mockito.when(accountRepository.save(Mockito.any(Account.class))).thenReturn(account);
+        Mockito.when(accountRepository.save(any(Account.class))).thenReturn(account);
 
         Assertions.assertThrows(IllegalArgumentException.class, () -> {
             accountService.addAccount(accountRequest);
@@ -230,7 +231,7 @@ class AccountServiceTests {
         AccountActiveRequest accountActiveRequest = new AccountActiveRequest(true);
 
         //Mocking
-        Mockito.when(accountRepository.save(Mockito.any(Account.class))).thenReturn(account);
+        Mockito.when(accountRepository.save(any(Account.class))).thenReturn(account);
 
         accountService.activateOrDeactivateTheAccount(account, accountActiveRequest);
 
@@ -243,7 +244,7 @@ class AccountServiceTests {
     void testActivateOrDeactivateTheAccountWithInvalidAccountActiveRequest() {
         AccountActiveRequest accountActiveRequest = new AccountActiveRequest(false);
         //Mocking
-        Mockito.when(accountRepository.save(Mockito.any(Account.class))).thenReturn(account);
+        Mockito.when(accountRepository.save(any(Account.class))).thenReturn(account);
         accountService.activateOrDeactivateTheAccount(account, accountActiveRequest);
 
         Assertions.assertEquals(accountActiveRequest.isActive(), account.isActive());
@@ -302,7 +303,7 @@ class AccountServiceTests {
     void assigningBankAccountToNonAdminThrowsIllegalArgument() {
         User user = new User();
         user.setId(1);
-        user.setRole(Role.USER);
+        user.setRole(Role.CUSTOMER);
 
         Mockito.when(accountRepository.findByIBAN(account.getIBAN())).thenReturn(Optional.empty());
 
@@ -323,7 +324,7 @@ class AccountServiceTests {
     @Test
     void updateAbsoluteLimitsShouldWork() {
         AccountAbsoluteLimitRequest accountAbsoluteLimitRequest = new AccountAbsoluteLimitRequest(-10);
-        Mockito.when(accountRepository.save(Mockito.any(Account.class))).thenReturn(account);
+        Mockito.when(accountRepository.save(any(Account.class))).thenReturn(account);
 
         Assertions.assertDoesNotThrow(() -> accountService.updateAbsoluteLimit(account, accountAbsoluteLimitRequest));
     }
@@ -332,8 +333,54 @@ class AccountServiceTests {
     void bankAccountCannotBeDeactivatedException() {
         AccountActiveRequest accountActiveRequest = new AccountActiveRequest(false);
         account.setIBAN("NL01INHO0000000001");
-        Mockito.when(accountRepository.save(Mockito.any(Account.class))).thenReturn(account);
+        Mockito.when(accountRepository.save(any(Account.class))).thenReturn(account);
 
         Assertions.assertThrows(IllegalArgumentException.class, () -> accountService.activateOrDeactivateTheAccount(account, accountActiveRequest));
+    }
+
+    @Test
+    void attemptingToSetCurrentAccountTwiceThrowsIllegalArgumentException() {
+        Mockito.when(accountRepository.findAllByUser(user)).thenReturn(List.of(account));
+        Mockito.when(userService.getUserById(accountRequest.userId())).thenReturn(user);
+
+        Assertions.assertThrows(IllegalArgumentException.class, () -> accountService.addAccount(accountRequest));
+    }
+
+    @Test
+    void attemptingToSetSavingAccountTwiceThrowsIllegalArgumentException() {
+        AccountRequest savingRequest = new AccountRequest("euro", "SAVING", 1);
+        Account savingAccount = new Account();
+        savingAccount.setType(AccountType.SAVING);
+
+        Mockito.when(accountRepository.findAllByUser(user)).thenReturn(List.of(account, savingAccount));
+        Mockito.when(userService.getUserById(savingRequest.userId())).thenReturn(user);
+
+        Assertions.assertThrows(IllegalArgumentException.class, () -> accountService.addAccount(savingRequest));
+    }
+
+    @Test
+    void updateSavingAbsoluteLimitShouldThrowIllegalArgumentException(){
+        AccountAbsoluteLimitRequest accountAbsoluteLimitRequest = new AccountAbsoluteLimitRequest(-10);
+        account.setType(AccountType.SAVING);
+        Mockito.when(accountRepository.save(any(Account.class))).thenReturn(account);
+
+        Assertions.assertThrows(IllegalArgumentException.class, () -> accountService.updateAbsoluteLimit(account, accountAbsoluteLimitRequest));
+    }
+
+    @Test
+    void getAccounts_WithPageAndLimit_ShouldReturnPagedAccounts() {
+        // Arrange
+        Optional<Integer> page = Optional.of(0);
+        Optional<Integer> limit = Optional.of(1);
+        Optional<String> iban = Optional.of("");
+        Optional<String> firstName = Optional.of("");
+        Optional<String> lastName = Optional.of("");
+        Optional<String> accountTypeString = Optional.of("CURRENT");
+
+        List<Account> accounts = new ArrayList<>(); // Create a list of accounts for testing
+        Page<Account> pagedAccounts = new PageImpl<>(accounts); // Create a paged result using the list
+        Mockito.when(accountRepository.findAccounts(anyString(), anyString(), anyString(), any(), any()))
+                .thenReturn(pagedAccounts);
+        Assertions.assertDoesNotThrow(() -> accountService.getAccounts(page, limit, iban, firstName, lastName, accountTypeString));
     }
 }
