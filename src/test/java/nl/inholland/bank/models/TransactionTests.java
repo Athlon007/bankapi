@@ -141,7 +141,7 @@ class TransactionTests {
         transaction.setDescription(description);
 
         // Verify the description is set correctly
-        assertEquals("Withdrawn 0,00 null ('Test description')", transaction.getDescription());
+        assertEquals("Withdrawn 0,00 null (\'Test description\')", transaction.getDescription());
     }
 
     @Test
@@ -158,7 +158,7 @@ class TransactionTests {
         transaction.setDescription(description);
 
         // Verify the description is set correctly
-        assertEquals("Transferred 0,00 null to NL01INHO0000000001 ('Test description')", transaction.getDescription());
+        assertEquals("Transferred 0,00 null to NL01INHO0000000001 (\'Test description\')", transaction.getDescription());
     }
 
     @Test
@@ -175,7 +175,7 @@ class TransactionTests {
         transaction.setDescription(description);
 
         // Verify the description is set correctly
-        assertEquals("Deposited 0,00 null ('Test description')", transaction.getDescription());
+        assertEquals("Deposited 0,00 null (\'Test description\')", transaction.getDescription());
     }
 
     @Test
