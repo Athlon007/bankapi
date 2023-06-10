@@ -762,7 +762,7 @@ class TransactionServiceTest {
         Mockito.when(userService.getBearerUsername()).thenReturn("billy");
         Mockito.when(userRepository.findUserByUsername("billy")).thenReturn(Optional.of(user));
         Mockito.when(accountService.getAccountByIBAN("NL10INHO6628932884")).thenReturn(accountReceiver);
-        Mockito.when(userLimitsService.getUserLimits(this.user.getId())).thenReturn(limits);
+        Mockito.when(userLimitsService.getUserLimits(anyInt())).thenReturn(limits);
 
         transactionService.withdrawMoney(depositRequest);
 
