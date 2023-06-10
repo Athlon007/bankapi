@@ -618,10 +618,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                items:
-                  $ref: "#/components/schemas/TransactionRequest"
+                $ref: "#/components/schemas/TransactionRequest"
       responses:
         "201":
           description: "Transaction successful!"
