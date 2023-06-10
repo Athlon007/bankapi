@@ -284,7 +284,6 @@ class AccountControllerTests {
     void activateAccountAsUserShouldReturnUnauthorized() throws Exception {
         Mockito.when(accountService.getAccountById(account.getId())).thenReturn(account);
         Mockito.when(accountService.activateOrDeactivateTheAccount(account, accountActiveRequest)).thenReturn(account);
-        Mockito.when(userService.getBearerUserRole()).thenReturn(Role.CUSTOMER);
 
         mockMvc.perform(MockMvcRequestBuilders.put("/accounts/1/1")
                         .contentType(MediaType.APPLICATION_JSON)
