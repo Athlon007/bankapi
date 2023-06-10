@@ -290,4 +290,31 @@ class TransactionControllerTest {
 //                .andExpect(MockMvcResultMatchers.status().is(500));
 //    }
 
+        Mockito.when(userService.getBearerUserRole()).thenReturn(Role.ADMIN);
+
+        MockHttpServletRequestBuilder post = MockMvcRequestBuilders.post("/transactions/withdraw")
+                .contentType("application/json")
+                .content(mapper.writeValueAsString(withdrawDepositRequest));
+
+        mockMvc.perform(post)
+                .andExpect(MockMvcResultMatchers.status().is(500));
+    }
+
+
+
+
+
+    /* BROKEN TEST:
+    @Test
+    void buildTransactionResponse() {
+        when(transactionService.withdrawMoney(mockBadTransactionRequest)).thenReturn(mockTransaction.get(0));
+
+        TransactionResponse transactionResponse = transactionController.buildTransactionResponse(mockTransaction.get(0));
+        assertEquals(mockTransaction.get(0).getAmount(), transactionResponse.getAmount());
+        assertEquals(mockTransaction.get(0).getCurrencyType(), transactionResponse.getCurrencyType());
+        assertEquals(mockTransaction.get(0).getTransactionType(), transactionResponse.getTransactionType());
+
+    }
+
+     */
 }
