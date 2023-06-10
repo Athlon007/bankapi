@@ -24,12 +24,12 @@ public interface AccountRepository extends CrudRepository<Account, Integer>, Jpa
     Optional<Account> findByIBAN(String iban);
 
     default Page<Account> findAccounts(
-            String iban, String firstName, String lastName, AccountType accountType, Pageable pageable) {
+            String IBAN, String firstName, String lastName, AccountType accountType, Pageable pageable) {
         Specification<Account> specification = Specification.where(null);
 
-        if (StringUtils.isNotBlank(iban)) {
+        if (StringUtils.isNotBlank(IBAN)) {
             // Find accounts by IBAN
-            specification = specification.and(AccountSpecifications.withIBAN(iban));
+            specification = specification.and(AccountSpecifications.withIBAN(IBAN));
         } else if (StringUtils.isNotBlank(firstName) || StringUtils.isNotBlank(lastName)) {
             // Find accounts by customer name
             specification = specification.and(AccountSpecifications.withCustomerName(firstName, lastName));

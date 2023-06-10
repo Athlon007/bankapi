@@ -105,13 +105,13 @@ public class AccountController {
     public ResponseEntity getAccounts(
             @RequestParam Optional<Integer> page,
             @RequestParam Optional<Integer> limit,
-            @RequestParam Optional<String> iban,
+            @RequestParam Optional<String> IBAN,
             @RequestParam Optional<String> firstName,
             @RequestParam Optional<String> lastName,
             @RequestParam Optional<String> accountType
     ) {
         // Retrieve accounts
-        List<Account> accounts = accountService.getAccounts(page, limit, iban, firstName, lastName, accountType);
+        List<Account> accounts = accountService.getAccounts(page, limit, IBAN, firstName, lastName, accountType);
 
         if (userService.getBearerUserRole() == Role.CUSTOMER) {
             // Convert to client responses
