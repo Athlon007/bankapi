@@ -131,7 +131,7 @@ public class UserService {
         // Declare pageable, so we can limit the results.
         Pageable pageable = PageRequest.of(pageValue, limitValue);
 
-        List<User> users = null;
+        List<User> users;
 
         if (userRole == Role.ADMIN || userRole == Role.EMPLOYEE) {
             users = userRepository.findUsers(pageable, name, hasNoAccount, isActive).getContent();
