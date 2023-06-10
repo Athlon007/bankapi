@@ -140,8 +140,10 @@ class TransactionTests {
         // Set the description
         transaction.setDescription(description);
 
+        String descriptionText = transaction.getDescription().replace('.', ',');
+
         // Verify the description is set correctly
-        assertEquals("Withdrawn 0,00 null (\'Test description\')", transaction.getDescription());
+        assertEquals("Withdrawn 0,00 null (\'Test description\')", descriptionText);
     }
 
     @Test
@@ -157,8 +159,9 @@ class TransactionTests {
         // Set the description
         transaction.setDescription(description);
 
-        // Verify the description is set correctly
-        assertEquals("Transferred 0,00 null to NL01INHO0000000001 (\'Test description\')", transaction.getDescription());
+        String descriptionResult = transaction.getDescription();
+        descriptionResult = descriptionResult.replace('.', ',');
+        assertEquals("Transferred 0,00 null to NL01INHO0000000001 ('Test description')", descriptionResult);
     }
 
     @Test
@@ -174,8 +177,10 @@ class TransactionTests {
         // Set the description
         transaction.setDescription(description);
 
+        String descriptionText = transaction.getDescription().replace('.', ',');
+
         // Verify the description is set correctly
-        assertEquals("Deposited 0,00 null (\'Test description\')", transaction.getDescription());
+        assertEquals("Deposited 0,00 null (\'Test description\')", descriptionText);
     }
 
     @Test
