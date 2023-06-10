@@ -18,6 +18,7 @@ import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import javax.naming.AuthenticationException;
+import javax.security.auth.login.AccountNotFoundException;
 import java.io.File;
 import java.io.FileWriter;
 
@@ -91,5 +92,10 @@ class ErrorHandlerTests {
     @Test
     void handleDataIntegrityViolationException() {
         Assertions.assertDoesNotThrow(() -> errorHandler.handleDataIntegrityViolationException(new org.springframework.dao.DataIntegrityViolationException("Test")));
+    }
+
+    @Test
+    void handleAccountNotFoundException() {
+        Assertions.assertDoesNotThrow(() -> errorHandler.handleAccountNotFoundException(new AccountNotFoundException("Test")));
     }
 }

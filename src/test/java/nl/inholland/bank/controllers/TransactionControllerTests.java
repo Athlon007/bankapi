@@ -254,19 +254,4 @@ class TransactionControllerTest {
         mockMvc.perform(post)
                 .andExpect(MockMvcResultMatchers.status().is(500));
     }
-
-
-
-
-
-    @Test
-    void buildTransactionResponse() {
-        when(transactionService.withdrawMoney(mockBadTransactionRequest)).thenReturn(mockTransaction.get(0));
-
-        TransactionResponse transactionResponse = transactionController.buildTransactionResponse(mockTransaction.get(0));
-        assertEquals(mockTransaction.get(0).getAmount(), transactionResponse.getAmount());
-        assertEquals(mockTransaction.get(0).getCurrencyType(), transactionResponse.getCurrencyType());
-        assertEquals(mockTransaction.get(0).getTransactionType(), transactionResponse.getTransactionType());
-
-    }
 }

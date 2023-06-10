@@ -15,6 +15,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.server.MethodNotAllowedException;
 
 import javax.naming.AuthenticationException;
+import javax.security.auth.login.AccountNotFoundException;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.time.LocalDateTime;
@@ -114,6 +115,13 @@ public class ErrorHandler {
     @ExceptionHandler(DataIntegrityViolationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public String handleDataIntegrityViolationException(DataIntegrityViolationException e) {
+        return "{\"error_message\": \"" + e.getMessage() + "\"}";
+    }
+
+    @ExceptionHandler(AccountNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public String handleAccountNotFoundException(AccountNotFoundException e) {
+        writeToFile(e);
         return "{\"error_message\": \"" + e.getMessage() + "\"}";
     }
 
