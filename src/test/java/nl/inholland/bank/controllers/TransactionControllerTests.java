@@ -41,7 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(TransactionController.class)
 @Import(ApiTestConfiguration.class)
 @AutoConfigureMockMvc(addFilters = false)
-class TransactionControllerTest {
+class TransactionControllerTests {
     @Autowired
     MockMvc mockMvc;
 
