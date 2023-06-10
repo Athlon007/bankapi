@@ -1,6 +1,9 @@
 package nl.inholland.bank.services;
 
-import nl.inholland.bank.models.*;
+import nl.inholland.bank.models.Account;
+import nl.inholland.bank.models.AccountType;
+import nl.inholland.bank.models.Role;
+import nl.inholland.bank.models.User;
 import nl.inholland.bank.models.dtos.AuthDTO.LoginRequest;
 import nl.inholland.bank.models.dtos.AuthDTO.RefreshTokenRequest;
 import nl.inholland.bank.models.dtos.AuthDTO.jwt;
@@ -11,8 +14,6 @@ import nl.inholland.bank.models.exceptions.OperationNotAllowedException;
 import nl.inholland.bank.repositories.AccountRepository;
 import nl.inholland.bank.repositories.UserRepository;
 import nl.inholland.bank.utils.JwtTokenProvider;
-import javax.naming.AuthenticationException;
-
 import org.hibernate.ObjectNotFoundException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -22,6 +23,7 @@ import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import javax.naming.AuthenticationException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;

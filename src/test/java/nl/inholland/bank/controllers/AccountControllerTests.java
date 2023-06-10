@@ -1,10 +1,12 @@
 package nl.inholland.bank.controllers;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import nl.inholland.bank.configuration.ApiTestConfiguration;
 import nl.inholland.bank.models.*;
-import nl.inholland.bank.models.dtos.AccountDTO.*;
+import nl.inholland.bank.models.dtos.AccountDTO.AccountAbsoluteLimitRequest;
+import nl.inholland.bank.models.dtos.AccountDTO.AccountActiveRequest;
+import nl.inholland.bank.models.dtos.AccountDTO.AccountClientResponse;
+import nl.inholland.bank.models.dtos.AccountDTO.AccountRequest;
 import nl.inholland.bank.services.AccountService;
 import nl.inholland.bank.services.UserService;
 import org.junit.jupiter.api.Assertions;
@@ -29,10 +31,6 @@ import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 @ExtendWith(SpringExtension.class)
 @WebMvcTest(AccountController.class)

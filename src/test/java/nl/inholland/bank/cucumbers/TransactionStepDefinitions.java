@@ -3,7 +3,6 @@ package nl.inholland.bank.cucumbers;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.When;
 import nl.inholland.bank.models.CurrencyType;
-import nl.inholland.bank.models.TransactionType;
 import nl.inholland.bank.models.dtos.TransactionDTO.TransactionRequest;
 import nl.inholland.bank.models.dtos.TransactionDTO.TransactionSearchRequest;
 import nl.inholland.bank.models.dtos.TransactionDTO.WithdrawDepositRequest;

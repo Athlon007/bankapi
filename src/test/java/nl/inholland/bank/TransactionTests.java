@@ -1,10 +1,7 @@
 package nl.inholland.bank;
 
 import nl.inholland.bank.models.*;
-import nl.inholland.bank.models.dtos.AccountDTO.AccountRequest;
 import nl.inholland.bank.models.dtos.TransactionDTO.WithdrawDepositRequest;
-import nl.inholland.bank.models.dtos.UserDTO.UserRequest;
-import nl.inholland.bank.models.exceptions.UserNotTheOwnerOfAccountException;
 import nl.inholland.bank.services.AccountService;
 import nl.inholland.bank.services.TransactionService;
 import nl.inholland.bank.services.UserService;
@@ -12,12 +9,9 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import javax.naming.AuthenticationException;
-import javax.naming.InsufficientResourcesException;
-import javax.security.auth.login.AccountNotFoundException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 

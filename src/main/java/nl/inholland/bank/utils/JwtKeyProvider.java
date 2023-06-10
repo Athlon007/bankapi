@@ -1,10 +1,10 @@
 package nl.inholland.bank.utils;
 
-import org.springframework.stereotype.Component;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.security.*;
