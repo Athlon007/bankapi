@@ -19,8 +19,6 @@ import java.util.List;
 public interface TransactionRepository extends CrudRepository<Transaction, Long>, JpaSpecificationExecutor<Transaction> {
     List<Transaction> findAllByTimestampIsAfterAndUserId(LocalDateTime start, int userId);
 
-    Page<Transaction> findAll(Pageable pageable);
-
     default Page<Transaction> findTransactions(
             double minAmount, double maxAmount,
             LocalDateTime startDate, LocalDateTime endDate,

@@ -64,8 +64,9 @@ public class TransactionService {
         transaction.setCurrencyType(currencyType);
         transaction.setAmount(amount);
         transaction.setTimestamp(LocalDateTime.now());
-        transaction.setDescription(description);
         transaction.setTransactionType(transactionType);
+        transaction.setDescription(description);
+
 
         return transaction;
     }
@@ -87,7 +88,7 @@ public class TransactionService {
         User user = getUserByUsername();
         checkAccountPreconditionsForWithdrawOrDeposit(accountSender, user);
         checkUserLimits(accountSender, withdrawDepositRequest.amount());
-        Transaction transaction = createTransaction(user, accountSender, null, withdrawDepositRequest.currencyType(), withdrawDepositRequest.amount(), "Withdraw successful", TransactionType.WITHDRAWAL);
+        Transaction transaction = createTransaction(user, accountSender, null, withdrawDepositRequest.currencyType(), withdrawDepositRequest.amount(), "", TransactionType.WITHDRAWAL);
         updateAccountBalance(accountSender, withdrawDepositRequest.amount(), false);
 
         return transactionRepository.save(transaction);
@@ -105,7 +106,7 @@ public class TransactionService {
         Account accountReceiver = accountService.getAccountByIBAN(depositRequest.IBAN());
         User user = getUserByUsername();
         checkAccountPreconditionsForWithdrawOrDeposit(accountReceiver, user);
-        Transaction transaction = createTransaction(user, null, accountReceiver, depositRequest.currencyType(), depositRequest.amount(), "Deposit successful", TransactionType.DEPOSIT);
+        Transaction transaction = createTransaction(user, null, accountReceiver, depositRequest.currencyType(), depositRequest.amount(), "", TransactionType.DEPOSIT);
         updateAccountBalance(accountReceiver, depositRequest.amount(), true);
 
         return transactionRepository.save(transaction);
@@ -144,10 +145,7 @@ public class TransactionService {
             UserNotTheOwnerOfAccountException,
             javax.naming.AuthenticationException {
         // Get performing user
-        User user = null;
-        if (userRepository.findUserByUsername(userService.getBearerUsername()).isPresent()) {
-            user = userRepository.findUserByUsername(userService.getBearerUsername()).get();
-        }
+        User user = userRepository.findUserByUsername(userService.getBearerUsername()).orElse(null);
 
         // Check if accounts exists and get the corresponding accounts of the given IBANs
         Account accountSender = accountService.getAccountByIBAN(request.sender_iban());

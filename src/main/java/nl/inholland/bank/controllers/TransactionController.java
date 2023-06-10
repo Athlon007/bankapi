@@ -1,14 +1,12 @@
 package nl.inholland.bank.controllers;
 
 import nl.inholland.bank.models.*;
-import nl.inholland.bank.models.dtos.ExceptionResponse;
 import nl.inholland.bank.models.dtos.TransactionDTO.TransactionRequest;
 import nl.inholland.bank.models.dtos.TransactionDTO.TransactionResponse;
 import nl.inholland.bank.models.dtos.TransactionDTO.TransactionSearchRequest;
 import nl.inholland.bank.models.dtos.TransactionDTO.WithdrawDepositRequest;
 import nl.inholland.bank.models.exceptions.UserNotTheOwnerOfAccountException;
 import nl.inholland.bank.services.TransactionService;
-import nl.inholland.bank.services.UserService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -30,11 +28,9 @@ import java.util.Optional;
 @CrossOrigin(origins = "*")
 public class TransactionController {
     private final TransactionService transactionService;
-    private final UserService userService;
 
-    public TransactionController(TransactionService transactionService, UserService userService) {
+    public TransactionController(TransactionService transactionService) {
         this.transactionService = transactionService;
-        this.userService = userService;
     }
 
     @PostMapping("/withdraw")
@@ -101,46 +97,19 @@ public class TransactionController {
     }
 
     public TransactionResponse buildTransactionResponse(Transaction transaction) {
-        TransactionResponse response = null;
-        if (transaction.getTransactionType() == TransactionType.WITHDRAWAL) {
-            assert transaction.getAccountSender() != null;
-            response = new TransactionResponse(
-                    transaction.getId(),
-                    transaction.getUser().getUsername(),
-                    transaction.getAccountSender().getIBAN(),
-                    null,
-                    transaction.getAmount(),
-                    transaction.getTimestamp(),
-                    "Successfully withdrawn: " + transaction.getAmount() + " " + transaction.getCurrencyType() + " from your account",
-                    TransactionType.WITHDRAWAL
-            );
-        }
-        if (transaction.getTransactionType() == TransactionType.DEPOSIT) {
-            assert transaction.getAccountReceiver() != null;
-            response = new TransactionResponse(
-                    transaction.getId(),
-                    transaction.getUser().getUsername(),
-                    null,
-                    transaction.getAccountReceiver().getIBAN(),
-                    transaction.getAmount(),
-                    transaction.getTimestamp(),
-                    "Successfully deposited: " + transaction.getAmount() + " " + transaction.getCurrencyType() + " into your account",
-                    TransactionType.DEPOSIT
-            );
-        }
-        if (transaction.getTransactionType() == TransactionType.TRANSACTION) {
-            response = new TransactionResponse(
-                    transaction.getId(),
-                    transaction.getUser().getUsername(),
-                    transaction.getAccountSender().getIBAN(),
-                    transaction.getAccountReceiver().getIBAN(),
-                    transaction.getAmount(),
-                    transaction.getTimestamp(),
-                    "Successfully transferred: " + transaction.getAmount() + " "
-                            + transaction.getCurrencyType() + " to " + transaction.getAccountReceiver().getIBAN(),
-                    TransactionType.TRANSACTION
-            );
-        }
-        return response;
+        String senderIBAN = transaction.getAccountSender() != null ? transaction.getAccountSender().getIBAN() : null;
+        String receiverIBAN = transaction.getAccountReceiver() != null ? transaction.getAccountReceiver().getIBAN() : null;
+
+        return new TransactionResponse(
+                transaction.getId(),
+                transaction.getUser().getUsername(),
+                senderIBAN,
+                receiverIBAN,
+                transaction.getAmount(),
+                transaction.getCurrencyType(),
+                transaction.getTimestamp(),
+                transaction.getDescription(),
+                transaction.getTransactionType()
+        );
     }
 }
