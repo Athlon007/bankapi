@@ -33,6 +33,36 @@ class ErrorHandlerTests {
     }
 
     @Test
+    void allCustomExceptionsMustBeRepresentedInErrorHandler() {
+        // Get all custom exceptions.
+        File[] files = new File("src/main/java/nl/inholland/bank/models/exceptions").listFiles();
+        if (files == null) {
+            Assertions.fail("No custom exceptions found.");
+        }
+
+        // Get all methods in ErrorHandler.
+        java.lang.reflect.Method[] methods = ErrorHandler.class.getDeclaredMethods();
+        if (methods.length == 0) {
+            Assertions.fail("No methods found in ErrorHandler.");
+        }
+
+        // Check if all custom exceptions are represented in ErrorHandler.
+        for (File file : files) {
+            String exceptionName = file.getName().replace(".java", "");
+            boolean found = false;
+            for (java.lang.reflect.Method method : methods) {
+                if (method.getName().equals("handle" + exceptionName)) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                Assertions.fail("Custom exception " + exceptionName + " is not represented in ErrorHandler.");
+            }
+        }
+    }
+
+    @Test
     void testException() {
         Assertions.assertDoesNotThrow(() -> errorHandler.handleException(new Exception("Test exception")));
     }
