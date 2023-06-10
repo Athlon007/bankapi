@@ -1,27 +1,24 @@
 package nl.inholland.bank.services;
 
-import io.cucumber.java.en.When;
 import nl.inholland.bank.configuration.ApiTestConfiguration;
 import nl.inholland.bank.models.*;
 import nl.inholland.bank.models.dtos.TransactionDTO.TransactionRequest;
 import nl.inholland.bank.models.dtos.TransactionDTO.TransactionSearchRequest;
 import nl.inholland.bank.models.dtos.TransactionDTO.WithdrawDepositRequest;
 import nl.inholland.bank.models.exceptions.*;
-import nl.inholland.bank.repositories.AccountRepository;
 import nl.inholland.bank.repositories.TransactionRepository;
 import nl.inholland.bank.repositories.UserRepository;
+import nl.inholland.bank.utils.JwtTokenProvider;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import javax.naming.InsufficientResourcesException;
@@ -30,13 +27,11 @@ import javax.security.sasl.AuthenticationException;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(SpringExtension.class)
@@ -60,6 +55,9 @@ class TransactionServiceTest {
 
     @MockBean
     private UserLimitsService userLimitsService;
+
+    @Autowired
+    private JwtTokenProvider mockJwtTokenProvider;
 
     private User user, user2;
     private Account currentAccount, currentAccount2, savingAccount, savingAccount2;
@@ -123,6 +121,8 @@ class TransactionServiceTest {
                 AccountType.SAVING,
                 0.0
         );
+        user.setId(1);
+        user2.setId(2);
         userService.assignAccountToUser(user, currentAccount);
         userService.assignAccountToUser(user, savingAccount);
         userService.assignAccountToUser(user2, currentAccount2);
@@ -178,27 +178,260 @@ class TransactionServiceTest {
 
     @Test
     void processTransaction_AccountNotFoundException() throws AccountNotFoundException {
-        // Arrange
-        TransactionRequest request = new TransactionRequest("sender_iban", "receiver_iban", 100.0, "description");
+        TransactionRequest request = new TransactionRequest("NL10INHO6628932884", "NL89INHO9277178029", 100.0, "description");
         when(userRepository.findUserByUsername(anyString())).thenReturn(java.util.Optional.of(new User()));
-        when(accountService.getAccountByIBAN("sender_iban")).thenReturn(null);
+        when(accountService.getAccountByIBAN("NL10INHO6628932884")).thenReturn(null);
 
         assertThrows(AccountNotFoundException.class, () -> transactionService.processTransaction(request));
-        verify(accountService, times(1)).getAccountByIBAN("sender_iban");
+        verify(accountService, times(1)).getAccountByIBAN("NL10INHO6628932884");
     }
 
     @Test
     void processTransaction_UserNotTheOwnerOfAccountException() throws AccountNotFoundException {
-        // Arrange
-        TransactionRequest request = new TransactionRequest(currentAccount.getIBAN(), currentAccount2.getIBAN(), 100.0, "description");
-        User user = this.user2;
+        User user = new User();
+        Account accountSender = new Account();
+        Account accountReceiver = new Account();
+        TransactionRequest request = new TransactionRequest("NL10INHO6628932884", "NL89INHO9277178029", 100.0, "description");
+
+        Mockito.when(userRepository.findUserByUsername(Mockito.anyString())).thenReturn(Optional.of(user));
+
+        Mockito.when(accountService.getAccountByIBAN(Mockito.anyString())).thenReturn(accountSender, accountReceiver);
+
+        Assertions.assertThrows(UserNotTheOwnerOfAccountException.class, () -> {
+            transactionService.checkUserAuthorization(user, accountReceiver);
+        });
+    }
+
+    @Test
+    void processTransaction_SenderAccountInactive() throws AccountNotFoundException, InsufficientResourcesException,
+            UserNotTheOwnerOfAccountException, javax.naming.AuthenticationException {
+        // Create a mock User
+        User user = this.user;
+        when(userService.getBearerUsername()).thenReturn("username");
+        when(userRepository.findUserByUsername("username")).thenReturn(java.util.Optional.of(user));
+
+        // Set to inactive
         Account accountSender = this.currentAccount;
+        accountSender.setActive(false);
+
         Account accountReceiver = this.currentAccount2;
-        Mockito.when(userRepository.findUserByUsername(anyString())).thenReturn(java.util.Optional.of(user));
+
+        // Create a TransactionRequest
+        TransactionRequest request = new TransactionRequest("NL10INHO6628932884", "NL89INHO9277178029", 100.0, "description");
+
         Mockito.when(accountService.getAccountByIBAN(request.sender_iban())).thenReturn(accountSender);
         Mockito.when(accountService.getAccountByIBAN(request.receiver_iban())).thenReturn(accountReceiver);
+        Mockito.when(userService.getBearerUserRole()).thenReturn(Role.EMPLOYEE);
 
+        // Assert that an InactiveAccountException is thrown
+        assertThrows(InactiveAccountException.class, () -> transactionService.processTransaction(request));
+    }
+
+    @Test
+    void processTransaction_ReceiverAccountInactive() throws AccountNotFoundException, InsufficientResourcesException,
+            UserNotTheOwnerOfAccountException, javax.naming.AuthenticationException {
+        // Create a mock User
+        User user = this.user;
+        when(userService.getBearerUsername()).thenReturn("username");
+        when(userRepository.findUserByUsername("username")).thenReturn(java.util.Optional.of(user));
+
+        Account accountSender = this.currentAccount;
+
+        // Set to inactive
+        Account accountReceiver = this.currentAccount2;
+        accountReceiver.setActive(false);
+
+        // Create a TransactionRequest
+        TransactionRequest request = new TransactionRequest("NL10INHO6628932884", "NL89INHO9277178029", 100.0, "description");
+
+        Mockito.when(accountService.getAccountByIBAN(request.sender_iban())).thenReturn(accountSender);
+        Mockito.when(accountService.getAccountByIBAN(request.receiver_iban())).thenReturn(accountReceiver);
+        Mockito.when(userService.getBearerUserRole()).thenReturn(Role.EMPLOYEE);
+
+        // Assert that an InactiveAccountException is thrown
+        assertThrows(InactiveAccountException.class, () -> transactionService.processTransaction(request));
+    }
+
+    @Test
+    void processTransaction_SameAccount() throws AccountNotFoundException, InsufficientResourcesException,
+            UserNotTheOwnerOfAccountException, javax.naming.AuthenticationException {
+        // Create a mock User
+        User user = this.user;
+        when(userService.getBearerUsername()).thenReturn("username");
+        when(userRepository.findUserByUsername("username")).thenReturn(java.util.Optional.of(user));
+
+        Account accountSender = this.currentAccount;
+
+        // Set to inactive
+        Account accountReceiver = this.currentAccount;
+
+        // Create a TransactionRequest
+        TransactionRequest request = new TransactionRequest("NL10INHO6628932884", "NL10INHO6628932884", 100.0, "description");
+
+        Mockito.when(accountService.getAccountByIBAN(request.sender_iban())).thenReturn(accountSender);
+        Mockito.when(accountService.getAccountByIBAN(request.receiver_iban())).thenReturn(accountReceiver);
+        Mockito.when(userService.getBearerUserRole()).thenReturn(Role.EMPLOYEE);
+
+        // Assert that an InactiveAccountException is thrown
+        assertThrows(SameAccountTransferException.class, () -> transactionService.processTransaction(request));
+    }
+
+    @Test
+    void processTransaction_checkSavingAccountOwnership() throws AccountNotFoundException, InsufficientResourcesException,
+            UserNotTheOwnerOfAccountException, javax.naming.AuthenticationException {
+        // Create a mock User
+        User user = this.user;
+        when(userService.getBearerUsername()).thenReturn("username");
+        when(userRepository.findUserByUsername("username")).thenReturn(java.util.Optional.of(user));
+
+        Account accountSender = this.currentAccount;
+        accountSender.setUser(user);
+
+        // Set to inactive
+        Account accountReceiver = this.savingAccount;
+        accountReceiver.setUser(user2);
+
+        // Create a TransactionRequest
+        TransactionRequest request = new TransactionRequest("NL10INHO6628932884", "NL10INHO6628923423", 100.0, "description");
+
+        Mockito.when(accountService.getAccountByIBAN(request.sender_iban())).thenReturn(accountSender);
+        Mockito.when(accountService.getAccountByIBAN(request.receiver_iban())).thenReturn(accountReceiver);
+        Mockito.when(userService.getBearerUserRole()).thenReturn(Role.CUSTOMER);
+
+        // Assert that an InactiveAccountException is thrown
         assertThrows(UserNotTheOwnerOfAccountException.class, () -> transactionService.processTransaction(request));
+    }
+
+    @Test
+    void processTransaction_checkUserLimitsExceedTransactionLimit() throws AccountNotFoundException, InsufficientResourcesException,
+            UserNotTheOwnerOfAccountException, javax.naming.AuthenticationException {
+        // Create a mock User
+        User user = this.user;
+        when(userService.getBearerUsername()).thenReturn("username");
+        when(userRepository.findUserByUsername("username")).thenReturn(java.util.Optional.of(user));
+
+        Account accountSender = this.currentAccount;
+        accountSender.setUser(user);
+        accountSender.setBalance(2000);
+
+        // Set to inactive
+        Account accountReceiver = this.currentAccount2;
+        accountReceiver.setUser(user2);
+
+        Limits limits = new Limits();
+        limits.setTransactionLimit(500);
+        limits.setDailyTransactionLimit(1000);
+
+        // Create a TransactionRequest
+        TransactionRequest request = new TransactionRequest("NL10INHO6628932884", "NL10INHO6628923423", 600.0, "description");
+
+        Mockito.when(accountService.getAccountByIBAN(request.sender_iban())).thenReturn(accountSender);
+        Mockito.when(accountService.getAccountByIBAN(request.receiver_iban())).thenReturn(accountReceiver);
+        Mockito.when(userService.getBearerUserRole()).thenReturn(Role.CUSTOMER);
+        Mockito.when(userLimitsService.getUserLimits(accountSender.getUser().getId())).thenReturn(limits);
+
+        // Assert that an InactiveAccountException is thrown
+        assertThrows(TransactionLimitException.class, () -> transactionService.processTransaction(request));
+    }
+
+    @Test
+    void processTransaction_checkUserLimitsExceedDailyTransactionLimit() throws AccountNotFoundException, InsufficientResourcesException,
+            UserNotTheOwnerOfAccountException, javax.naming.AuthenticationException {
+        // Create a mock User
+        User user = this.user;
+        when(userService.getBearerUsername()).thenReturn("username");
+        when(userRepository.findUserByUsername("username")).thenReturn(java.util.Optional.of(user));
+
+        Account accountSender = this.currentAccount;
+        accountSender.setUser(user);
+        accountSender.setBalance(2000);
+
+        // Set to inactive
+        Account accountReceiver = this.currentAccount2;
+        accountReceiver.setUser(user2);
+
+        Limits limits = new Limits();
+        limits.setTransactionLimit(1500);
+        limits.setDailyTransactionLimit(1000);
+
+        // Create a TransactionRequest
+        TransactionRequest request = new TransactionRequest("NL10INHO6628932884", "NL10INHO6628923423", 1100.0, "description");
+
+        Mockito.when(accountService.getAccountByIBAN(request.sender_iban())).thenReturn(accountSender);
+        Mockito.when(accountService.getAccountByIBAN(request.receiver_iban())).thenReturn(accountReceiver);
+        Mockito.when(userService.getBearerUserRole()).thenReturn(Role.CUSTOMER);
+        Mockito.when(userLimitsService.getUserLimits(accountSender.getUser().getId())).thenReturn(limits);
+
+        // Assert that an InactiveAccountException is thrown
+        assertThrows(DailyTransactionLimitException.class, () -> transactionService.processTransaction(request));
+    }
+
+    @Test
+    void processTransaction_checkUserLimitsInsufficientFunds() throws AccountNotFoundException, InsufficientResourcesException,
+            UserNotTheOwnerOfAccountException, javax.naming.AuthenticationException {
+        // Create a mock User
+        User user = this.user;
+        when(userService.getBearerUsername()).thenReturn("username");
+        when(userRepository.findUserByUsername("username")).thenReturn(java.util.Optional.of(user));
+
+        Account accountSender = this.currentAccount;
+        accountSender.setUser(user);
+        accountSender.setBalance(100);
+        accountSender.setAbsoluteLimit(0);
+
+        // Set to inactive
+        Account accountReceiver = this.currentAccount2;
+        accountReceiver.setUser(user2);
+
+        Limits limits = new Limits();
+        limits.setTransactionLimit(500);
+        limits.setDailyTransactionLimit(1000);
+        limits.setRemainingDailyTransactionLimit(450);
+
+        // Create a TransactionRequest
+        TransactionRequest request = new TransactionRequest("NL10INHO6628932884", "NL10INHO6628923423", 200.0, "description");
+
+        Mockito.when(accountService.getAccountByIBAN(request.sender_iban())).thenReturn(accountSender);
+        Mockito.when(accountService.getAccountByIBAN(request.receiver_iban())).thenReturn(accountReceiver);
+        Mockito.when(userService.getBearerUserRole()).thenReturn(Role.CUSTOMER);
+        Mockito.when(userLimitsService.getUserLimits(accountSender.getUser().getId())).thenReturn(limits);
+
+        // Assert that an InactiveAccountException is thrown
+        assertThrows(InsufficientFundsException.class, () -> transactionService.processTransaction(request));
+    }
+
+    @Test
+    void processTransaction_transferMoney() throws AccountNotFoundException, InsufficientResourcesException,
+            UserNotTheOwnerOfAccountException, javax.naming.AuthenticationException {
+        // Create a mock User
+        User user = this.user;
+        when(userService.getBearerUsername()).thenReturn("username");
+        when(userRepository.findUserByUsername("username")).thenReturn(java.util.Optional.of(user));
+
+        Account accountSender = this.currentAccount;
+        accountSender.setUser(user);
+        accountSender.setBalance(100);
+        accountSender.setAbsoluteLimit(0);
+
+        // Set to inactive
+        Account accountReceiver = this.currentAccount2;
+        accountReceiver.setUser(user2);
+
+        Limits limits = new Limits();
+        limits.setTransactionLimit(500);
+        limits.setDailyTransactionLimit(1000);
+        limits.setRemainingDailyTransactionLimit(450);
+
+        // Create a TransactionRequest
+        TransactionRequest request = new TransactionRequest("NL10INHO6628932884", "NL10INHO6628923423", 100.0, "description");
+
+        Mockito.when(accountService.getAccountByIBAN(request.sender_iban())).thenReturn(accountSender);
+        Mockito.when(accountService.getAccountByIBAN(request.receiver_iban())).thenReturn(accountReceiver);
+        Mockito.when(userService.getBearerUserRole()).thenReturn(Role.CUSTOMER);
+        Mockito.when(userLimitsService.getUserLimits(accountSender.getUser().getId())).thenReturn(limits);
+
+        // Assert that an InactiveAccountException is thrown
+        assertDoesNotThrow(() -> transactionService.processTransaction(request));
     }
 
     @Test
@@ -216,16 +449,38 @@ class TransactionServiceTest {
     @Test
     void isUserAuthorizedForTransaction_ShouldReturnFalseForMismatchedUserAndUserRoleIsUser() {
         User user = this.user;
-        Account account = currentAccount;
-        account.setUser(user2); // Different user object
-
         user.setRole(Role.CUSTOMER); // Set the user role to USER
 
-        // Act
+        Account account = currentAccount2;
+        account.setUser(user2); // Different user object
+
         boolean isAuthorized = transactionService.isUserAuthorizedForTransaction(user, account);
 
-        // Assert
         Assertions.assertFalse(isAuthorized);
+    }
+
+    @Test
+    void isUserAuthorizedForTransaction_ShouldReturnTrueForUserRoleIsEmployee() {
+        User user = this.user;
+        user.setRole(Role.CUSTOMER); // Set the user role to USER
+
+        Account account = currentAccount2;
+        account.setUser(user2); // Different user object
+        Mockito.when(userService.getBearerUserRole()).thenReturn(Role.EMPLOYEE);
+
+        Assertions.assertTrue(transactionService.isUserAuthorizedForTransaction(user, account));
+    }
+
+    @Test
+    void isUserAuthorizedForTransaction_ShouldReturnFalseForWrongUser() {
+        User user = this.user;
+        user.setRole(Role.CUSTOMER); // Set the user role to USER
+
+        Account account = currentAccount2;
+        account.setUser(user2); // Different user object
+        Mockito.when(userService.getBearerUserRole()).thenReturn(Role.CUSTOMER);
+
+        Assertions.assertFalse(transactionService.isUserAuthorizedForTransaction(user, account));
     }
 
     @Test
@@ -235,7 +490,6 @@ class TransactionServiceTest {
 
         account.setActive(false); // Set the account as inactive
 
-        // Act and Assert
         Assertions.assertThrows(InactiveAccountException.class, () -> {
             transactionService.checkAccountStatus(account, accountType);
         });
@@ -248,7 +502,6 @@ class TransactionServiceTest {
 
         account.setActive(true); // Set the account as active
 
-        // Act and Assert
         Assertions.assertDoesNotThrow(() -> {
             transactionService.checkAccountStatus(account, accountType);
         });
@@ -262,7 +515,6 @@ class TransactionServiceTest {
         accountSender.setIBAN(accountSender.getIBAN());
         accountReceiver.setIBAN(accountReceiver.getIBAN()); // Set the same IBAN for both accounts
 
-        // Act and Assert
         Assertions.assertThrows(SameAccountTransferException.class, () -> {
             transactionService.checkSameAccount(accountSender, accountReceiver);
         });
@@ -276,7 +528,6 @@ class TransactionServiceTest {
         accountSender.setIBAN(accountSender.getIBAN());
         accountReceiver.setIBAN(accountReceiver.getIBAN());
 
-        // Act and Assert
         Assertions.assertDoesNotThrow(() -> {
             transactionService.checkSameAccount(accountSender, accountReceiver);
         });
@@ -293,7 +544,6 @@ class TransactionServiceTest {
         accountSender.setUser(new User()); // Set up necessary dependencies
         accountReceiver.setUser(user);
 
-        // Act and Assert
         Assertions.assertThrows(UserNotTheOwnerOfAccountException.class, () -> {
             transactionService.checkSavingAccountOwnership(user, accountSender, accountReceiver);
         });
@@ -314,7 +564,6 @@ class TransactionServiceTest {
         accountSender.setUser(user);
         accountReceiver.setUser(user);
 
-        // Act and Assert
         Assertions.assertDoesNotThrow(() -> {
             transactionService.checkSavingAccountOwnership(user, accountSender, accountReceiver);
         });
@@ -335,12 +584,11 @@ class TransactionServiceTest {
 
         Mockito.when(userLimitsService.getUserLimits(this.user.getId())).thenReturn(limits);
 
-        // Act and Assert
         Assertions.assertThrows(TransactionLimitException.class, () -> {
             transactionService.checkUserLimits(accountSender, amount);
         });
 
-        // Verify that the getUserLimits method is called once with the correct argument
+        // Verify
         Mockito.verify(userLimitsService, Mockito.times(1)).getUserLimits(this.user.getId());
     }
 
@@ -382,16 +630,13 @@ class TransactionServiceTest {
 
     @Test
     void updateAccountBalance_WhenIsDeposit_ShouldIncreaseBalance() {
-        // Arrange
         Account account = new Account();
         account.setBalance(100.0);
         double amount = 50.0;
         boolean isDeposit = true;
 
-        // Act
         transactionService.updateAccountBalance(account, amount, isDeposit);
 
-        // Assert
         double expectedBalance = 150.0;
         Assertions.assertEquals(expectedBalance, account.getBalance());
         Mockito.verify(accountService, Mockito.times(1)).updateAccount(account);
@@ -399,16 +644,13 @@ class TransactionServiceTest {
 
     @Test
     void updateAccountBalance_WhenIsNotDeposit_ShouldDecreaseBalance() {
-        // Arrange
         Account account = new Account();
         account.setBalance(100.0);
         double amount = 50.0;
         boolean isDeposit = false;
 
-        // Act
         transactionService.updateAccountBalance(account, amount, isDeposit);
 
-        // Assert
         double expectedBalance = 50.0;
         Assertions.assertEquals(expectedBalance, account.getBalance());
         Mockito.verify(accountService, Mockito.times(1)).updateAccount(account);
@@ -416,42 +658,33 @@ class TransactionServiceTest {
 
     @Test
     void mapTransactionTypeToString_WhenDeposit_ReturnsDeposit() {
-        // Arrange
         String transactionType = "deposit";
 
-        // Act
         TransactionType result = transactionService.mapTransactionTypeToString(transactionType);
 
-        // Assert
         Assertions.assertEquals(TransactionType.DEPOSIT, result);
     }
 
     @Test
     void mapTransactionTypeToString_WhenWithdrawal_ReturnsWithdrawal() {
-        // Arrange
         String transactionType = "withdrawal";
 
-        // Act
         TransactionType result = transactionService.mapTransactionTypeToString(transactionType);
 
-        // Assert
         Assertions.assertEquals(TransactionType.WITHDRAWAL, result);
     }
 
     @Test
     void mapTransactionTypeToString_WhenUnknownTransaction_ReturnsTransaction() {
-        // Arrange
         String transactionType = "unknown";
 
-        // Act
         TransactionType result = transactionService.mapTransactionTypeToString(transactionType);
 
-        // Assert
         Assertions.assertEquals(TransactionType.TRANSACTION, result);
     }
 
     @Test
-    public void testTransferMoney() {
+    void testTransferMoney() {
         when(transactionRepository.save(any(Transaction.class))).thenReturn(mock(Transaction.class));
 
         Transaction result = transactionService.transferMoney(
@@ -462,7 +695,7 @@ class TransactionServiceTest {
     }
 
     @Test
-    public void testGetTransactions_UnauthorizedAccess_ThrowsAuthenticationException() {
+    void testGetTransactions_UnauthorizedAccess_ThrowsAuthenticationException() {
         when(userService.getBearerUserRole()).thenReturn(null);
 
         assertThrows(AuthenticationException.class, () -> {

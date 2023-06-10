@@ -145,10 +145,7 @@ public class TransactionService {
             UserNotTheOwnerOfAccountException,
             javax.naming.AuthenticationException {
         // Get performing user
-        User user = null;
-        if (userRepository.findUserByUsername(userService.getBearerUsername()).isPresent()) {
-            user = userRepository.findUserByUsername(userService.getBearerUsername()).get();
-        }
+        User user = userRepository.findUserByUsername(userService.getBearerUsername()).orElse(null);
 
         // Check if accounts exists and get the corresponding accounts of the given IBANs
         Account accountSender = accountService.getAccountByIBAN(request.sender_iban());
