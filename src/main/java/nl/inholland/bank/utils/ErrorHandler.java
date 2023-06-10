@@ -1,5 +1,6 @@
 package nl.inholland.bank.utils;
 
+import nl.inholland.bank.models.exceptions.*;
 import org.hibernate.ObjectNotFoundException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -121,7 +122,54 @@ public class ErrorHandler {
     @ExceptionHandler(AccountNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public String handleAccountNotFoundException(AccountNotFoundException e) {
-        writeToFile(e);
+        return "{\"error_message\": \"" + e.getMessage() + "\"}";
+    }
+
+    @ExceptionHandler(UserNotTheOwnerOfAccountException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public String handleUserNotTheOwnerOfAccountException(UserNotTheOwnerOfAccountException e) {
+        return "{\"error_message\": \"" + e.getMessage() + "\"}";
+    }
+
+    @ExceptionHandler(AccountIsNotActiveException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public String handleAccountIsNotActiveException(AccountIsNotActiveException e) {
+        return "{\"error_message\": \"" + e.getMessage() + "\"}";
+    }
+
+    @ExceptionHandler(DailyTransactionLimitException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public String handleDailyTransactionLimitException(DailyTransactionLimitException e) {
+        return "{\"error_message\": \"" + e.getMessage() + "\"}";
+    }
+
+    @ExceptionHandler(SameAccountTransferException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public String handleSameAccountTransferException(SameAccountTransferException e) {
+        return "{\"error_message\": \"" + e.getMessage() + "\"}";
+    }
+
+    @ExceptionHandler(InactiveAccountException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public String handleInactiveAccountException(InactiveAccountException e) {
+        return "{\"error_message\": \"" + e.getMessage() + "\"}";
+    }
+
+    @ExceptionHandler(OperationNotAllowedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public String handleOperationNotAllowedException(OperationNotAllowedException e) {
+        return "{\"error_message\": \"" + e.getMessage() + "\"}";
+    }
+
+    @ExceptionHandler(InsufficientFundsException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public String handleInsufficientFundsException(InsufficientFundsException e) {
+        return "{\"error_message\": \"" + e.getMessage() + "\"}";
+    }
+
+    @ExceptionHandler(TransactionLimitException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public String handleTransactionLimitException(TransactionLimitException e) {
         return "{\"error_message\": \"" + e.getMessage() + "\"}";
     }
 

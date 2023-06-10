@@ -1,6 +1,4 @@
 package nl.inholland.bank.configuration;
-
-import nl.inholland.bank.services.UserLimitsService;
 import nl.inholland.bank.utils.JwtTokenProvider;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
