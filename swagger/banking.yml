@@ -815,6 +815,8 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
   /auth/refresh:
     post:
       tags:
@@ -1158,3 +1160,9 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/Error"
+    Forbidden:
+        description: "User is not allowed to perform this action."
+        content:
+          application/json:
+            schema:
+                $ref: "#/components/schemas/Error"
