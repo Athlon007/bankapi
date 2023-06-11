@@ -4,6 +4,7 @@ RUN apt-get install openjdk-19-jdk -y
 COPY . .
 RUN ./mvnw clean install -U
 
+RUN apt-get install wget -y
 # Download the inholland.p12 form http://kfigura.nl/bank/security/inholland.p12
 RUN wget -q https://kfigura.nl/bank/security/inholland.p12
 
