@@ -352,6 +352,29 @@ class AccountControllerTests {
     }
 
     @Test
+    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    void getAccountsWithLowercaseIban() throws Exception {
+        Mockito.when(accountService.getAccounts(Optional.of(0), Optional.of(10), Optional.of(account.getIBAN()), Optional.of("John"), Optional.of("Doe"), Optional.of("CURRENT")))
+                .thenReturn(List.of(account));
+
+        Mockito.when(userService.getBearerUserRole()).thenReturn(Role.ADMIN);
+
+        String iban = account.getIBAN().toLowerCase();
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/accounts?iban=" + iban)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(accountActiveRequest))
+                )
+                .andExpect(MockMvcResultMatchers.status().isOk());
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/accounts", 0, 10, account.getIBAN(), "John", "Doe", "CURRENT")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(accountActiveRequest))
+                )
+                .andExpect(MockMvcResultMatchers.status().isOk());
+    }
+
+    @Test
     @WithMockUser(username = "admin", roles = {"CUSTOMER"})
     void getAccountsWithParamsAsCustomer() throws Exception {
         Mockito.when(accountService.getAccounts(Optional.of(0), Optional.of(10), Optional.of(account.getIBAN()), Optional.of("John"), Optional.of("Doe"), Optional.of("CURRENT")))

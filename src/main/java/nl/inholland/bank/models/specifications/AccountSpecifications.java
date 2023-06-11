@@ -11,7 +11,7 @@ import java.util.List;
 
 public class AccountSpecifications {
     public static Specification<Account> withIBAN(String iban) {
-        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("iban"), iban);
+        return (root, query, criteriaBuilder) -> criteriaBuilder.like(root.get("IBAN"), iban + "%");
     }
 
     public static Specification<Account> withCustomerName(String firstName, String lastName) {
