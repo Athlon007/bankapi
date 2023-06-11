@@ -3,6 +3,7 @@ package nl.inholland.bank.utils;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.PathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 
@@ -23,7 +24,7 @@ public class JwtKeyProvider {
 
     @PostConstruct
     void init() throws KeyStoreException, IOException, CertificateException, NoSuchAlgorithmException, UnrecoverableKeyException {
-        Resource resource = new ClassPathResource(keystore);
+        Resource resource = new PathResource(keystore);
         KeyStore store = KeyStore.getInstance("PKCS12");
         store.load(resource.getInputStream(), password.toCharArray());
         privateKey = store.getKey(alias, password.toCharArray());
