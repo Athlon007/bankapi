@@ -1,7 +1,8 @@
 package nl.inholland.bank.models;
 
 import org.apache.commons.validator.routines.IBANValidator;
-import org.iban4j.*;
+import org.iban4j.CountryCode;
+import org.iban4j.Iban;
 
 
 public class IBANGenerator {

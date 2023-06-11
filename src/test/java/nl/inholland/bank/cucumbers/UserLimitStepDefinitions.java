@@ -14,7 +14,7 @@ import org.springframework.http.MediaType;
 public class UserLimitStepDefinitions extends BaseStepDefinitions {
     public static final String USERS_LIMITS_ENDPOINT = "/users/{userId}/limits";
 
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @When("I get user limits for user {int}")
     public void iGetUserLimitsForUser(int userId) {

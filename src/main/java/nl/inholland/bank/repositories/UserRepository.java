@@ -1,6 +1,5 @@
 package nl.inholland.bank.repositories;
 
-import nl.inholland.bank.models.Role;
 import nl.inholland.bank.models.User;
 import nl.inholland.bank.models.specifications.UserSpecifications;
 import org.springframework.data.domain.Page;

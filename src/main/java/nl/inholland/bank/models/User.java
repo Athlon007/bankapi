@@ -8,11 +8,8 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.ToString;
 import nl.inholland.bank.models.exceptions.OperationNotAllowedException;
-import org.springframework.lang.NonNullFields;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 @Entity

@@ -5,7 +5,6 @@ import nl.inholland.bank.models.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mockito;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.*;
@@ -13,22 +12,17 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.repository.query.FluentQuery;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.mock;
 
 @ExtendWith(SpringExtension.class)
 @Import(ApiTestConfiguration.class)
 @AutoConfigureMockMvc(addFilters = false)
 class TransactionRepositoryTests {
-    private TransactionRepository transactionRepository = new TransactionRepository() {
-        Transaction transaction = new Transaction() {
+    private final TransactionRepository transactionRepository = new TransactionRepository() {
+        final Transaction transaction = new Transaction() {
             {
                 setId(1);
                 setTimestamp(LocalDateTime.now());
@@ -42,7 +36,7 @@ class TransactionRepositoryTests {
             }
         };
 
-        Transaction deposit = new Transaction() {
+        final Transaction deposit = new Transaction() {
             {
                 setId(2);
                 setTimestamp(LocalDateTime.now());
@@ -56,7 +50,7 @@ class TransactionRepositoryTests {
             }
         };
 
-        Transaction withdrawal = new Transaction() {
+        final Transaction withdrawal = new Transaction() {
             {
                 setId(3);
                 setTimestamp(LocalDateTime.now());

@@ -11,7 +11,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-
 import javax.naming.InsufficientResourcesException;
 import javax.security.auth.login.AccountNotFoundException;
 import javax.security.sasl.AuthenticationException;

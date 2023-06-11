@@ -130,4 +130,73 @@ class TransactionTests {
         Transaction transaction = new Transaction();
         assertThrows(IllegalArgumentException.class, () -> transaction.setTimestamp(futureTimestamp));
     }
+
+    @Test
+    void setDescription() {
+        // Create test data
+        String description = "Test description";
+        Transaction transaction = new Transaction();
+
+        // Set the description
+        transaction.setDescription(description);
+
+        String descriptionText = transaction.getDescription().replace('.', ',');
+
+        // Verify the description is set correctly
+        assertEquals("Withdrawn 0,00 null (\'Test description\')", descriptionText);
+    }
+
+    @Test
+    void setDescriptionTransaction() {
+        // Create test data
+        String description = "Test description";
+        Transaction transaction = new Transaction();
+        transaction.setTransactionType(TransactionType.TRANSACTION);
+        Account receiver = new Account();
+        receiver.setIBAN("NL01INHO0000000001");
+        transaction.setAccountReceiver(receiver);
+
+        // Set the description
+        transaction.setDescription(description);
+
+        String descriptionResult = transaction.getDescription();
+        descriptionResult = descriptionResult.replace('.', ',');
+        assertEquals("Transferred 0,00 null to NL01INHO0000000001 ('Test description')", descriptionResult);
+    }
+
+    @Test
+    void setDescriptionDeposit() {
+        // Create test data
+        String description = "Test description";
+        Transaction transaction = new Transaction();
+        transaction.setTransactionType(TransactionType.DEPOSIT);
+        Account receiver = new Account();
+        receiver.setIBAN("NL01INHO0000000001");
+        transaction.setAccountReceiver(receiver);
+
+        // Set the description
+        transaction.setDescription(description);
+
+        String descriptionText = transaction.getDescription().replace('.', ',');
+
+        // Verify the description is set correctly
+        assertEquals("Deposited 0,00 null (\'Test description\')", descriptionText);
+    }
+
+    @Test
+    void noMoreThan2Decimals() {
+        // Create test data
+        Transaction transaction = new Transaction();
+
+        assertThrows(IllegalArgumentException.class, () -> transaction.setAmount(100.123));
+    }
+
+    @Test
+    void getSetId() {
+        // Create test data
+        Transaction transaction = new Transaction();
+        transaction.setId(1);
+
+        assertEquals(1, transaction.getId());
+    }
 }

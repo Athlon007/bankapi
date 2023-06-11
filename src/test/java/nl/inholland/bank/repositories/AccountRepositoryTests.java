@@ -1,20 +1,19 @@
 package nl.inholland.bank.repositories;
 
 
-import io.micrometer.common.util.StringUtils;
 import nl.inholland.bank.configuration.ApiTestConfiguration;
 import nl.inholland.bank.models.Account;
 import nl.inholland.bank.models.AccountType;
 import nl.inholland.bank.models.User;
-import nl.inholland.bank.models.specifications.AccountSpecifications;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.repository.query.FluentQuery;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -23,8 +22,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
-import static org.mockito.Mockito.when;
-
 
 @ExtendWith(SpringExtension.class)
 @Import(ApiTestConfiguration.class)
@@ -32,7 +29,7 @@ import static org.mockito.Mockito.when;
 class AccountRepositoryTests {
 
 
-    private AccountRepository accountRepository = new AccountRepository() {
+    private final AccountRepository accountRepository = new AccountRepository() {
         @Override
         public List<Account> findAllByUser(User user) {
             return null;

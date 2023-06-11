@@ -2,13 +2,10 @@ package nl.inholland.bank.cucumbers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.cucumber.java.Before;
-import io.cucumber.java.BeforeAll;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
-import nl.inholland.bank.models.User;
 import nl.inholland.bank.models.dtos.UserDTO.UserForAdminRequest;
 import nl.inholland.bank.models.dtos.UserDTO.UserForClientResponse;
 import nl.inholland.bank.models.dtos.UserDTO.UserRequest;
@@ -24,7 +21,7 @@ import java.util.List;
 public class UserStepDefinitions extends BaseStepDefinitions {
     public static final String USERS_ENDPOINT = "/users";
 
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @When("I call the application users endpoint")
     public void iCallTheApplicationUsersEndpoint() {

@@ -70,8 +70,8 @@ paths:
         - in: query
           name: active
           description: >
-              Filter by users that are active or inactive.<br>
-              Note: This parameter is only available for employees and admins. Clients always see active users.
+            Filter by users that are active or inactive.<br>
+            Note: This parameter is only available for employees and admins. Clients always see active users.
           required: false
           schema:
             type: boolean
@@ -429,7 +429,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/AccountForClientResponse"
+                  $ref: "#/components/schemas/AccountClientResponse"
                 example:
                   - id: 1
                     iban: "NL74INHO9388899795"
@@ -474,7 +474,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AccountForClientResponse"
+                $ref: "#/components/schemas/AccountClientResponse"
               example:
                 - id: 1
                   iban: "NL74INHO9388899795"
@@ -491,64 +491,124 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "404":
           $ref: "#/components/responses/NotFound"
+    get:
+      tags:
+        - Accounts
+        - Employee
+      security:
+        - bearerAuth: []
+      description: >
+        Retrieves all accounts.
+      operationId: retrieveAccounts
+      parameters:
+        - name: page
+          in: query
+          description: Page number
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          description: Number of items per page
+          schema:
+            type: integer
+        - name: iban
+          in: query
+          description: Account iban
+          schema:
+            type: string
+        - name: IBAN
+          in: query
+          description: Account IBAN (alternative)
+          schema:
+            type: string
+        - name: firstName
+          in: query
+          description: Account holder's first name
+          schema:
+            type: string
+        - name: lastName
+          in: query
+          description: Account holder's last name
+          schema:
+            type: string
+        - name: accountType
+          in: query
+          description: Account type
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "List of accounts."
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AccountClientResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "405":
+          $ref: "#/components/responses/InternalServerError"
   /accounts/{user_id}/{account_id}:
     put:
-        tags:
-            - Accounts
-            - Employee
-        security:
-            - bearerAuth: []
-        description: >
-            Activate the account with the given user_id and account_id.
-        operationId: ActivateAccount
-        parameters:
-          - name: user_id
-            in: path
-            description: User ID
-            required: true
+      tags:
+        - Accounts
+        - Employee
+      security:
+        - bearerAuth: []
+      description: >
+        Activate the account with the given user_id and account_id.
+      operationId: ActivateAccount
+      parameters:
+        - name: user_id
+          in: path
+          description: User ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: account_id
+          in: path
+          description: Account ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
             schema:
-              type: integer
-              format: int64
-          - name: account_id
-            in: path
-            description: Account ID
-            required: true
-            schema:
-              type: integer
-              format: int64
-        requestBody:
-            required: true
-            content:
-                application/json:
-                    schema:
-                        $ref: "#/components/schemas/AccountActivateRequest"
-                    example:
-                        is_active: false
-        responses:
-            "200":
-                description: Account has been deactivated
-                content:
-                    application/json:
-                        schema:
-                            $ref: "#/components/schemas/AccountForClientResponse"
-                        example:
-                            id: 1
-                            iban: "NL74INHO9388899795"
-                            currency_type: "EURO"
-                            account_type: "SAVING"
-                            is_active: false
-                            balance: 0
-                            absolute_limit: 0
-                            first_name: "John"
-                            last_name: "Doe"
-            "401":
-                $ref: "#/components/responses/Unauthorized"
-            "404":
-                $ref: "#/components/responses/NotFound"
-            "400":
-                $ref: "#/components/responses/BadRequest"
-            "405":
-                $ref: "#/components/responses/NotAllowed"
+              $ref: "#/components/schemas/AccountActivateRequest"
+            example:
+              is_active: false
+      responses:
+        "200":
+          description: Account has been deactivated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountClientResponse"
+              example:
+                id: 1
+                iban: "NL74INHO9388899795"
+                currency_type: "EURO"
+                account_type: "SAVING"
+                is_active: false
+                balance: 0
+                absolute_limit: 0
+                first_name: "John"
+                last_name: "Doe"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "405":
+          $ref: "#/components/responses/NotAllowed"
   /accounts/{user_id}/{account_id}/limit:
     put:
       tags:
@@ -581,14 +641,14 @@ paths:
             schema:
               $ref: "#/components/schemas/AccountAbsoluteLimitRequest"
             example:
-                absolute_limit: -20
+              absolute_limit: -20
       responses:
         "200":
           description: Account has been updated
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AccountForClientResponse"
+                $ref: "#/components/schemas/AccountClientResponse"
               example:
                 id: 1
                 iban: "NL74INHO9388899795"
@@ -610,7 +670,7 @@ paths:
       tags:
         - Transaction
       description: >
-        Transfers money from one user to another.
+        Transfers money from one account to another.
       operationId: transfer
       security:
         - bearerAuth: []
@@ -618,10 +678,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                items:
-                  $ref: "#/components/schemas/TransactionRequest"
+              $ref: "#/components/schemas/TransactionRequest"
       responses:
         "201":
           description: "Transaction successful!"
@@ -636,10 +693,14 @@ paths:
                   senderiban: "NL00INHL1234567890"
                   receiveriban: "NL00INHL0987654321"
                   amount: 50.00
-        "401":
-          $ref: "#/components/responses/Unauthorized"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "405":
+          $ref: "#/components/responses/InternalServerError"
     get:
       tags:
         - Transaction
@@ -648,54 +709,92 @@ paths:
       operationId: getAllTransfers
       security:
         - bearerAuth: []
-      responses:
-        "200":
-          description: "Returns all transfers."
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/TransactionResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-  /transactions/{transaction_id}:
-    get:
-      tags:
-        - Transaction
-      description: >
-        Returns all transactions for a given user.
-      operationId: getTransfers
-      security:
-        - bearerAuth: []
       parameters:
-        - name: transaction_id
-          in: path
-          description: Transaction ID
-          required: true
+        - name: page
+          in: query
+          description: Page number of the results.
           schema:
             type: integer
-            format: int64
+        - name: limit
+          in: query
+          description: Maximum number of transactions per page.
+          schema:
+            type: integer
+        - name: minAmount
+          in: query
+          description: Minimum transaction amount.
+          schema:
+            type: number
+            format: double
+        - name: maxAmount
+          in: query
+          description: Maximum transaction amount.
+          schema:
+            type: number
+            format: double
+        - name: startDate
+          in: query
+          description: Start date of the transaction.
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          description: End date of the transaction.
+          schema:
+            type: string
+            format: date-time
+        - name: transactionID
+          in: query
+          description: Transaction ID.
+          schema:
+            type: integer
+        - name: ibanSender
+          in: query
+          description: Sender's IBAN.
+          schema:
+            type: string
+        - name: ibanReceiver
+          in: query
+          description: Receiver's IBAN.
+          schema:
+            type: string
+        - name: userSenderID
+          in: query
+          description: ID of the sender user.
+          schema:
+            type: integer
+        - name: userReceiverID
+          in: query
+          description: ID of the receiver user.
+          schema:
+            type: integer
+        - name: transactionType
+          in: query
+          description: Type of the transaction.
+          schema:
+            type: string
       responses:
         "200":
-          description: "Returns all transfers for a given user."
+          description: "List of transactions."
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: "#/components/schemas/TransactionResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
-        "404":
-          $ref: "#/components/responses/NotFound"
+        "405":
+          $ref: "#/components/responses/InternalServerError"
   /transactions/deposit:
     post:
       tags:
         - Employee
         - Client
+        - Transaction
       description: >
         Deposit money to a account.
       operationId: deposit
@@ -738,6 +837,7 @@ paths:
       tags:
         - Employee
         - Client
+        - Transaction
       description: >
         Withdraw money from a account.
       operationId: withdraw
@@ -749,9 +849,9 @@ paths:
             schema:
               $ref: "#/components/schemas/TransactionWithdrawDepositRequest"
             example:
-                IBAN: "NL55INHO6906951728"
-                amount: 100.00
-                currency_type: "EURO"
+              IBAN: "NL55INHO6906951728"
+              amount: 100.00
+              currency_type: "EURO"
       responses:
         "200":
           description: "Withdraw successful!"
@@ -762,13 +862,13 @@ paths:
                 items:
                   $ref: "#/components/schemas/TransactionResponse"
                 example:
-                    id: 1
-                    username: "JohnDoe"
-                    sender_iban: "NL55INHO6906951728"
-                    amount: 100.00
-                    timestamp: "2021-06-01T12:00:00.000Z"
-                    description: "Successfully withdrew: 100.00 EURO from your account"
-                    transaction_type: "WITHDRAWAL"
+                  id: 1
+                  username: "JohnDoe"
+                  sender_iban: "NL55INHO6906951728"
+                  amount: 100.00
+                  timestamp: "2021-06-01T12:00:00.000Z"
+                  description: "Successfully withdrew: 100.00 EURO from your account"
+                  transaction_type: "WITHDRAWAL"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "400":
@@ -815,6 +915,8 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "400":
           $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
   /auth/refresh:
     post:
       tags:
@@ -887,9 +989,9 @@ components:
           format: string
           enum: [admin, employee, client]
         current_account:
-          $ref: "#/components/schemas/AccountForClientResponse"
+          $ref: "#/components/schemas/AccountClientResponse"
         savings_account:
-          $ref: "#/components/schemas/AccountForClientResponse"
+          $ref: "#/components/schemas/AccountClientResponse"
         active:
           type: boolean
       description: ok
@@ -961,26 +1063,26 @@ components:
       type: object
       properties:
         currency_type:
-            type: string
-            enum: [ "EURO" ]
+          type: string
+          enum: [ "EURO" ]
         account_type:
-            type: string
-            enum: ["CURRENT", "SAVING"]
+          type: string
+          enum: ["CURRENT", "SAVING"]
         user_id:
-            type: integer
-            format: int64
+          type: integer
+          format: int64
     AccountAbsoluteLimitRequest:
-        type: object
-        properties:
-            absolute_limit:
-              type: number
-              format: double
+      type: object
+      properties:
+        absolute_limit:
+          type: number
+          format: double
     AccountActivateRequest:
-        type: object
-        properties:
-            isActive:
-              type: boolean
-    AccountForClientResponse:
+      type: object
+      properties:
+        isActive:
+          type: boolean
+    AccountClientResponse:
       type: object
       properties:
         id:
@@ -1111,11 +1213,11 @@ components:
           format: double
           minimum: 0
     Error:
-        type: object
-        properties:
-            error_message:
-                type: string
-        example: { "error_message": "Error message" }
+      type: object
+      properties:
+        error_message:
+          type: string
+      example: { "error_message": "Error message" }
   securitySchemes:
     bearerAuth:
       type: http
@@ -1154,6 +1256,12 @@ components:
             $ref: "#/components/schemas/Error"
     InternalServerError:
       description: "Internal server error."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Forbidden:
+      description: "User is not allowed to perform this action."
       content:
         application/json:
           schema:

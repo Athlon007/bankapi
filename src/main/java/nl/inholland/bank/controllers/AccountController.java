@@ -106,11 +106,17 @@ public class AccountController {
             @RequestParam Optional<Integer> page,
             @RequestParam Optional<Integer> limit,
             @RequestParam Optional<String> iban,
+            @RequestParam(name = "IBAN") Optional<String> IBAN,
             @RequestParam Optional<String> firstName,
             @RequestParam Optional<String> lastName,
             @RequestParam Optional<String> accountType
     ) {
         // Retrieve accounts
+
+        if (IBAN.isPresent()) {
+            iban = IBAN;
+        }
+
         List<Account> accounts = accountService.getAccounts(page, limit, iban, firstName, lastName, accountType);
 
         if (userService.getBearerUserRole() == Role.CUSTOMER) {

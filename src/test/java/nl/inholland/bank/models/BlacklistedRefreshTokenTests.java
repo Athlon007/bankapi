@@ -1,9 +1,8 @@
 package nl.inholland.bank.models;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.junit.jupiter.api.Assertions;
 
 class BlacklistedRefreshTokenTests {
 

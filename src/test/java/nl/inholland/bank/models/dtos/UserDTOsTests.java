@@ -102,4 +102,10 @@ class UserDTOsTests {
         UserForAdminRequest userRequest = new UserForAdminRequest("email", "username", "password", "firstname", "lastname", "1234", "phone", "2000", "role");
         Assertions.assertEquals(-163770035, userRequest.hashCode());
     }
+
+    @Test
+    void userForAdminRequestCompareOther() {
+        UserForAdminRequest userRequest = new UserForAdminRequest("email", "username", "password", "firstname", "lastname", "1234", "phone", "2000", "role");
+        Assertions.assertDoesNotThrow(() -> userRequest.equals(new Object()));
+    }
 }

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
-import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import io.jsonwebtoken.lang.Assert;
 import nl.inholland.bank.models.dtos.AccountDTO.AccountAbsoluteLimitRequest;
@@ -14,15 +13,11 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 public class AccountStepDefinitions extends BaseStepDefinitions{
 
     public static final String ACCOUNTS_ENDPOINT = "/accounts";
 
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @When("I call the application accounts endpoint with user id {int}")
     public void iCallTheApplicationAccountsEndpointWithUserId(int userId) {

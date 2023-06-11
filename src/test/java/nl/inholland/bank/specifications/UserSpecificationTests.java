@@ -17,4 +17,40 @@ class UserSpecificationTests {
         System.out.println(specification);
         Assertions.assertNotNull(specification);
     }
+
+    @Test
+    void accountIsNull() {
+        Specification<User> specification = Specification.where(null);
+        specification = specification.and(UserSpecifications.accountIsNull());
+
+        System.out.println(specification);
+        Assertions.assertNotNull(specification);
+    }
+
+    @Test
+    void accountIsNotNull() {
+        Specification<User> specification = Specification.where(null);
+        specification = specification.and(UserSpecifications.accountIsNotNull());
+
+        System.out.println(specification);
+        Assertions.assertNotNull(specification);
+    }
+
+    @Test
+    void active() {
+        Specification<User> specification = Specification.where(null);
+        specification = specification.and(UserSpecifications.active());
+
+        System.out.println(specification);
+        Assertions.assertNotNull(specification);
+    }
+
+    @Test
+    void notActive() {
+        Specification<User> specification = Specification.where(null);
+        specification = specification.and(UserSpecifications.notActive());
+
+        System.out.println(specification);
+        Assertions.assertNotNull(specification);
+    }
 }
