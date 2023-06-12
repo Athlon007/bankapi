@@ -259,7 +259,12 @@ public class UserService {
      * @return Username of user that is currently logged in.
      */
     public String getBearerUsername() {
-        return jwtTokenProvider.getUsername();
+        String username = jwtTokenProvider.getUsername();
+        if (username == null) {
+            return "";
+        }
+
+        return username;
     }
 
     /**
