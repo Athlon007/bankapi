@@ -86,7 +86,7 @@ public class TransactionService {
         Account accountSender = accountService.getAccountByIBAN(withdrawDepositRequest.IBAN());
         User user = getUserByUsername();
         checkAccountPreconditionsForWithdrawOrDeposit(accountSender, user);
-        checkUserLimits(accountSender, withdrawDepositRequest.amount());
+        checkUserLimits(accountSender, withdrawDepositRequest.amount(), null);
         Transaction transaction = createTransaction(user, accountSender, null, withdrawDepositRequest.currencyType(), withdrawDepositRequest.amount(), "", TransactionType.WITHDRAWAL);
         updateAccountBalance(accountSender, withdrawDepositRequest.amount(), false);
 
@@ -163,7 +163,7 @@ public class TransactionService {
         checkAccountStatus(accountReceiver, "receiver");
         checkSameAccount(accountSender, accountReceiver);
         checkSavingAccountOwnership(user, accountSender, accountReceiver);
-        checkUserLimits(accountSender, amount);
+        checkUserLimits(accountSender, amount, accountReceiver);
 
         // If all requirements have been met, create transaction
         return transferMoney(user, accountSender, accountReceiver, accountSender.getCurrencyType(), amount, request.description());
@@ -249,15 +249,21 @@ public class TransactionService {
      * @throws DailyTransactionLimitException Exception if transaction exceeds daily limit.
      * @throws InsufficientFundsException Exception if insufficient funds.
      */
-    void checkUserLimits(Account accountSender, double amount) throws TransactionLimitException,
+    void checkUserLimits(Account accountSender, double amount, Account accountReceiver) throws TransactionLimitException,
             DailyTransactionLimitException, InsufficientFundsException, javax.naming.AuthenticationException {
         Limits limits = this.userLimitsService.getUserLimits(accountSender.getUser().getId());
 
         if (amount > limits.getTransactionLimit()) {
-            throw new TransactionLimitException("Amount exceeds the transaction limit.");
-        } else if (amount > limits.getRemainingDailyTransactionLimit()) {
-            throw new DailyTransactionLimitException("Amount exceeds remaining daily transaction limit.");
-        } else if (accountSender.getBalance() - amount < accountSender.getAbsoluteLimit()) {
+            if (accountReceiver == null || (accountReceiver.getType() != AccountType.SAVING && accountSender.getType() != AccountType.SAVING)) {
+                throw new TransactionLimitException("Amount exceeds the transaction limit.");
+            }
+        }
+        if (amount > limits.getRemainingDailyTransactionLimit()) {
+            if (accountReceiver == null || (accountReceiver.getType() != AccountType.SAVING && accountSender.getType() != AccountType.SAVING)) {
+                throw new DailyTransactionLimitException("Amount exceeds remaining daily transaction limit.");
+            }
+        }
+        if (accountSender.getBalance() - amount < accountSender.getAbsoluteLimit()) {
             throw new InsufficientFundsException("Insufficient funds, transaction exceeds the absolute limit.");
         }
     }

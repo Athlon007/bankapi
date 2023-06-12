@@ -577,6 +577,8 @@ class TransactionServiceTest {
         Account accountSender = this.currentAccount;
         double amount = 550.0;
 
+        Account accountReceiver = this.currentAccount2;
+
         Limits limits = new Limits();
         limits.setTransactionLimit(500.0);
         limits.setRemainingDailyTransactionLimit(1000.0);
@@ -584,7 +586,7 @@ class TransactionServiceTest {
         Mockito.when(userLimitsService.getUserLimits(this.user.getId())).thenReturn(limits);
 
         Assertions.assertThrows(TransactionLimitException.class, () -> {
-            transactionService.checkUserLimits(accountSender, amount);
+            transactionService.checkUserLimits(accountSender, amount, accountReceiver);
         });
 
         // Verify
@@ -603,7 +605,7 @@ class TransactionServiceTest {
         Mockito.when(userLimitsService.getUserLimits(this.user.getId())).thenReturn(limits);
 
         Assertions.assertThrows(DailyTransactionLimitException.class, () -> {
-            transactionService.checkUserLimits(accountSender, amount);
+            transactionService.checkUserLimits(accountSender, amount, currentAccount2);
         });
 
         Mockito.verify(userLimitsService, Mockito.times(1)).getUserLimits(this.user.getId());
@@ -621,7 +623,7 @@ class TransactionServiceTest {
         Mockito.when(userLimitsService.getUserLimits(this.user.getId())).thenReturn(limits);
 
         Assertions.assertThrows(InsufficientFundsException.class, () -> {
-            transactionService.checkUserLimits(accountSender, amount);
+            transactionService.checkUserLimits(accountSender, amount, currentAccount2);
         });
 
         Mockito.verify(userLimitsService, Mockito.times(1)).getUserLimits(this.user.getId());
